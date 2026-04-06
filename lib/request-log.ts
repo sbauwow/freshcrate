@@ -1,6 +1,21 @@
+import crypto from "crypto";
 import { getDb } from "./db";
 import { log } from "./logger";
 import { NextRequest } from "next/server";
+
+/** Module-level request counter for periodic pruning. */
+let requestCount = 0;
+
+/**
+ * Hash an IP address with a daily-rotating salt.
+ * Allows same-day correlation (e.g. rate-limit abuse detection)
+ * without storing raw IP addresses (GDPR compliance).
+ */
+function hashIp(ip: string): string {
+  if (!ip) return "";
+  const salt = "freshcrate-" + new Date().toISOString().slice(0, 10);
+  return crypto.createHash("sha256").update(salt + ip).digest("hex").slice(0, 16);
+}
 
 /**
  * Log an API request to the database and structured logger.
@@ -15,12 +30,13 @@ export function logRequest(
   const duration = Date.now() - startTime;
   const path = request.nextUrl.pathname;
   const method = request.method;
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+  const rawIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     || request.headers.get("x-real-ip")
     || "";
+  const ip = hashIp(rawIp);
   const userAgent = (request.headers.get("user-agent") || "").slice(0, 200);
 
-  // Structured log to stdout
+  // Structured log to stdout (uses hashed IP, not raw)
   log.request({ method, path, status, duration_ms: duration, ip, user_agent: userAgent, api_key_prefix: apiKeyPrefix });
 
   // Persist to DB (async-safe, fire and forget)
@@ -33,11 +49,17 @@ export function logRequest(
   } catch {
     // Don't let logging failures break the API
   }
+
+  // Prune old logs every 1000 requests
+  requestCount++;
+  if (requestCount % 1000 === 0) {
+    pruneRequestLog();
+  }
 }
 
 /**
  * Prune old request logs (keep last 30 days).
- * Call from a cron job or on startup.
+ * Called automatically every 1000 requests, or manually from a cron job / startup.
  */
 export function pruneRequestLog(days = 30) {
   try {

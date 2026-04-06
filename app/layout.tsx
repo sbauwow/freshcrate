@@ -90,6 +90,10 @@ export default function RootLayout({
             <Link href="/api" className="text-fm-text-light hover:text-fm-link">API</Link>
             {" | "}
             <Link href="/submit" className="text-fm-text-light hover:text-fm-link">Submit a Package</Link>
+            {" | "}
+            <Link href="/privacy" className="text-fm-text-light hover:text-fm-link">Privacy</Link>
+            {" | "}
+            <Link href="/terms" className="text-fm-text-light hover:text-fm-link">Terms</Link>
           </div>
         </footer>
       </body>
