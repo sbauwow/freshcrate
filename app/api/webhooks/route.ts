@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasApiKeys, extractBearerToken, validateApiKey } from "@/lib/auth";
 import { listWebhooks, registerWebhook } from "@/lib/webhooks";
+import { logRequest } from "@/lib/request-log";
 
 /**
  * Authenticate the request using the same pattern as POST /api/projects.
@@ -29,10 +30,15 @@ function authenticateRequest(request: NextRequest): NextResponse | null {
  * Requires API key authentication when keys are configured.
  */
 export async function GET(request: NextRequest) {
+  const start = Date.now();
   const authError = authenticateRequest(request);
-  if (authError) return authError;
+  if (authError) {
+    logRequest(request, authError.status, start);
+    return authError;
+  }
 
   const webhooks = listWebhooks();
+  logRequest(request, 200, start);
   return NextResponse.json({ webhooks, count: webhooks.length });
 }
 
@@ -43,13 +49,18 @@ export async function GET(request: NextRequest) {
  * Body: { url: string, events?: string, secret?: string }
  */
 export async function POST(request: NextRequest) {
+  const start = Date.now();
   const authError = authenticateRequest(request);
-  if (authError) return authError;
+  if (authError) {
+    logRequest(request, authError.status, start);
+    return authError;
+  }
 
   try {
     const data = await request.json();
 
     if (!data.url) {
+      logRequest(request, 400, start);
       return NextResponse.json(
         { error: "Missing required field: url" },
         { status: 400 }
@@ -60,6 +71,7 @@ export async function POST(request: NextRequest) {
     try {
       new URL(data.url);
     } catch {
+      logRequest(request, 400, start);
       return NextResponse.json(
         { error: "Invalid URL format" },
         { status: 400 }
@@ -72,6 +84,7 @@ export async function POST(request: NextRequest) {
       const requestedEvents = data.events.split(",").map((e: string) => e.trim());
       const invalid = requestedEvents.filter((e: string) => !validEvents.includes(e));
       if (invalid.length > 0) {
+        logRequest(request, 400, start);
         return NextResponse.json(
           { error: `Invalid events: ${invalid.join(", ")}. Valid events: ${validEvents.join(", ")}` },
           { status: 400 }
@@ -80,9 +93,11 @@ export async function POST(request: NextRequest) {
     }
 
     const id = registerWebhook(data.url, data.events, data.secret);
+    logRequest(request, 201, start);
     return NextResponse.json({ id, url: data.url }, { status: 201 });
   } catch (err) {
     const message = (err as Error).message;
+    logRequest(request, 500, start);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

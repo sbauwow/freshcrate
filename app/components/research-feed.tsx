@@ -8,6 +8,8 @@ interface Paper {
   source: string;
   date: string;
   authors?: string;
+  is_new?: boolean;
+  pwc_url?: string;
 }
 
 interface TrendingModel {
@@ -62,14 +64,19 @@ export default function ResearchFeed() {
         <ul className="space-y-2">
           {data.papers.slice(0, 8).map((paper, i) => (
             <li key={i}>
-              <a
-                href={paper.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-fm-link hover:text-fm-link-hover text-[10px] leading-tight block"
-              >
-                {paper.title}
-              </a>
+              <div className="flex items-start gap-1">
+                {paper.is_new && (
+                  <span className="text-[8px] font-bold px-1 rounded bg-green-100 text-green-700 uppercase shrink-0 mt-0.5">new</span>
+                )}
+                <a
+                  href={paper.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-fm-link hover:text-fm-link-hover text-[10px] leading-tight"
+                >
+                  {paper.title}
+                </a>
+              </div>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className={`text-[9px] px-1 py-0 rounded font-bold ${
                   paper.source === "HF Daily"
@@ -80,6 +87,9 @@ export default function ResearchFeed() {
                 </span>
                 {paper.authors && (
                   <span className="text-[9px] text-fm-text-light truncate max-w-[120px]">{paper.authors}</span>
+                )}
+                {paper.pwc_url && (
+                  <a href={paper.pwc_url} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-500 hover:underline font-bold">PwC</a>
                 )}
                 <span className="text-[9px] text-fm-text-light ml-auto">{paper.date}</span>
               </div>

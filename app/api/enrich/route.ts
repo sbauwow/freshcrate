@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categorize } from "@/lib/categories";
+import { logRequest } from "@/lib/request-log";
 
 /**
  * Agent enrichment endpoint.
@@ -34,15 +35,18 @@ async function ghFetch(url: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const start = Date.now();
   try {
     const { url } = await request.json();
 
     if (!url || typeof url !== "string") {
+      logRequest(request, 400, start);
       return NextResponse.json({ error: "Provide a GitHub URL or owner/repo" }, { status: 400 });
     }
 
     const parsed = parseRepo(url);
     if (!parsed) {
+      logRequest(request, 400, start);
       return NextResponse.json({ error: "Could not parse GitHub repo from input" }, { status: 400 });
     }
 
@@ -55,6 +59,7 @@ export async function POST(request: NextRequest) {
     ]);
 
     if (!repoData) {
+      logRequest(request, 404, start);
       return NextResponse.json({ error: `Repository ${owner}/${repo} not found` }, { status: 404 });
     }
 
@@ -104,8 +109,10 @@ export async function POST(request: NextRequest) {
       },
     };
 
+    logRequest(request, 200, start);
     return NextResponse.json(enriched);
   } catch (err) {
+    logRequest(request, 500, start);
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
 }
