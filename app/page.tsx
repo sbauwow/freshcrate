@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getLatestReleases, getCategories, getStats } from "@/lib/queries";
+import { computeLifecycle } from "@/lib/lifecycle";
 import ResearchFeed from "./components/research-feed";
 
 function LicensePill({ license }: { license: string }) {
@@ -78,7 +79,22 @@ export default function Home() {
                     <span className="text-[11px] text-fm-text-light font-mono">
                       {project.latest_version}
                     </span>
-                    <UrgencyBadge urgency={project.latest_urgency} />
+                    {(() => {
+                      const lc = computeLifecycle({
+                        stars: project.stars ?? 0,
+                        forks: project.forks ?? 0,
+                        releaseCount: project.release_count ?? 1,
+                        lastReleaseDate: project.release_date,
+                        createdAt: project.created_at,
+                        verified: !!project.verified,
+                        license: project.license,
+                      });
+                      return (
+                        <span className={`${lc.color} ${lc.textColor} px-1.5 py-0.5 rounded text-[9px] font-bold`} title={lc.reason}>
+                          {lc.emoji} {lc.label}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <p className="text-[11px] text-fm-text mb-1">{project.short_desc}</p>
                   <div className="text-[10px] text-fm-text-light">

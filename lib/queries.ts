@@ -12,6 +12,10 @@ export interface Project {
   author: string;
   created_at: string;
   updated_at: string;
+  stars: number;
+  forks: number;
+  language: string;
+  verified: number;
 }
 
 export interface Release {
@@ -28,6 +32,7 @@ export interface ProjectWithRelease extends Project {
   latest_changes: string;
   latest_urgency: string;
   release_date: string;
+  release_count: number;
   tags: string[];
 }
 
@@ -41,7 +46,8 @@ export function getLatestReleases(limit = 20, offset = 0): ProjectWithRelease[] 
   const db = getDb();
   const rows = db.prepare(`
     SELECT p.*, r.version as latest_version, r.changes as latest_changes,
-           r.urgency as latest_urgency, r.created_at as release_date
+           r.urgency as latest_urgency, r.created_at as release_date,
+           (SELECT COUNT(*) FROM releases r3 WHERE r3.project_id = p.id) as release_count
     FROM projects p
     JOIN releases r ON r.project_id = p.id
     WHERE r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
