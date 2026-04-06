@@ -21,7 +21,9 @@
     "mcp": "npx tsx mcp/server.ts",
     "apikeys": "node scripts/apikeys.mjs",
     "monitor": "node scripts/monitor.mjs",
-    "monitor:dry": "node scripts/monitor.mjs --dry-run"
+    "monitor:dry": "node scripts/monitor.mjs --dry-run",
+    "enrich": "node scripts/enrich.mjs",
+    "enrich:dry": "node scripts/enrich.mjs --dry-run"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

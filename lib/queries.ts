@@ -229,3 +229,100 @@ export function rebuildSearchIndex(): void {
   const db = getDb();
   db.prepare("INSERT INTO projects_fts(projects_fts) VALUES('rebuild')").run();
 }
+
+export interface ProjectWithReadme extends ProjectWithRelease {
+  stars: number;
+  forks: number;
+  language: string;
+  readme_html: string;
+}
+
+/**
+ * @description Fetches a project by name including enrichment data (stars, forks, language, readme_html).
+ * @param name - The project name to look up
+ * @returns The project with release info, tags, and GitHub enrichment data, or null if not found
+ */
+export function getProjectWithReadme(name: string): ProjectWithReadme | null {
+  const db = getDb();
+  const row = db.prepare(`
+    SELECT p.*, p.stars, p.forks, p.language, p.readme_html,
+           r.version as latest_version, r.changes as latest_changes,
+           r.urgency as latest_urgency, r.created_at as release_date
+    FROM projects p
+    JOIN releases r ON r.project_id = p.id
+    WHERE p.name = ? AND r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+  `).get(name) as ProjectWithReadme | undefined;
+
+  if (!row) return null;
+  return { ...row, tags: getProjectTags(row.id) };
+}
+
+/**
+ * @description Finds projects similar to the given one by matching category or overlapping tags.
+ * @param projectId - The ID of the project to find similar projects for
+ * @param category - The category to match against
+ * @param tags - Array of tags to find overlap with
+ * @param limit - Maximum number of similar projects to return (default: 5)
+ * @returns Array of similar projects with release info and tags
+ */
+export function getSimilarProjects(
+  projectId: number,
+  category: string,
+  tags: string[],
+  limit = 5
+): ProjectWithRelease[] {
+  const db = getDb();
+
+  if (tags.length === 0) {
+    // Only match by category
+    const rows = db.prepare(`
+      SELECT p.*, r.version as latest_version, r.changes as latest_changes,
+             r.urgency as latest_urgency, r.created_at as release_date
+      FROM projects p
+      JOIN releases r ON r.project_id = p.id
+      WHERE p.id != ? AND p.category = ?
+        AND r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+      ORDER BY r.created_at DESC
+      LIMIT ?
+    `).all(projectId, category, limit) as ProjectWithRelease[];
+
+    return rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
+  }
+
+  const placeholders = tags.map(() => "?").join(", ");
+  const rows = db.prepare(`
+    SELECT DISTINCT p.*, r.version as latest_version, r.changes as latest_changes,
+           r.urgency as latest_urgency, r.created_at as release_date,
+           (CASE WHEN p.category = ? THEN 1 ELSE 0 END) +
+           (SELECT COUNT(*) FROM tags t WHERE t.project_id = p.id AND t.tag IN (${placeholders})) as relevance
+    FROM projects p
+    JOIN releases r ON r.project_id = p.id
+    WHERE p.id != ?
+      AND r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+      AND (p.category = ? OR p.id IN (SELECT t.project_id FROM tags t WHERE t.tag IN (${placeholders})))
+    ORDER BY relevance DESC, r.created_at DESC
+    LIMIT ?
+  `).all(category, ...tags, projectId, category, ...tags, limit) as (ProjectWithRelease & { relevance: number })[];
+
+  return rows.map(({ relevance: _relevance, ...row }) => ({ ...row, tags: getProjectTags(row.id) }));
+}
+
+/**
+ * @description Updates GitHub enrichment data for a project (stars, forks, language, readme_html).
+ * Also sets last_github_sync and readme_fetched_at to the current timestamp.
+ * @param projectId - The ID of the project to update
+ * @param data - Object containing stars, forks, language, and readme_html
+ */
+export function updateProjectGithubData(
+  projectId: number,
+  data: { stars: number; forks: number; language: string; readme_html: string }
+): void {
+  const db = getDb();
+  const now = new Date().toISOString();
+  db.prepare(`
+    UPDATE projects
+    SET stars = ?, forks = ?, language = ?, readme_html = ?,
+        last_github_sync = ?, readme_fetched_at = ?
+    WHERE id = ?
+  `).run(data.stars, data.forks, data.language, data.readme_html, now, now, projectId);
+}

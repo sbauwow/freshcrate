@@ -43,15 +43,11 @@ for INSERT/UPDATE/DELETE sync. `searchProjects()` uses FTS5 with BM25 ranking,
 falls back to LIKE if FTS unavailable. Tag search via LIKE UNION.
 
 ### 2.2 Package Detail Enrichment
-**Status:** Not started
-**Priority:** Medium
-**Effort:** Medium
-
-Extend project pages with:
-- README rendering (fetch from GitHub, cache in DB)
-- Star count / fork count (stored, refreshed periodically)
-- Dependency graph (parse package.json / pyproject.toml)
-- Similar packages (based on tags/category overlap)
+**Status:** DONE
+**Deliverable:** Migration 005 adds stars, forks, language, readme_html columns.
+`scripts/enrich.mjs` fetches GitHub metadata + README for all packages.
+Project pages show GitHub stats, rendered README, and similar packages.
+Run: `npm run enrich` (or `npm run enrich:dry`).
 
 ### 2.3 RSS/Atom Feed
 **Status:** DONE
@@ -59,12 +55,11 @@ Extend project pages with:
 link, author, category, and changes content.
 
 ### 2.4 Webhooks for New Packages
-**Status:** Not started
-**Priority:** Low
-**Effort:** Medium
-
-When a new package is submitted or a release is published, fire webhooks
-to registered URLs. Enables agent-to-agent notification.
+**Status:** DONE
+**Deliverable:** `lib/webhooks.ts` — register/fire/log webhooks with HMAC-SHA256
+signatures. Events: `new_package`, `new_release`. Auto-deactivates after 10
+consecutive failures. API: `POST/GET /api/webhooks`, `DELETE /api/webhooks/[id]`.
+Wired into POST /api/projects (fire-and-forget on new package).
 
 ---
 
@@ -110,14 +105,11 @@ Run: `npm run monitor` (or `npm run monitor:dry` for dry run).
 Designed for cron: `0 6 * * * cd /path/to/freshcrate && npm run monitor`
 
 ### 3.4 Package Comparison
-**Status:** Not started
-**Priority:** Low
-**Effort:** Medium
-
-Side-by-side comparison of packages:
-- `/compare?a=langchain&b=llamaindex`
-- Stars, releases, license, last update, tags overlap
-- Useful for agents evaluating tool choices
+**Status:** DONE
+**Deliverable:** `/compare?a=name1&b=name2` — side-by-side comparison page.
+Shows version, category, license, author, stars, forks, language, tags,
+release count, last release date. Highlights differences, shows shared tags.
+Package selection form when params missing. Nav link added.
 
 ---
 
@@ -163,6 +155,6 @@ Support `next export` for static site generation.
 
 ## Next Up
 
-**High-value Phase 2:** Package detail enrichment (2.2), webhooks (2.4)
-**Phase 3:** Package verification & trust (3.2), package comparison (3.4)
-**Phase 4:** Admin dashboard (4.2), multi-source import (4.3)
+**Phase 3:** Package verification & trust (3.2)
+**Phase 4:** Admin dashboard (4.2), multi-source import (4.3), static export (4.4)
+**Optional:** PostgreSQL migration (4.1) — only if write contention appears

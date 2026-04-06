@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getLatestReleases, getProjectByName, submitProject } from "@/lib/queries";
 import { CATEGORIES } from "@/lib/categories";
 import { hasApiKeys, extractBearerToken, validateApiKey } from "@/lib/auth";
+import { fireNewPackageEvent } from "@/lib/webhooks";
 
 export async function GET(request: NextRequest) {
   const limit = parseInt(request.nextUrl.searchParams.get("limit") || "20");
@@ -112,6 +113,16 @@ export async function POST(request: NextRequest) {
       version: data.version.slice(0, 50),
       changes: (data.changes || "").slice(0, 2000),
       tags: (data.tags || []).slice(0, 10),
+    });
+
+    // Fire webhook notification (fire and forget — don't await)
+    fireNewPackageEvent({
+      id: projectId,
+      name: data.name,
+      short_desc: data.short_desc,
+      category: data.category,
+      author: data.author,
+      version: data.version,
     });
 
     return NextResponse.json({ id: projectId, name: data.name }, { status: 201 });

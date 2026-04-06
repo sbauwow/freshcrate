@@ -38,6 +38,8 @@ export default function RootLayout({
               <span className="text-[#999]">|</span>
               <Link href="/submit" className="text-black hover:text-fm-link no-underline">submit</Link>
               <span className="text-[#999]">|</span>
+              <Link href="/compare" className="text-black hover:text-fm-link no-underline">compare</Link>
+              <span className="text-[#999]">|</span>
               <Link href="/api" className="text-black hover:text-fm-link no-underline">api</Link>
             </nav>
           </div>

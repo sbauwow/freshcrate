@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getProjectByName, getProjectReleases } from "@/lib/queries";
+import { getProjectByName, getProjectReleases, getProjectWithReadme, getSimilarProjects } from "@/lib/queries";
 import { notFound } from "next/navigation";
 
 export default async function ProjectPage({ params }: { params: Promise<{ name: string }> }) {
@@ -8,6 +8,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
   if (!project) notFound();
 
   const releases = getProjectReleases(project.id);
+  const enriched = getProjectWithReadme(name);
+  const similar = getSimilarProjects(project.id, project.category, project.tags, 5);
 
   const urgencyColors: Record<string, string> = {
     Low: "text-fm-urgency-low",
@@ -53,6 +55,19 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
           <p className="text-[11px] text-fm-text leading-relaxed">{project.description}</p>
         </div>
 
+        {/* README */}
+        {enriched?.readme_html && (
+          <div className="mb-6">
+            <h3 className="text-[12px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
+              README
+            </h3>
+            <div
+              className="text-[11px] text-fm-text leading-relaxed prose prose-sm max-w-none overflow-x-auto"
+              dangerouslySetInnerHTML={{ __html: enriched.readme_html }}
+            />
+          </div>
+        )}
+
         {/* Release history */}
         <div>
           <h3 className="text-[12px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
@@ -79,6 +94,26 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
             </tbody>
           </table>
         </div>
+
+        {/* Similar packages */}
+        {similar.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-[12px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
+              Similar Packages
+            </h3>
+            <div className="space-y-2">
+              {similar.map((p) => (
+                <div key={p.id} className="flex items-baseline gap-2 text-[11px]">
+                  <Link href={`/projects/${p.name}`} className="font-bold text-fm-link hover:text-fm-link-hover">
+                    {p.name}
+                  </Link>
+                  <span className="text-fm-text-light">{p.short_desc}</span>
+                  <span className="text-fm-text-light font-mono ml-auto shrink-0">{p.latest_version}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sidebar info */}
@@ -112,6 +147,37 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
             </div>
           </div>
         </div>
+
+        {/* GitHub stats badges */}
+        {enriched && (enriched.stars > 0 || enriched.forks > 0 || enriched.language) && (
+          <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
+            <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
+              GitHub Stats
+            </h3>
+            <div className="space-y-2 text-[11px]">
+              {enriched.stars > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-fm-text-light">⭐</span>
+                  <span className="font-bold">{enriched.stars.toLocaleString()}</span>
+                  <span className="text-fm-text-light">stars</span>
+                </div>
+              )}
+              {enriched.forks > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-fm-text-light">🍴</span>
+                  <span className="font-bold">{enriched.forks.toLocaleString()}</span>
+                  <span className="text-fm-text-light">forks</span>
+                </div>
+              )}
+              {enriched.language && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-fm-text-light">🔤</span>
+                  <span className="font-bold">{enriched.language}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {project.homepage_url && (
           <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
