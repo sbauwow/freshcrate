@@ -2,6 +2,24 @@ import Link from "next/link";
 import { getLatestReleases, getCategories, getStats } from "@/lib/queries";
 import ResearchFeed from "./components/research-feed";
 
+function LicensePill({ license }: { license: string }) {
+  // Permissive = green, Copyleft = yellow, Weak copyleft = blue, Unknown = gray
+  const l = license || "Unknown";
+  let color = "bg-gray-200 text-gray-700";          // Unknown / NOASSERTION
+  if (/^MIT|^ISC|^BSD|^Apache|^Unlicense|^0BSD|^CC0/i.test(l)) {
+    color = "bg-green-100 text-green-800";           // Permissive
+  } else if (/^GPL|^AGPL|^MPL/i.test(l)) {
+    color = "bg-yellow-100 text-yellow-800";         // Copyleft
+  } else if (/^LGPL|^EPL|^EUPL|^CDDL/i.test(l)) {
+    color = "bg-blue-100 text-blue-800";             // Weak copyleft
+  }
+  return (
+    <span className={`${color} px-1.5 py-0.5 rounded text-[9px] font-mono font-bold`}>
+      {l}
+    </span>
+  );
+}
+
 function UrgencyBadge({ urgency }: { urgency: string }) {
   const colors: Record<string, string> = {
     Low: "bg-fm-urgency-low",
@@ -90,7 +108,7 @@ export default function Home() {
                         </Link>
                       </span>
                       <span className="w-[100px] px-2 py-1 text-center border-l border-fm-border/30">
-                        <span className="text-fm-text">{project.license || "Unknown"}</span>
+                        <LicensePill license={project.license} />
                       </span>
                     </div>
                   </div>
