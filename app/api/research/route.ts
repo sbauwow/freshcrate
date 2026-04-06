@@ -83,7 +83,7 @@ async function fetchHuggingFacePapers(limit = 10): Promise<Paper[]> {
 async function fetchHuggingFaceTrending(limit = 10): Promise<TrendingModel[]> {
   try {
     const res = await fetch(
-      `https://huggingface.co/api/models?sort=trending&direction=-1&limit=${limit}`,
+      `https://huggingface.co/api/models?sort=trendingScore&direction=-1&limit=${limit}`,
       { next: { revalidate: 3600 } }
     );
     if (!res.ok) return [];
@@ -103,7 +103,7 @@ async function fetchHuggingFaceTrending(limit = 10): Promise<TrendingModel[]> {
 async function fetchHuggingFaceDatasets(limit = 8): Promise<TrendingDataset[]> {
   try {
     const res = await fetch(
-      `https://huggingface.co/api/datasets?sort=trending&direction=-1&limit=${limit}`,
+      `https://huggingface.co/api/datasets?sort=trendingScore&direction=-1&limit=${limit}`,
       { next: { revalidate: 3600 } }
     );
     if (!res.ok) return [];
