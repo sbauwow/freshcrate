@@ -142,7 +142,7 @@ export default function Home() {
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-[10px] text-fm-text-light">{timeAgo(project.release_date)}</div>
-                  <div className="text-[9px] text-fm-text-light mt-0.5">by {project.author}</div>
+                  <div className="text-[9px] text-fm-text-light mt-0.5">by <Link href={`/search?author=${encodeURIComponent(project.author)}`} className="text-fm-link hover:text-fm-link-hover">{project.author}</Link></div>
                 </div>
               </div>
             </div>

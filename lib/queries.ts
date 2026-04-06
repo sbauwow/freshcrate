@@ -153,13 +153,14 @@ export function searchProjects(query: string): ProjectWithRelease[] {
           OR p.id IN (
             SELECT t.project_id FROM tags t WHERE t.tag LIKE ?
           )
+          OR p.author LIKE ?
         )
       ORDER BY (
         CASE WHEN p.id IN (SELECT rowid FROM projects_fts WHERE projects_fts MATCH ?)
         THEN (SELECT bm25(projects_fts) FROM projects_fts WHERE projects_fts MATCH ? AND rowid = p.id)
         ELSE 0 END
       )
-    `).all(query, `%${query}%`, query, query) as ProjectWithRelease[];
+    `).all(query, `%${query}%`, `%${query}%`, query, query) as ProjectWithRelease[];
 
     return rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
   } catch {
@@ -172,9 +173,9 @@ export function searchProjects(query: string): ProjectWithRelease[] {
       JOIN releases r ON r.project_id = p.id
       LEFT JOIN tags t ON t.project_id = p.id
       WHERE r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
-        AND (p.name LIKE ? OR p.short_desc LIKE ? OR p.description LIKE ? OR t.tag LIKE ?)
+        AND (p.name LIKE ? OR p.short_desc LIKE ? OR p.description LIKE ? OR t.tag LIKE ? OR p.author LIKE ?)
       ORDER BY r.created_at DESC
-    `).all(like, like, like, like) as ProjectWithRelease[];
+    `).all(like, like, like, like, like) as ProjectWithRelease[];
 
     return rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
   }
