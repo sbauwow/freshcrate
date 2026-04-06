@@ -85,17 +85,24 @@ export default function RootLayout({
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-fm-border mt-8 py-4 text-center text-[10px] text-fm-text-light">
+        <footer
+          className="mt-8 py-5 text-center text-[10px] border-t"
+          style={{ background: "linear-gradient(180deg, #f8f8f8 0%, #f0eef5 50%, #e8e0f0 100%)", borderColor: "#d0c8e0" }}
+        >
           <div className="max-w-[1100px] mx-auto px-4">
-            🥩 freshmeat is dead. long live freshcrate 📦
+            <span style={{ color: "#8b7aa8" }}>
+              🥩 freshmeat is dead. long live freshcrate 📦
+            </span>
             <br />
-            <Link href="/api" className="text-fm-text-light hover:text-fm-link">API</Link>
-            {" | "}
-            <Link href="/submit" className="text-fm-text-light hover:text-fm-link">Submit a Package</Link>
-            {" | "}
-            <Link href="/privacy" className="text-fm-text-light hover:text-fm-link">Privacy</Link>
-            {" | "}
-            <Link href="/terms" className="text-fm-text-light hover:text-fm-link">Terms</Link>
+            <span className="inline-flex flex-wrap justify-center gap-0 mt-1">
+              <Link href="/api" className="hover:text-fm-link" style={{ color: "#9990b0" }}>API</Link>
+              <span style={{ color: "#c8c0d8" }}>{" | "}</span>
+              <Link href="/submit" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Submit</Link>
+              <span style={{ color: "#c8c0d8" }}>{" | "}</span>
+              <Link href="/privacy" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Privacy</Link>
+              <span style={{ color: "#c8c0d8" }}>{" | "}</span>
+              <Link href="/terms" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Terms</Link>
+            </span>
           </div>
         </footer>
         {/* Page view beacon — 1x1 transparent GIF, no JS, no cookies */}

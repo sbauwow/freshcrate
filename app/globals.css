@@ -52,3 +52,25 @@ a:hover {
   color: var(--fm-link-hover);
   text-decoration: underline;
 }
+
+/* Selection highlight — subtle vaporwave */
+::selection {
+  background: #e0c3fc;
+  color: #1a0a2e;
+}
+
+/* Scrollbar — thin, tinted */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+::-webkit-scrollbar-thumb {
+  background: #b8b8d0;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9090b0;
+}

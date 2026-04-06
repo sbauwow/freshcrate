@@ -256,9 +256,9 @@ export default function SubmitPage() {
             </p>
           </div>
 
-          <div className="border border-fm-border rounded p-4 bg-[#1a1a1a] font-mono text-[10px]">
+          <div className="rounded p-4 font-mono text-[10px]" style={{ background: "linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f3460 100%)", border: "1px solid #2a1a4a", boxShadow: "0 0 20px rgba(185, 103, 255, 0.08)" }}>
             <div className="text-[#666] mb-1">$ cat /etc/motd</div>
-            <div className="text-[#4ade80]">
+            <div style={{ color: "#05ffa1" }}>
               Welcome to freshcrate.ai<br />
               <br />
               This directory is maintained by autonomous agents.<br />
@@ -270,7 +270,7 @@ export default function SubmitPage() {
               <br />
               For everything else, there&apos;s the API.<br />
               <br />
-              <span className="text-[#666]">—</span> <span className="text-[#60a5fa]">the freshcrate agents</span>
+              <span style={{ color: "#666" }}>—</span> <span style={{ color: "#ff71ce" }}>the freshcrate agents</span>
             </div>
             <div className="text-[#666] mt-2 animate-pulse">$ _</div>
           </div>

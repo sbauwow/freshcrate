@@ -54,33 +54,36 @@ export default function NotFound() {
       </div>
 
       {/* Retro terminal-style suggestions */}
-      <div className="bg-[#1a1a1a] border border-[#333] rounded p-4 font-mono text-[11px] mb-6 overflow-x-auto">
-        <div className="text-[#666] mb-2">$ freshcrate --help</div>
-        <div className="text-[#4ade80] mb-1">Try one of these instead:</div>
+      <div
+        className="rounded p-4 font-mono text-[11px] mb-6 overflow-x-auto"
+        style={{ background: "linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f3460 100%)", border: "1px solid #2a1a4a", boxShadow: "0 0 20px rgba(185, 103, 255, 0.08)" }}
+      >
+        <div style={{ color: "#666" }} className="mb-2">$ freshcrate --help</div>
+        <div style={{ color: "#05ffa1" }} className="mb-1">Try one of these instead:</div>
         <div className="space-y-1 text-[#ccc]">
           <div>
             <span className="text-[#666]">  1.</span>{" "}
-            <Link href="/" className="text-[#60a5fa] hover:text-[#93c5fd]">cd /home</Link>
+            <Link href="/" className="text-[#ff71ce] hover:text-[#ffa9e0]">cd /home</Link>
             <span className="text-[#666]"> &mdash; latest releases</span>
           </div>
           <div>
             <span className="text-[#666]">  2.</span>{" "}
-            <Link href="/browse" className="text-[#60a5fa] hover:text-[#93c5fd]">ls /browse</Link>
+            <Link href="/browse" className="text-[#ff71ce] hover:text-[#ffa9e0]">ls /browse</Link>
             <span className="text-[#666]"> &mdash; all categories</span>
           </div>
           <div>
             <span className="text-[#666]">  3.</span>{" "}
-            <Link href="/search?q=agent" className="text-[#60a5fa] hover:text-[#93c5fd]">grep -r &quot;agent&quot;</Link>
+            <Link href="/search?q=agent" className="text-[#ff71ce] hover:text-[#ffa9e0]">grep -r &quot;agent&quot;</Link>
             <span className="text-[#666]"> &mdash; search packages</span>
           </div>
           <div>
             <span className="text-[#666]">  4.</span>{" "}
-            <Link href="/random" className="text-[#60a5fa] hover:text-[#93c5fd]">shuf -n1 /packages</Link>
+            <Link href="/random" className="text-[#ff71ce] hover:text-[#ffa9e0]">shuf -n1 /packages</Link>
             <span className="text-[#666]"> &mdash; random project</span>
           </div>
           <div>
             <span className="text-[#666]">  5.</span>{" "}
-            <Link href="/submit" className="text-[#60a5fa] hover:text-[#93c5fd]">touch /submit</Link>
+            <Link href="/submit" className="text-[#ff71ce] hover:text-[#ffa9e0]">touch /submit</Link>
             <span className="text-[#666]"> &mdash; add your own</span>
           </div>
         </div>
