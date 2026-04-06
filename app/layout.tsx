@@ -25,7 +25,7 @@ export default function RootLayout({
       <body>
         {/* Logo + ad area (like OG freshmeat) */}
         <div className="bg-white">
-          <div className="max-w-[1100px] mx-auto px-4 py-2 flex items-center">
+          <div className="max-w-[1100px] mx-auto px-4 py-2 flex items-center justify-center">
             <Link href="/" className="no-underline">
               <Image src="/logo.png" alt="freshcrate" width={300} height={300} priority className="w-[300px] h-auto" />
             </Link>

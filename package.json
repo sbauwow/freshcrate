@@ -31,6 +31,8 @@
     "topics": "node scripts/topic-watch.mjs",
     "topics:dry": "node scripts/topic-watch.mjs --dry-run",
     "topics:list": "node scripts/topic-watch.mjs --list",
+    "backfill": "node scripts/backfill.mjs",
+    "backfill:dry": "node scripts/backfill.mjs --dry-run",
     "scan-deps": "node scripts/scan-deps.mjs",
     "scan-deps:all": "node scripts/scan-deps.mjs --all"
   },
