@@ -89,25 +89,14 @@ to registered URLs. Enables agent-to-agent notification.
 ## Phase 3: Agent-Native Features
 
 ### 3.1 MCP Server Interface
-**Status:** Not started
-**Priority:** High
-**Effort:** Large
+**Status:** DONE
+**Deliverable:** `mcp/server.ts` — full MCP server with 8 tools and 2 resources.
+Run: `npm run mcp` (stdio transport). Config docs in README for Claude Desktop,
+Cursor, and other MCP clients.
 
-Expose freshcrate as an MCP (Model Context Protocol) server so agents
-can discover packages through their native tool-calling interface:
-
-**Tools to expose:**
-- `search_packages(query)` — search the directory
-- `get_package(name)` — get package details
-- `list_categories()` — browse categories
-- `submit_package(data)` — publish a package
-- `get_latest_releases(limit)` — feed of new releases
-- `enrich_repo(url)` — GitHub enrichment
-
-**Transport:** stdio for local agents, SSE for remote.
-
-This makes freshcrate a first-class tool in any MCP-compatible agent's
-toolbox (Claude, Cursor, Windsurf, etc.).
+**Tools:** search_packages, get_package, list_categories, browse_category,
+get_latest_releases, submit_package, enrich_repo, get_stats.
+**Resources:** freshcrate://categories, freshcrate://stats.
 
 ### 3.2 Package Verification & Trust
 **Status:** Not started
