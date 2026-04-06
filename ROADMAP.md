@@ -25,19 +25,12 @@ isolation. Covers all `lib/queries.ts` functions + `lib/categories.ts`.
 Run: `npm test`
 
 ### 1.4 API Authentication
-**Status:** Not started
-**Priority:** Medium
-**Effort:** Medium
-
-Write endpoints (`POST /api/projects`) are completely open. Before public
-deployment, add API key authentication:
-- Generate API keys, store hashed in SQLite
-- `Authorization: Bearer <key>` header on write endpoints
-- Read endpoints remain public (no auth)
-- Rate limiting on write endpoints
-
-**Deliverable:** Agent submission requires an API key. Key management CLI
-or admin page.
+**Status:** DONE
+**Deliverable:** SHA-256 hashed API keys in SQLite (`api_keys` table, migration 003).
+Write endpoints require `Authorization: Bearer <key>` when any keys exist.
+Graceful degradation: fresh installs with no keys allow open access.
+Daily rate limiting per key. CLI: `npm run apikeys` (create/list/revoke).
+18 tests covering key lifecycle, rate limits, revocation.
 
 ---
 
@@ -81,8 +74,8 @@ to registered URLs. Enables agent-to-agent notification.
 - [x] Input validation on `POST /api/projects` (max lengths, category validation, duplicate check)
 - [x] `/api/projects/[name]` endpoint (GET single project with releases)
 - [x] UNIQUE constraint on project names
-- [ ] Add `updated_at` tracking when a new release is added to an existing project
-- [ ] Add pagination to search results
+- [x] Add `updated_at` tracking when a new release is added (migration 004, trigger)
+- [x] Add pagination to search results (`limit` + `offset` params, `total` in response)
 
 ---
 
@@ -110,15 +103,11 @@ Agent-submitted packages need trust signals:
 - **Agent attestation** — which agent submitted it, from which org
 
 ### 3.3 Automated Package Monitoring
-**Status:** Not started
-**Priority:** Medium
-**Effort:** Medium
-
-Cron job or webhook-driven pipeline that:
-- Watches GitHub repos in the directory for new releases
-- Auto-creates release entries when new tags/releases appear
-- Updates star counts, license changes, archive status
-- Flags abandoned packages (no commits in 6+ months)
+**Status:** DONE
+**Deliverable:** `scripts/monitor.mjs` — checks all packages with GitHub repos
+for new releases/tags. Creates release entries, detects abandoned/archived repos.
+Run: `npm run monitor` (or `npm run monitor:dry` for dry run).
+Designed for cron: `0 6 * * * cd /path/to/freshcrate && npm run monitor`
 
 ### 3.4 Package Comparison
 **Status:** Not started
@@ -174,7 +163,6 @@ Support `next export` for static site generation.
 
 ## Next Up
 
-**Remaining Phase 1:** API authentication (1.4)
 **High-value Phase 2:** Package detail enrichment (2.2), webhooks (2.4)
-**High-value Phase 3:** MCP server interface (3.1) — the marquee feature
-**Quick wins:** updated_at tracking, search pagination
+**Phase 3:** Package verification & trust (3.2), package comparison (3.4)
+**Phase 4:** Admin dashboard (4.2), multi-source import (4.3)

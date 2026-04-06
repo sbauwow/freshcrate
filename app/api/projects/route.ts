@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLatestReleases, getProjectByName, submitProject } from "@/lib/queries";
 import { CATEGORIES } from "@/lib/categories";
+import { hasApiKeys, extractBearerToken, validateApiKey } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const limit = parseInt(request.nextUrl.searchParams.get("limit") || "20");
@@ -11,6 +12,22 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check: if API keys exist, require one
+    if (hasApiKeys()) {
+      const token = extractBearerToken(request.headers.get("authorization"));
+      if (!token) {
+        return NextResponse.json(
+          { error: "Authentication required. Include: Authorization: Bearer <api_key>" },
+          { status: 401 }
+        );
+      }
+      const auth = validateApiKey(token);
+      if (!auth.valid) {
+        const status = auth.error.includes("Rate limit") ? 429 : 401;
+        return NextResponse.json({ error: auth.error }, { status });
+      }
+    }
+
     const data = await request.json();
 
     // Required fields

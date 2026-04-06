@@ -6,6 +6,19 @@ export async function GET(request: NextRequest) {
   if (!q) {
     return NextResponse.json({ error: "Missing query parameter: q" }, { status: 400 });
   }
-  const projects = searchProjects(q);
-  return NextResponse.json({ query: q, projects, count: projects.length });
+
+  const limit = Math.min(parseInt(request.nextUrl.searchParams.get("limit") || "20"), 100);
+  const offset = Math.max(parseInt(request.nextUrl.searchParams.get("offset") || "0"), 0);
+
+  const allResults = searchProjects(q);
+  const paginated = allResults.slice(offset, offset + limit);
+
+  return NextResponse.json({
+    query: q,
+    projects: paginated,
+    count: paginated.length,
+    total: allResults.length,
+    limit,
+    offset,
+  });
 }

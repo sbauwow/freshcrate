@@ -18,7 +18,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "migrate": "node scripts/migrate.mjs",
-    "mcp": "npx tsx mcp/server.ts"
+    "mcp": "npx tsx mcp/server.ts",
+    "apikeys": "node scripts/apikeys.mjs",
+    "monitor": "node scripts/monitor.mjs",
+    "monitor:dry": "node scripts/monitor.mjs --dry-run"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
