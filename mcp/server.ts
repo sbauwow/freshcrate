@@ -420,6 +420,49 @@ server.tool(
   }
 );
 
+server.tool(
+  "list_watched_topics",
+  "List all GitHub topics being watched for new packages.",
+  {},
+  async () => {
+    const db = (await import("../lib/db.js")).getDb();
+    const topics = db
+      .prepare(
+        "SELECT topic, active, last_checked_at, repos_found, repos_added FROM watched_topics ORDER BY topic"
+      )
+      .all();
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({ topics, count: topics.length }, null, 2),
+        },
+      ],
+    };
+  }
+);
+
+server.tool(
+  "watch_topic",
+  "Add a new GitHub topic to watch for new packages. The topic watcher polls GitHub periodically and auto-ingests new repos.",
+  {
+    topic: z.string().describe("GitHub topic to watch (e.g., 'ai-agent', 'mcp-server')"),
+  },
+  async ({ topic }) => {
+    const clean = topic.toLowerCase().replace(/[^a-z0-9-]/g, "-").slice(0, 50);
+    const db = (await import("../lib/db.js")).getDb();
+    db.prepare("INSERT OR IGNORE INTO watched_topics (topic) VALUES (?)").run(clean);
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({ topic: clean, status: "watching" }, null, 2),
+        },
+      ],
+    };
+  }
+);
+
 // ── Resources ─────────────────────────────────────────────────────────
 
 server.resource(

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { CATEGORIES, LICENSES } from "@/lib/categories";
 
 interface EnrichedData {
@@ -27,12 +26,12 @@ interface EnrichedData {
 }
 
 export default function SubmitPage() {
-  const router = useRouter();
-  const [step, setStep] = useState<"input" | "enriching" | "review">("input");
+  const [step, setStep] = useState<"input" | "enriching" | "review" | "submitted">("input");
   const [repoUrl, setRepoUrl] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState<EnrichedData | null>(null);
+  const [submittedName, setSubmittedName] = useState("");
 
   // Step 1: User pastes a repo URL, agent fetches + enriches
   async function handleEnrich(e: React.FormEvent) {
@@ -95,7 +94,8 @@ export default function SubmitPage() {
       }
 
       const result = await res.json();
-      router.push(`/projects/${result.name}`);
+      setSubmittedName(result.name || payload.name);
+      setStep("submitted");
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -115,6 +115,24 @@ export default function SubmitPage() {
       {error && (
         <div className="bg-red-50 border border-red-300 text-red-700 text-[11px] px-3 py-2 rounded mb-4">
           {error}
+        </div>
+      )}
+
+      {/* Submitted confirmation */}
+      {step === "submitted" && (
+        <div className="py-8 text-center">
+          <div className="text-[24px] mb-3">&#x1f4e6;</div>
+          <h3 className="text-[14px] font-bold text-fm-green mb-2">Submission received!</h3>
+          <p className="text-[11px] text-fm-text mb-4">
+            <strong>{submittedName}</strong> has been queued for review.<br />
+            We&apos;ll review it and publish it shortly.
+          </p>
+          <button
+            onClick={() => { setStep("input"); setData(null); setError(""); setSubmittedName(""); }}
+            className="text-[11px] text-fm-link hover:text-fm-link-hover underline cursor-pointer"
+          >
+            Submit another package
+          </button>
         </div>
       )}
 

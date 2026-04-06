@@ -28,6 +28,9 @@
     "verify:dry": "node scripts/verify.mjs --dry-run",
     "pipeline": "node scripts/pipeline.mjs",
     "pipeline:clear": "node scripts/pipeline.mjs --clear",
+    "topics": "node scripts/topic-watch.mjs",
+    "topics:dry": "node scripts/topic-watch.mjs --dry-run",
+    "topics:list": "node scripts/topic-watch.mjs --list",
     "scan-deps": "node scripts/scan-deps.mjs",
     "scan-deps:all": "node scripts/scan-deps.mjs --all"
   },

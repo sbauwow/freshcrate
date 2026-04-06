@@ -77,15 +77,26 @@ export default function Home() {
                       </Link>
                     ))}
                   </div>
+                  {/* OG freshmeat-style metadata bar */}
+                  <div className="mt-1.5 border border-fm-border/60 rounded overflow-hidden text-[9px]">
+                    <div className="flex bg-[#dddddd]">
+                      <span className="flex-1 px-2 py-0.5 font-bold text-fm-text">Category</span>
+                      <span className="w-[100px] px-2 py-0.5 font-bold text-fm-text text-center border-l border-fm-border/60">License</span>
+                    </div>
+                    <div className="flex bg-white">
+                      <span className="flex-1 px-2 py-1">
+                        <Link href={`/browse?category=${encodeURIComponent(project.category)}`} className="text-fm-link hover:text-fm-link-hover">
+                          {project.category}
+                        </Link>
+                      </span>
+                      <span className="w-[100px] px-2 py-1 text-center border-l border-fm-border/30">
+                        <span className="text-fm-text">{project.license || "Unknown"}</span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-[10px] text-fm-text-light">{timeAgo(project.release_date)}</div>
-                  <Link
-                    href={`/browse?category=${encodeURIComponent(project.category)}`}
-                    className="text-[9px] text-fm-text-light hover:text-fm-link"
-                  >
-                    {project.category}
-                  </Link>
                   <div className="text-[9px] text-fm-text-light mt-0.5">by {project.author}</div>
                 </div>
               </div>
