@@ -6,7 +6,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const results = q ? searchProjects(q) : [];
 
   return (
-    <div className="flex gap-5">
+    <div className="flex flex-col md:flex-row gap-5">
       <div className="flex-1 min-w-0">
         <div className="border-b-2 border-fm-green pb-1 mb-3">
           <h2 className="text-[14px] font-bold text-fm-green">

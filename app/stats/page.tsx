@@ -90,6 +90,7 @@ export default function StatsPage() {
 
       {/* ========== TOTALS ========== */}
       <SectionHeader id="totals" title="Totals" />
+      <div className="overflow-x-auto">
       <table className="border-collapse text-[11px] w-full max-w-[600px]">
         <tbody>
           {[
@@ -111,12 +112,14 @@ export default function StatsPage() {
           ))}
         </tbody>
       </table>
+      </div>
 
       {/* ========== TOP 20 BY STARS ========== */}
       <SectionHeader id="most-starred" title="Top 20 — Most Starred" />
       {stats.topByStars.length === 0 ? (
         <p className="text-[11px] text-fm-text-light italic">No star data available yet.</p>
       ) : (
+        <div className="overflow-x-auto">
         <table className="border-collapse text-[11px] w-full">
           <thead>
             <tr className="bg-fm-sidebar-bg">
@@ -151,6 +154,7 @@ export default function StatsPage() {
             })}
           </tbody>
         </table>
+        </div>
       )}
 
       {/* ========== TOP 20 BY VITALITY ========== */}
@@ -158,6 +162,7 @@ export default function StatsPage() {
       {stats.topByVitality.length === 0 ? (
         <p className="text-[11px] text-fm-text-light italic">No releases in the last 30 days. The crates are resting.</p>
       ) : (
+        <div className="overflow-x-auto">
         <table className="border-collapse text-[11px] w-full">
           <thead>
             <tr className="bg-fm-sidebar-bg">
@@ -194,6 +199,7 @@ export default function StatsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       {/* ========== TOP 20 BEST VERIFIED ========== */}
@@ -201,6 +207,7 @@ export default function StatsPage() {
       {stats.topVerified.length === 0 ? (
         <p className="text-[11px] text-fm-text-light italic">No verified packages yet. Trust no one.</p>
       ) : (
+        <div className="overflow-x-auto">
         <table className="border-collapse text-[11px] w-full">
           <thead>
             <tr className="bg-fm-sidebar-bg">
@@ -237,10 +244,12 @@ export default function StatsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       {/* ========== LICENSE BREAKDOWN ========== */}
       <SectionHeader id="license-breakdown" title="License Breakdown" />
+      <div className="overflow-x-auto">
       <table className="border-collapse text-[11px] w-full max-w-[600px]">
         <thead>
           <tr className="bg-fm-sidebar-bg">
@@ -262,12 +271,14 @@ export default function StatsPage() {
           ))}
         </tbody>
       </table>
+      </div>
 
       {/* ========== LANGUAGE BREAKDOWN ========== */}
       <SectionHeader id="language-breakdown" title="Language Breakdown" />
       {stats.languageBreakdown.length === 0 ? (
         <p className="text-[11px] text-fm-text-light italic">No language data available.</p>
       ) : (
+        <div className="overflow-x-auto">
         <table className="border-collapse text-[11px] w-full max-w-[600px]">
           <thead>
             <tr className="bg-fm-sidebar-bg">
@@ -289,6 +300,7 @@ export default function StatsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       {/* ========== AGENT HALL OF FAME ========== */}
@@ -296,6 +308,7 @@ export default function StatsPage() {
       <p className="text-[10px] text-fm-text-light mb-2 italic">
         Dubious achievements in open-source software. No agents were harmed in the making of these awards.
       </p>
+      <div className="overflow-x-auto">
       <table className="border-collapse text-[11px] w-full">
         <thead>
           <tr className="bg-fm-sidebar-bg">
@@ -398,6 +411,7 @@ export default function StatsPage() {
           )}
         </tbody>
       </table>
+      </div>
 
       {/* ========== FUN FACTS ========== */}
       <SectionHeader id="fun-facts" title="🎲 Fun Facts" />

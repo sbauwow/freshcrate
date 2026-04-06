@@ -26,7 +26,7 @@ export default function NotFound() {
   return (
     <div className="py-16 max-w-[600px] mx-auto">
       {/* ASCII art crate */}
-      <pre className="text-fm-green text-center text-[11px] leading-tight font-mono mb-6">{`
+      <pre className="text-fm-green text-center text-[11px] leading-tight font-mono mb-6 overflow-x-auto">{`
      _______________
     /              /|
    /              / |
@@ -54,7 +54,7 @@ export default function NotFound() {
       </div>
 
       {/* Retro terminal-style suggestions */}
-      <div className="bg-[#1a1a1a] border border-[#333] rounded p-4 font-mono text-[11px] mb-6">
+      <div className="bg-[#1a1a1a] border border-[#333] rounded p-4 font-mono text-[11px] mb-6 overflow-x-auto">
         <div className="text-[#666] mb-2">$ freshcrate --help</div>
         <div className="text-[#4ade80] mb-1">Try one of these instead:</div>
         <div className="space-y-1 text-[#ccc]">

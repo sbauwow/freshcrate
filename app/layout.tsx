@@ -38,7 +38,7 @@ export default function RootLayout({
         {/* Nav bar - gray like OG */}
         <div className="bg-[#dddddd] border-b border-[#6f6f6f]">
           <div className="max-w-[1100px] mx-auto px-4 py-1.5 flex items-center justify-between">
-            <nav className="flex gap-1 text-[11px] font-bold">
+            <nav className="flex flex-wrap gap-1 text-[11px] font-bold">
               <Link href="/" className="text-black hover:text-fm-link no-underline">home</Link>
               <span className="text-[#999]">|</span>
               <Link href="/browse" className="text-black hover:text-fm-link no-underline">browse</Link>
@@ -59,7 +59,7 @@ export default function RootLayout({
 
         {/* Search bar - light blue like OG */}
         <div className="bg-[#bbddff] border-b border-[#6f6f6f]">
-          <div className="max-w-[1100px] mx-auto px-4 py-1.5 flex items-center gap-2">
+          <div className="max-w-[1100px] mx-auto px-4 py-1.5 flex flex-wrap items-center gap-2">
             <label className="text-[11px] font-bold text-black">Search for</label>
             <form action="/search" method="GET" className="flex items-center gap-1">
               <input

@@ -23,7 +23,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
   };
 
   return (
-    <div className="flex gap-5">
+    <div className="flex flex-col md:flex-row gap-5">
       <div className="flex-1 min-w-0">
         {/* Breadcrumb */}
         <div className="text-[10px] text-fm-text-light mb-3">
@@ -40,7 +40,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
         <div className="border-b-2 border-fm-green pb-3 mb-4">
           <h2 className="text-[18px] font-bold text-fm-green mb-1">{project.name}</h2>
           <p className="text-[12px] text-fm-text mb-2">{project.short_desc}</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {project.tags.map((tag) => (
               <Link
                 key={tag}
@@ -77,26 +77,28 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
           <h3 className="text-[12px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
             Release History
           </h3>
-          <table className="w-full text-[11px]">
-            <thead>
-              <tr className="text-left text-fm-text-light border-b border-fm-border">
-                <th className="py-1 font-bold">Version</th>
-                <th className="py-1 font-bold">Changes</th>
-                <th className="py-1 font-bold">Urgency</th>
-                <th className="py-1 font-bold text-right">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {releases.map((r) => (
-                <tr key={r.id} className="border-b border-fm-border/30">
-                  <td className="py-1.5 font-mono font-bold">{r.version}</td>
-                  <td className="py-1.5">{r.changes}</td>
-                  <td className={`py-1.5 font-bold ${urgencyColors[r.urgency] || ""}`}>{r.urgency}</td>
-                  <td className="py-1.5 text-right text-fm-text-light">{new Date(r.created_at).toLocaleDateString()}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[11px]">
+              <thead>
+                <tr className="text-left text-fm-text-light border-b border-fm-border">
+                  <th className="py-1 font-bold">Version</th>
+                  <th className="py-1 font-bold">Changes</th>
+                  <th className="py-1 font-bold">Urgency</th>
+                  <th className="py-1 font-bold text-right">Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {releases.map((r) => (
+                  <tr key={r.id} className="border-b border-fm-border/30">
+                    <td className="py-1.5 font-mono font-bold">{r.version}</td>
+                    <td className="py-1.5">{r.changes}</td>
+                    <td className={`py-1.5 font-bold ${urgencyColors[r.urgency] || ""}`}>{r.urgency}</td>
+                    <td className="py-1.5 text-right text-fm-text-light">{new Date(r.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Dependencies & License Audit */}
@@ -129,7 +131,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
       </div>
 
       {/* Sidebar info */}
-      <aside className="w-[220px] shrink-0">
+      <aside className="w-full md:w-[220px] md:shrink-0">
         <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
           <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
             Project Info

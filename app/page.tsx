@@ -53,7 +53,7 @@ export default function Home() {
   const stats = getStats();
 
   return (
-    <div className="flex gap-5">
+    <div className="flex flex-col md:flex-row gap-5">
       {/* Main content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-3 border-b-2 border-fm-green pb-1">
@@ -100,7 +100,7 @@ export default function Home() {
                   <div className="text-[10px] text-fm-text-light">
                     <span className="italic">&ldquo;{project.latest_changes}&rdquo;</span>
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
                     {project.tags.map((tag) => (
                       <Link
                         key={tag}
@@ -140,7 +140,7 @@ export default function Home() {
       </div>
 
       {/* Sidebar */}
-      <aside className="w-[220px] shrink-0">
+      <aside className="w-full md:w-[220px] md:shrink-0">
         {/* Stats box */}
         <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
           <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">

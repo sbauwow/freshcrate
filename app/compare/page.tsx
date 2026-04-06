@@ -180,6 +180,7 @@ export default async function ComparePage({
       </h2>
 
       {/* Comparison table */}
+      <div className="overflow-x-auto">
       <table className="w-full text-[11px] text-fm-text border-collapse mb-6">
         <thead>
           <tr className="border-b-2 border-fm-green">
@@ -253,6 +254,7 @@ export default async function ComparePage({
           </tr>
         </tbody>
       </table>
+      </div>
 
       {/* Overlapping tags */}
       {overlapping.length > 0 && (

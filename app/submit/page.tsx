@@ -194,7 +194,7 @@ export default function SubmitPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="bg-white border border-fm-border rounded p-3">
               <div className="text-[10px] font-bold text-fm-green mb-1">🔭 Discovery</div>
               <p className="text-[10px] text-fm-text-light leading-relaxed">

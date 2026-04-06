@@ -8,7 +8,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: Promi
   const projects = category ? getProjectsByCategory(category) : [];
 
   return (
-    <div className="flex gap-5">
+    <div className="flex flex-col md:flex-row gap-5">
       <div className="flex-1 min-w-0">
         <div className="border-b-2 border-fm-green pb-1 mb-3">
           <h2 className="text-[14px] font-bold text-fm-green">
@@ -17,7 +17,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: Promi
         </div>
 
         {!category ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {categories.map((cat) => (
               <Link
                 key={cat.category}
@@ -61,7 +61,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: Promi
       </div>
 
       {/* Sidebar */}
-      <aside className="w-[220px] shrink-0">
+      <aside className="w-full md:w-[220px] md:shrink-0">
         <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3">
           <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
             All Categories

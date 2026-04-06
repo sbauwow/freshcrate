@@ -37,8 +37,7 @@ yarn-error.log*
 # freshcrate oauth token cache
 .freshcrate-token
 
-# database (auto-created on first run)
-*.db
+# WAL journal files (not needed in git)
 *.db-shm
 *.db-wal
 
