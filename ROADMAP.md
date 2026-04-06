@@ -4,60 +4,25 @@ Last updated: 2026-04-05
 
 ---
 
-## Phase 1: Foundation Hardening (Current)
-
-The app works end-to-end but has gaps that block reliable agent workflows
-and production deployment.
+## Phase 1: Foundation Hardening
 
 ### 1.1 Extract Shared Category Rules
-**Status:** Not started
-**Priority:** High
-**Effort:** Small
-
-Category classification rules are duplicated in three places:
-- `app/api/enrich/route.ts`
-- `scripts/populate.mjs`
-- `app/submit/page.tsx` (CATEGORIES array)
-
-Extract to `lib/categories.ts` as a shared module. The populate script
-runs standalone (Node ESM, not through Next.js), so the shared module
-must be plain TypeScript compiled to JS, or use a `.mjs` extension with
-no TS-only syntax.
-
-**Deliverable:** Single source of truth for categories. All three consumers
-import from the same place. Adding a category = one file change.
+**Status:** DONE
+**Deliverable:** `lib/categories.ts` — single source of truth for categories,
+category rules, and licenses. Used by enrich API, submit page, and populate script.
 
 ### 1.2 Database Migrations
-**Status:** Not started
-**Priority:** High
-**Effort:** Medium
-
-Currently, schema changes require deleting the database. This is fine for
-development but blocks production deployment.
-
-Options (in order of preference):
-1. **Simple migration runner** — numbered SQL files in `migrations/`, applied
-   in order, tracked in a `_migrations` table. No dependencies needed.
-2. **Drizzle** — type-safe ORM with migration generation. Heavier but gives
-   type-safe queries for free.
-3. **Manual ALTER TABLE** — lowest effort, highest risk of drift.
-
-**Deliverable:** `npm run migrate` command that applies pending migrations.
-Schema versioned in git.
+**Status:** DONE
+**Deliverable:** Simple SQL migration runner in `lib/migrate.ts`. Numbered `.sql`
+files in `migrations/`. Tracked in `_migrations` table. CLI: `npm run migrate`.
+- `001_initial_schema.sql` — projects, releases, tags tables
+- `002_fts5_search.sql` — FTS5 virtual table with sync triggers
 
 ### 1.3 Test Suite
-**Status:** Not started
-**Priority:** High
-**Effort:** Medium
-
-Add Vitest with:
-- Unit tests for `lib/queries.ts` (use in-memory SQLite)
-- API route tests (call handlers directly)
-- Schema validation tests (ensure seed data matches expected shape)
-
-Target: every exported function in `lib/queries.ts` has at least one test.
-
-**Deliverable:** `npm test` runs green. CI-ready.
+**Status:** DONE
+**Deliverable:** Vitest with 31 tests across 2 files. In-memory SQLite for
+isolation. Covers all `lib/queries.ts` functions + `lib/categories.ts`.
+Run: `npm test`
 
 ### 1.4 API Authentication
 **Status:** Not started
@@ -79,23 +44,10 @@ or admin page.
 ## Phase 2: Search & Discovery
 
 ### 2.1 FTS5 Full-Text Search
-**Status:** Not started
-**Priority:** High
-**Effort:** Medium
-
-Current search uses `LIKE %query%` which is slow and misses partial matches.
-SQLite FTS5 is built-in and perfect for this:
-
-```sql
-CREATE VIRTUAL TABLE projects_fts USING fts5(
-  name, short_desc, description, tags,
-  content=projects, content_rowid=id
-);
-```
-
-Triggers to keep FTS in sync with the main table. Ranked results with BM25.
-
-**Deliverable:** Sub-millisecond full-text search with relevance ranking.
+**Status:** DONE
+**Deliverable:** SQLite FTS5 virtual table (`projects_fts`) with triggers
+for INSERT/UPDATE/DELETE sync. `searchProjects()` uses FTS5 with BM25 ranking,
+falls back to LIKE if FTS unavailable. Tag search via LIKE UNION.
 
 ### 2.2 Package Detail Enrichment
 **Status:** Not started
@@ -109,15 +61,9 @@ Extend project pages with:
 - Similar packages (based on tags/category overlap)
 
 ### 2.3 RSS/Atom Feed
-**Status:** Not started
-**Priority:** Medium
-**Effort:** Small
-
-freshmeat.net was famous for its RSS feeds. Add:
-- `/feed.xml` — latest releases (Atom format)
-- `/feed/category/<name>.xml` — per-category feeds
-
-Agents can subscribe to these for package monitoring.
+**Status:** DONE
+**Deliverable:** `/feed.xml` — Atom feed of latest 50 releases with title,
+link, author, category, and changes content.
 
 ### 2.4 Webhooks for New Packages
 **Status:** Not started
@@ -125,10 +71,18 @@ Agents can subscribe to these for package monitoring.
 **Effort:** Medium
 
 When a new package is submitted or a release is published, fire webhooks
-to registered URLs. Enables agent-to-agent notification:
-- Agent A publishes a package
-- freshcrate fires webhook
-- Agent B discovers it and evaluates it
+to registered URLs. Enables agent-to-agent notification.
+
+---
+
+## Phase 2.5: Good First Issues (DONE)
+
+- [x] JSDoc comments on all exported functions in `lib/queries.ts`
+- [x] Input validation on `POST /api/projects` (max lengths, category validation, duplicate check)
+- [x] `/api/projects/[name]` endpoint (GET single project with releases)
+- [x] UNIQUE constraint on project names
+- [ ] Add `updated_at` tracking when a new release is added to an existing project
+- [ ] Add pagination to search results
 
 ---
 
@@ -197,10 +151,7 @@ Side-by-side comparison of packages:
 **Effort:** Large
 
 SQLite handles the expected load (thousands of packages, moderate traffic).
-Only migrate if:
-- Write contention becomes measurable
-- Need full-text search features beyond FTS5
-- Deploying to platforms that don't support persistent disk
+Only migrate if write contention becomes measurable.
 
 ### 4.2 Admin Dashboard
 **Status:** Not started
@@ -228,33 +179,13 @@ Extend the populate pipeline beyond GitHub:
 **Priority:** Low
 **Effort:** Small
 
-For maximum portability, support `next export` to generate a static site.
-Would require pre-rendering all project pages and replacing dynamic API
-calls with static JSON. Good for archival or mirroring.
+Support `next export` for static site generation.
 
 ---
 
-## Contribution Priorities
+## Next Up
 
-If you're an agent or contributor looking for what to work on:
-
-**High impact, low effort (start here):**
-1. Extract shared category rules (1.1)
-2. Add RSS/Atom feed (2.3)
-3. Add Vitest for lib/queries.ts (1.3)
-
-**High impact, medium effort:**
-4. FTS5 search (2.1)
-5. Database migrations (1.2)
-6. API authentication (1.4)
-
-**High impact, high effort (needs design):**
-7. MCP server interface (3.1)
-8. Automated package monitoring (3.3)
-
-**Good first issues for agents:**
-- Add JSDoc comments to all exported functions in `lib/queries.ts`
-- Add input validation to `POST /api/projects` (max lengths, URL format)
-- Add `updated_at` tracking when a new release is added to an existing project
-- Add a `/api/projects/:name` endpoint (currently only page-based, not API)
-- Add pagination to search results
+**Remaining Phase 1:** API authentication (1.4)
+**High-value Phase 2:** Package detail enrichment (2.2), webhooks (2.4)
+**High-value Phase 3:** MCP server interface (3.1) — the marquee feature
+**Quick wins:** updated_at tracking, search pagination
