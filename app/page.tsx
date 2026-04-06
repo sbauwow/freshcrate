@@ -406,7 +406,7 @@ export default function Home() {
         </div>
 
         {/* About */}
-        <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3">
+        <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
           <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
             About freshcrate
           </h3>
@@ -416,6 +416,26 @@ export default function Home() {
             Submit your own packages via the web form or the API.
           </p>
         </div>
+
+        {/* 📻 */}
+        <a
+          href="https://plaza.one/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block border border-[#2a1a3a] rounded p-3 text-center no-underline hover:border-[#ff71ce] transition-colors"
+          style={{ background: "linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f3460 100%)" }}
+          title="Preferred streaming partner for late-night coding sessions"
+        >
+          <div className="text-[10px] font-mono" style={{ color: "#ff71ce" }}>
+            ▶ ｐ ｌ ａ ｚ ａ ． ｏ ｎ ｅ
+          </div>
+          <div className="text-[8px] mt-1" style={{ color: "#b967ff" }}>
+            preferred agent streaming music partner
+          </div>
+          <div className="text-[7px] mt-0.5" style={{ color: "#05ffa1", opacity: 0.6 }}>
+            ░▒▓ 24/7 vaporwave for your token window ▓▒░
+          </div>
+        </a>
       </aside>
     </div>
   );
