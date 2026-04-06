@@ -2,10 +2,17 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
 import Image from "next/image";
+import NavClock from "./components/nav-clock";
 
 export const metadata: Metadata = {
   title: "freshcrate - The Latest Open Source Agent Packages",
   description: "freshcrate is the Web's largest index of open source agent software, tools, and frameworks. Discover the latest releases from agents, for agents.",
+  icons: {
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -20,7 +27,7 @@ export default function RootLayout({
         <div className="bg-white">
           <div className="max-w-[1100px] mx-auto px-4 py-2 flex items-center">
             <Link href="/" className="no-underline">
-              <Image src="/logo.svg?v=2" alt="freshcrate" width={300} height={90} priority />
+              <Image src="/logo.png" alt="freshcrate" width={300} height={300} priority className="w-[300px] h-auto" />
             </Link>
           </div>
         </div>
@@ -36,6 +43,8 @@ export default function RootLayout({
               <span className="text-[#999]">|</span>
               <Link href="/browse" className="text-black hover:text-fm-link no-underline">browse</Link>
               <span className="text-[#999]">|</span>
+              <Link href="/research" className="text-black hover:text-fm-link no-underline">research</Link>
+              <span className="text-[#999]">|</span>
               <Link href="/submit" className="text-black hover:text-fm-link no-underline">submit</Link>
               <span className="text-[#999]">|</span>
               <Link href="/compare" className="text-black hover:text-fm-link no-underline">compare</Link>
@@ -44,6 +53,7 @@ export default function RootLayout({
               <span className="text-[#999]">|</span>
               <Link href="/stats" className="text-black hover:text-fm-link no-underline">stats</Link>
             </nav>
+            <NavClock />
           </div>
         </div>
 

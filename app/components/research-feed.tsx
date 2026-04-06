@@ -88,6 +88,13 @@ export default function ResearchFeed() {
         </ul>
       </SectionShell>
 
+      {/* See all link */}
+      <div className="text-right mb-2">
+        <a href="/research" className="text-fm-link hover:underline text-[10px] font-bold">
+          See all research →
+        </a>
+      </div>
+
       {/* Trending Models */}
       <SectionShell title="Trending Models">
         <ul className="space-y-1.5">
