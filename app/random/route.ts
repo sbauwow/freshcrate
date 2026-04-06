@@ -11,16 +11,9 @@ export async function GET(request: NextRequest) {
     .prepare("SELECT name FROM projects ORDER BY RANDOM() LIMIT 1")
     .get() as { name: string } | undefined;
 
-  // Use x-forwarded-host (set by Railway/reverse proxy) or fall back to request host
-  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "freshcrate.ai";
-  const proto = request.headers.get("x-forwarded-proto") || "https";
-  const base = `${proto}://${host}`;
+  // Clone the request URL and just swap the pathname — preserves host/proto/port
+  const url = request.nextUrl.clone();
+  url.pathname = row ? `/projects/${encodeURIComponent(row.name)}` : "/";
 
-  if (!row) {
-    return NextResponse.redirect(new URL("/", base));
-  }
-
-  return NextResponse.redirect(
-    new URL(`/projects/${encodeURIComponent(row.name)}`, base)
-  );
+  return NextResponse.redirect(url);
 }
