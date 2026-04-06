@@ -1,4 +1,4 @@
-# freshcrate
+# [www.freshcrate.ai](https://www.freshcrate.ai)
 
 The open source package directory for AI agents. From meat to code to crate.
 
