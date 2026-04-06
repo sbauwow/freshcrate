@@ -76,6 +76,17 @@ export default function Home() {
                     >
                       {project.name}
                     </Link>
+                    {project.repo_url && (
+                      <a
+                        href={project.repo_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] text-fm-text-light hover:text-fm-link"
+                        title="View source on GitHub"
+                      >
+                        &#128193;
+                      </a>
+                    )}
                     <span className="text-[11px] text-fm-text-light font-mono">
                       {project.latest_version}
                     </span>

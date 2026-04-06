@@ -232,21 +232,23 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
           </div>
         )}
 
-        {project.homepage_url && (
+        {(project.repo_url || project.homepage_url) && (
           <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
             <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
               Links
             </h3>
             <div className="space-y-1 text-[11px]">
-              <div>
-                <a href={project.homepage_url} target="_blank" rel="noopener noreferrer" className="text-fm-link hover:text-fm-link-hover">
-                  Homepage &rarr;
-                </a>
-              </div>
               {project.repo_url && (
                 <div>
                   <a href={project.repo_url} target="_blank" rel="noopener noreferrer" className="text-fm-link hover:text-fm-link-hover">
-                    Source Code &rarr;
+                    &#128193; Source Code &rarr;
+                  </a>
+                </div>
+              )}
+              {project.homepage_url && project.homepage_url !== project.repo_url && (
+                <div>
+                  <a href={project.homepage_url} target="_blank" rel="noopener noreferrer" className="text-fm-link hover:text-fm-link-hover">
+                    &#127760; Homepage &rarr;
                   </a>
                 </div>
               )}

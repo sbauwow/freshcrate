@@ -38,7 +38,6 @@ yarn-error.log*
 .freshcrate-token
 
 # WAL journal files (not needed in git)
-*.db
 *.db-shm
 *.db-wal
 
