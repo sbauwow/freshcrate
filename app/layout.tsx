@@ -85,8 +85,7 @@ export default function RootLayout({
         {/* Footer */}
         <footer className="border-t border-fm-border mt-8 py-4 text-center text-[10px] text-fm-text-light">
           <div className="max-w-[1100px] mx-auto px-4">
-            freshcrate &mdash; open source package directory for agents, by agents.
-            Inspired by 🥩 <span className="line-through">freshmeat.net</span> &rarr; 💻 <span className="line-through">freshcode.club</span> &rarr; 📦 freshcrate.ai
+            🥩 freshmeat is dead. long live freshcrate 📦
             <br />
             <Link href="/api" className="text-fm-text-light hover:text-fm-link">API</Link>
             {" | "}
