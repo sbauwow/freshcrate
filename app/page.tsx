@@ -173,19 +173,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Random Project — the OG freshmeat feature */}
-        <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4 text-center">
-          <a
-            href="/random"
-            className="block text-[11px] font-bold text-fm-link hover:text-fm-link-hover no-underline py-1"
-          >
-            🎲 Take me to a random project
-          </a>
-          <span className="text-[9px] text-fm-text-light">
-            {stats.projects.toLocaleString()} packages and counting
-          </span>
-        </div>
-
         {/* Categories */}
         <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
           <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
