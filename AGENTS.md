@@ -146,7 +146,7 @@ Category assignment uses regex-based rules (duplicated in `api/enrich/route.ts` 
 ### "Deploy to production"
 → `npm run build && npm start` (standard Next.js)
 → SQLite file must be on persistent disk (not serverless/ephemeral)
-→ Domain is freshcrate.club (referenced in API docs page)
+→ Domain is freshcrate.ai (referenced in API docs page)
 
 ## Gotchas
 

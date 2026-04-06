@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import { getLatestReleases, getCategories } from "@/lib/queries";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://freshcrate.club";
+  const baseUrl = "https://freshcrate.ai";
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, changeFrequency: "daily", priority: 1.0 },

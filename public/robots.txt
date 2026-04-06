@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://freshcrate.club/sitemap.xml
+Sitemap: https://freshcrate.ai/sitemap.xml

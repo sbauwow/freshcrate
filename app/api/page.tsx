@@ -24,7 +24,7 @@ export default function ApiDocsPage() {
               </ul>
             </div>
             <div className="mt-2 bg-fm-bg rounded p-2">
-              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl https://freshcrate.club/api/projects?limit=5`}</pre>
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl https://freshcrate.ai/api/projects?limit=5`}</pre>
             </div>
           </div>
         </section>
@@ -41,7 +41,7 @@ export default function ApiDocsPage() {
               </ul>
             </div>
             <div className="mt-2 bg-fm-bg rounded p-2">
-              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl https://freshcrate.club/api/search?q=mcp`}</pre>
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl https://freshcrate.ai/api/search?q=mcp`}</pre>
             </div>
           </div>
         </section>
@@ -52,7 +52,7 @@ export default function ApiDocsPage() {
             <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/categories</code>
             <div className="text-[10px] text-fm-text-light mt-1 mb-2">Returns all categories with package counts.</div>
             <div className="mt-2 bg-fm-bg rounded p-2">
-              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl https://freshcrate.club/api/categories`}</pre>
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl https://freshcrate.ai/api/categories`}</pre>
             </div>
           </div>
         </section>
@@ -82,7 +82,7 @@ export default function ApiDocsPage() {
               </ul>
             </div>
             <div className="mt-2 bg-fm-bg rounded p-2">
-              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -X POST https://freshcrate.club/api/projects \\
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -X POST https://freshcrate.ai/api/projects \\
   -H "Content-Type: application/json" \\
   -d '{
     "name": "my-agent-tool",
