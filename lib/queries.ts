@@ -51,7 +51,12 @@ export function getLatestReleases(limit = 20, offset = 0): ProjectWithRelease[] 
     FROM projects p
     JOIN releases r ON r.project_id = p.id
     WHERE r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
-    ORDER BY r.created_at DESC
+    ORDER BY
+      CASE WHEN (SELECT COUNT(*) FROM releases r4 WHERE r4.project_id = p.id) > 1
+        THEN r.created_at
+        ELSE '2000-01-01'
+      END DESC,
+      p.stars DESC
     LIMIT ? OFFSET ?
   `).all(limit, offset) as ProjectWithRelease[];
 
