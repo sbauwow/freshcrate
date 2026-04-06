@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 72" width="240" height="72">
+  <!-- Circle badge (matching favicon) -->
+  <circle cx="36" cy="36" r="30" fill="#FFD700"/>
+  <circle cx="36" cy="36" r="30" fill="none" stroke="#222" stroke-width="2.5"/>
+
+  <!-- Isometric crate icon -->
+  <path d="M20 29l16-9 16 9v18l-16 9-16-9z" fill="#FFC107" stroke="#222" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Crate inner lines -->
+  <line x1="36" y1="20" x2="36" y2="47" stroke="#222" stroke-width="1.8"/>
+  <line x1="20" y1="29" x2="36" y2="38" stroke="#222" stroke-width="1.8"/>
+  <line x1="52" y1="29" x2="36" y2="38" stroke="#222" stroke-width="1.8"/>
+  <!-- Top face highlight -->
+  <path d="M20 29l16 9 16-9" fill="none" stroke="#FFE082" stroke-width="1" opacity="0.6"/>
+
+  <!-- "freshcrate" text -->
+  <text x="76" y="44" font-family="Georgia, 'Times New Roman', serif" font-size="32" font-weight="bold" fill="#222" letter-spacing="-0.5">
+    freshcrate
+  </text>
+
+  <!-- Tagline -->
+  <text x="77" y="57" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" fill="#666" letter-spacing="0.5">
+    open source packages for agents
+  </text>
+</svg>

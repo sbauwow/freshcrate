@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --fm-green: #6f6f6f;
+  --fm-green-light: #888888;
+  --fm-green-dark: #555555;
+  --fm-orange: #3366cc;
+  --fm-bg: #ffffff;
+  --fm-sidebar-bg: #eeeeee;
+  --fm-border: #cccccc;
+  --fm-text: #000000;
+  --fm-text-light: #666666;
+  --fm-link: #3366cc;
+  --fm-link-hover: #3366cc;
+  --fm-urgency-low: #5b8c5b;
+  --fm-urgency-medium: #c49000;
+  --fm-urgency-high: #cc6600;
+  --fm-urgency-critical: #cc0000;
+}
+
+@theme inline {
+  --color-fm-green: var(--fm-green);
+  --color-fm-green-light: var(--fm-green-light);
+  --color-fm-green-dark: var(--fm-green-dark);
+  --color-fm-orange: var(--fm-orange);
+  --color-fm-bg: var(--fm-bg);
+  --color-fm-sidebar-bg: var(--fm-sidebar-bg);
+  --color-fm-border: var(--fm-border);
+  --color-fm-text: var(--fm-text);
+  --color-fm-text-light: var(--fm-text-light);
+  --color-fm-link: var(--fm-link);
+  --color-fm-link-hover: var(--fm-link-hover);
+  --color-fm-urgency-low: var(--fm-urgency-low);
+  --color-fm-urgency-medium: var(--fm-urgency-medium);
+  --color-fm-urgency-high: var(--fm-urgency-high);
+  --color-fm-urgency-critical: var(--fm-urgency-critical);
+}
+
+body {
+  background: var(--fm-bg);
+  color: var(--fm-text);
+  font-family: Verdana, Geneva, "DejaVu Sans", Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--fm-link);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--fm-link-hover);
+  text-decoration: underline;
+}

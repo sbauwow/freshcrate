@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <circle cx="16" cy="16" r="15" fill="#FFD700"/>
+  <circle cx="16" cy="16" r="15" fill="none" stroke="#222" stroke-width="2"/>
+  <!-- Crate: open box shape -->
+  <path d="M9 13l7-4 7 4v8l-7 4-7-4z" fill="none" stroke="#222" stroke-width="1.8" stroke-linejoin="round"/>
+  <line x1="16" y1="9" x2="16" y2="21" stroke="#222" stroke-width="1.5"/>
+  <line x1="9" y1="13" x2="16" y2="17" stroke="#222" stroke-width="1.5"/>
+  <line x1="23" y1="13" x2="16" y2="17" stroke="#222" stroke-width="1.5"/>
+</svg>
