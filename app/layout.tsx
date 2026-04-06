@@ -96,6 +96,9 @@ export default function RootLayout({
             <Link href="/terms" className="text-fm-text-light hover:text-fm-link">Terms</Link>
           </div>
         </footer>
+        {/* Page view beacon — 1x1 transparent GIF, no JS, no cookies */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/api/beacon" alt="" width={1} height={1} className="absolute" aria-hidden="true" />
       </body>
     </html>
   );

@@ -107,6 +107,11 @@ export async function GET() {
       requests: requests24h,
       errors: errors24h,
       avg_duration_ms: Math.round(avgDuration),
+      page_views: (() => { try { return (db.prepare("SELECT COUNT(*) as c FROM page_views WHERE created_at > datetime('now', '-1 day')").get() as { c: number }).c; } catch { return 0; } })(),
+      unique_visitors: (() => { try { return (db.prepare("SELECT COUNT(DISTINCT ip_hash) as c FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 0").get() as { c: number }).c; } catch { return 0; } })(),
+      bot_hits: (() => { try { return (db.prepare("SELECT COUNT(*) as c FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 1").get() as { c: number }).c; } catch { return 0; } })(),
+      top_pages: (() => { try { return db.prepare("SELECT path, COUNT(*) as views FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 0 GROUP BY path ORDER BY views DESC LIMIT 10").all(); } catch { return []; } })(),
+      top_referrers: (() => { try { return db.prepare("SELECT referrer, COUNT(*) as views FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 0 AND referrer != '' GROUP BY referrer ORDER BY views DESC LIMIT 10").all(); } catch { return []; } })(),
     },
   });
 }
