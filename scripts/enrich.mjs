@@ -97,7 +97,12 @@ async function enrichProject(project) {
     stars: repoData.stargazers_count || 0,
     forks: repoData.forks_count || 0,
     language: repoData.language || "",
-    readme_html: readmeHtml,
+    readme_html: readmeHtml
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+      .replace(/<iframe\b[^>]*>.*?<\/iframe>/gi, "")
+      .replace(/<object\b[^>]*>.*?<\/object>/gi, "")
+      .replace(/<embed\b[^>]*>/gi, "")
+      .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, ""),
   };
 }
 

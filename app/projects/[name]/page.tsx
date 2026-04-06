@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getProjectByName, getProjectReleases, getProjectWithReadme, getSimilarProjects } from "@/lib/queries";
 import { getVerificationStatus } from "@/lib/verify";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { notFound } from "next/navigation";
 import DepGraph from "@/app/components/dep-graph";
 
@@ -66,7 +67,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
             </h3>
             <div
               className="text-[11px] text-fm-text leading-relaxed prose prose-sm max-w-none overflow-x-auto"
-              dangerouslySetInnerHTML={{ __html: enriched.readme_html }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(enriched.readme_html) }}
             />
           </div>
         )}

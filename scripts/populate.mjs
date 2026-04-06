@@ -331,13 +331,20 @@ async function main() {
       for (const topic of topics.slice(0, 8)) { insertTag.run(projectId, topic.toLowerCase()); }
       if (repo.language) insertTag.run(projectId, repo.language.toLowerCase());
 
-      // Fetch README (HTML rendered)
+      // Fetch README (HTML rendered) — strip dangerous tags at ingestion
       const readmeRes = await ghFetch(
         `https://api.github.com/repos/${owner}/${repoName}/readme`,
         "application/vnd.github.html+json"
       );
       if (readmeRes?._html) {
-        updateReadme.run(readmeRes._html.slice(0, 100000), projectId);
+        const cleanHtml = readmeRes._html
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+          .replace(/<iframe\b[^>]*>.*?<\/iframe>/gi, "")
+          .replace(/<object\b[^>]*>.*?<\/object>/gi, "")
+          .replace(/<embed\b[^>]*>/gi, "")
+          .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, "")
+          .slice(0, 100000);
+        updateReadme.run(cleanHtml, projectId);
       }
 
       added++;
