@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectByName } from "@/lib/queries";
 import { getDependencies, getDependencyAudit, scanDependencies } from "@/lib/deps";
+import { hasApiKeys, extractBearerToken, validateApiKey } from "@/lib/auth";
 
 /**
  * GET /api/projects/[name]/deps — get cached dependencies + license audit
@@ -24,9 +25,21 @@ export async function GET(
 }
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
 ) {
+  // Auth check
+  if (hasApiKeys()) {
+    const token = extractBearerToken(request.headers.get("authorization"));
+    if (!token) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+    }
+    const auth = validateApiKey(token);
+    if (!auth.valid) {
+      return NextResponse.json({ error: auth.error }, { status: auth.error.includes("Rate") ? 429 : 401 });
+    }
+  }
+
   const { name } = await params;
   const project = getProjectByName(name);
   if (!project) {
