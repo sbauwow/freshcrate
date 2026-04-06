@@ -38,7 +38,7 @@ yarn-error.log*
 .freshcrate-token
 
 # WAL journal files (not needed in git)
-*.db
+# *.db — temporarily committed for production seed
 *.db-shm
 *.db-wal
 
