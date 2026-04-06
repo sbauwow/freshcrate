@@ -47,6 +47,8 @@ export default function RootLayout({
               <span className="text-[#999]">|</span>
               <Link href="/languages" className="text-black hover:text-fm-link no-underline">languages</Link>
               <span className="text-[#999]">|</span>
+              <Link href="/dependencies" className="text-black hover:text-fm-link no-underline">deps</Link>
+              <span className="text-[#999]">|</span>
               <Link href="/submit" className="text-black hover:text-fm-link no-underline">submit</Link>
               <span className="text-[#999]">|</span>
               <Link href="/compare" className="text-black hover:text-fm-link no-underline">compare</Link>

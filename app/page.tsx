@@ -48,7 +48,7 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function Home() {
-  const releases = getLatestReleases(15);
+  const releases = getLatestReleases(20);
   const categories = getCategories();
   const stats = getStats();
 
