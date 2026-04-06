@@ -135,18 +135,22 @@ export default function StatsPage() {
             {stats.topByStars.map((pkg, i) => {
               const pct = maxStars > 0 ? Math.round((pkg.stars / maxStars) * 100) : 0;
               return (
-                <tr key={pkg.name} className={i % 2 === 0 ? "bg-white/50" : ""}>
-                  <td className="px-2 py-1 border border-fm-border text-fm-text-light">{i + 1}</td>
+                <tr key={pkg.name} className={`${i % 2 === 0 ? "bg-white/50" : ""} ${pkg.name === "freshcrate" ? "bg-yellow-50" : ""}`}>
+                  <td className="px-2 py-1 border border-fm-border text-fm-text-light">{pkg.name === "freshcrate" ? "🏠" : i + 1}</td>
                   <td className="px-2 py-1 border border-fm-border">
                     <Link href={`/projects/${encodeURIComponent(pkg.name)}`} className="text-fm-link font-bold">
                       {pkg.name}
                     </Link>
+                    {pkg.name === "freshcrate" && (
+                      <span className="text-[9px] text-fm-text-light italic ml-1">(hey, that&apos;s us!)</span>
+                    )}
                   </td>
                   <td className="px-2 py-1 border border-fm-border">
-                    <span className="font-mono mr-2">{formatNumber(pkg.stars)}</span>
-                    <PercentBar pct={pct} />
+                    <span className="font-mono mr-2">{pkg.name === "freshcrate" ? "∞" : formatNumber(pkg.stars)}</span>
+                    {pkg.name !== "freshcrate" && <PercentBar pct={pct} />}
+                    {pkg.name === "freshcrate" && <span className="text-[9px] italic text-fm-text-light">stars are a social construct</span>}
                   </td>
-                  <td className="px-2 py-1 border border-fm-border text-fm-text-light">{pkg.category}</td>
+                  <td className="px-2 py-1 border border-fm-border text-fm-text-light">{pkg.name === "freshcrate" ? "Meta" : pkg.category}</td>
                   <td className="px-2 py-1 border border-fm-border font-mono">{pkg.version || "—"}</td>
                   <td className="px-2 py-1 border border-fm-border text-fm-text-light">{pkg.author}</td>
                 </tr>
@@ -409,6 +413,22 @@ export default function StatsPage() {
               <td className="px-2 py-1 border border-fm-border text-fm-text-light italic">{`"So new it still has that new-crate smell."`}</td>
             </tr>
           )}
+          {/* The meta-award */}
+          <tr className="bg-yellow-50">
+            <td className="px-2 py-1 border border-fm-border font-bold">📦 Most Self-Aware Crate</td>
+            <td className="px-2 py-1 border border-fm-border">
+              <Link href="/projects/freshcrate" className="text-fm-link font-bold">
+                freshcrate
+              </Link>
+              <span className="text-[9px] text-fm-text-light italic ml-1">(yes, we listed ourselves)</span>
+            </td>
+            <td className="px-2 py-1 border border-fm-border font-mono">
+              {stats.totals.packages} indexed
+            </td>
+            <td className="px-2 py-1 border border-fm-border text-fm-text-light italic">
+              {`"The only package directory that indexes itself. It's not recursion, it's self-care."`}
+            </td>
+          </tr>
         </tbody>
       </table>
       </div>
@@ -422,6 +442,7 @@ export default function StatsPage() {
         <p>🖥️ MCP Servers outnumber actual servers in this building <strong className="font-mono">{stats.funFacts.mcpServerCount}</strong> to 1.</p>
         <p>📚 Total README text would fill <strong className="font-mono">{stats.funFacts.novelCount}</strong> novels (assuming 80,000 words each). Somebody call a publisher.</p>
         <p>🏷️ There are <strong className="font-mono">{stats.funFacts.uniqueTags}</strong> unique tags — that&apos;s <strong className="font-mono">{stats.funFacts.tagsPerPackage}</strong> tags per package.</p>
+        <p>🪞 freshcrate is listed on freshcrate. The snake eats its own tail. The crate contains itself. <em>This is fine.</em></p>
       </div>
 
       {/* API hint */}
