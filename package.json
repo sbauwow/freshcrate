@@ -27,7 +27,9 @@
     "verify": "node scripts/verify.mjs",
     "verify:dry": "node scripts/verify.mjs --dry-run",
     "pipeline": "node scripts/pipeline.mjs",
-    "pipeline:clear": "node scripts/pipeline.mjs --clear"
+    "pipeline:clear": "node scripts/pipeline.mjs --clear",
+    "scan-deps": "node scripts/scan-deps.mjs",
+    "scan-deps:all": "node scripts/scan-deps.mjs --all"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

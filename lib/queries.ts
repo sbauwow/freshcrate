@@ -313,6 +313,235 @@ export function getSimilarProjects(
  * @param projectId - The ID of the project to update
  * @param data - Object containing stars, forks, language, and readme_html
  */
+export interface FullStats {
+  totals: {
+    packages: number;
+    releases: number;
+    tags: number;
+    categories: number;
+    verified: number;
+    totalStars: number;
+    totalForks: number;
+    languages: number;
+    avgStars: number;
+    readmeCoverage: number;
+  };
+  topByStars: {
+    name: string;
+    stars: number;
+    category: string;
+    version: string;
+    author: string;
+  }[];
+  topByVitality: {
+    name: string;
+    version: string;
+    urgency: string;
+    release_date: string;
+    category: string;
+  }[];
+  topVerified: {
+    name: string;
+    score: number;
+    checks: Record<string, boolean>;
+    category: string;
+  }[];
+  licenseBreakdown: { license: string; count: number; pct: number }[];
+  languageBreakdown: { language: string; count: number; pct: number }[];
+  hallOfFame: {
+    longestReadme: { name: string; length: number } | null;
+    speedDemon: { name: string; count: number } | null;
+    tagHoarder: { name: string; count: number } | null;
+    soloWarrior: { name: string; stars: number; forks: number; ratio: number } | null;
+    licenseRebel: { name: string; stars: number } | null;
+    dinosaur: { name: string; created_at: string } | null;
+    freshest: { name: string; created_at: string } | null;
+  };
+  funFacts: {
+    totalStarsDollars: number;
+    avgNameLength: number;
+    verifiedPct: number;
+    mcpServerCount: number;
+    novelCount: number;
+    uniqueTags: number;
+    tagsPerPackage: number;
+  };
+}
+
+/**
+ * @description Returns comprehensive statistics for the stats page.
+ * Executes multiple queries and aggregates all stats in one call.
+ * @returns FullStats object with all sections
+ */
+export function getFullStats(): FullStats {
+  const db = getDb();
+
+  // --- TOTALS ---
+  const packages = (db.prepare("SELECT COUNT(*) as c FROM projects").get() as { c: number }).c;
+  const releases = (db.prepare("SELECT COUNT(*) as c FROM releases").get() as { c: number }).c;
+  const tags = (db.prepare("SELECT COUNT(*) as c FROM tags").get() as { c: number }).c;
+  const categories = (db.prepare("SELECT COUNT(DISTINCT category) as c FROM projects").get() as { c: number }).c;
+  const verified = (db.prepare("SELECT COUNT(*) as c FROM projects WHERE verified = 1").get() as { c: number }).c;
+  const starForkSums = db.prepare("SELECT COALESCE(SUM(stars),0) as totalStars, COALESCE(SUM(forks),0) as totalForks FROM projects").get() as { totalStars: number; totalForks: number };
+  const languages = (db.prepare("SELECT COUNT(DISTINCT language) as c FROM projects WHERE language IS NOT NULL AND language != ''").get() as { c: number }).c;
+  const avgStars = packages > 0 ? Math.round(starForkSums.totalStars / packages) : 0;
+  const readmeCount = (db.prepare("SELECT COUNT(*) as c FROM projects WHERE readme_html IS NOT NULL AND readme_html != ''").get() as { c: number }).c;
+  const readmeCoverage = packages > 0 ? Math.round((readmeCount / packages) * 100) : 0;
+
+  // --- TOP 20 BY STARS ---
+  const topByStars = db.prepare(`
+    SELECT p.name, p.stars, p.category, p.author,
+           (SELECT r.version FROM releases r WHERE r.project_id = p.id ORDER BY r.created_at DESC LIMIT 1) as version
+    FROM projects p
+    ORDER BY p.stars DESC
+    LIMIT 20
+  `).all() as { name: string; stars: number; category: string; version: string; author: string }[];
+
+  // --- TOP 20 BY VITALITY (most recent releases in last 30 days) ---
+  const topByVitality = db.prepare(`
+    SELECT p.name, r.version, r.urgency, r.created_at as release_date, p.category
+    FROM projects p
+    JOIN releases r ON r.project_id = p.id
+    WHERE r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+      AND r.created_at >= datetime('now', '-30 days')
+    ORDER BY r.created_at DESC
+    LIMIT 20
+  `).all() as { name: string; version: string; urgency: string; release_date: string; category: string }[];
+
+  // --- TOP 20 BEST VERIFIED ---
+  const verifiedRows = db.prepare(`
+    SELECT p.name, p.verification_json, p.category
+    FROM projects p
+    WHERE p.verified = 1 AND p.verification_json IS NOT NULL
+    ORDER BY p.verified_at DESC
+    LIMIT 20
+  `).all() as { name: string; verification_json: string; category: string }[];
+
+  const topVerified = verifiedRows.map((row) => {
+    let checks: Record<string, boolean> = {};
+    let score = 0;
+    try {
+      checks = JSON.parse(row.verification_json);
+      const total = Object.keys(checks).length;
+      const passed = Object.values(checks).filter(Boolean).length;
+      score = total > 0 ? Math.round((passed / total) * 100) : 0;
+    } catch {
+      // ignore parse errors
+    }
+    return { name: row.name, score, checks, category: row.category };
+  }).sort((a, b) => b.score - a.score);
+
+  // --- LICENSE BREAKDOWN ---
+  const licenseRows = db.prepare(`
+    SELECT COALESCE(NULLIF(license, ''), 'Unknown') as license, COUNT(*) as count
+    FROM projects GROUP BY 1 ORDER BY count DESC
+  `).all() as { license: string; count: number }[];
+  const licenseBreakdown = licenseRows.map((r) => ({
+    ...r,
+    pct: packages > 0 ? Math.round((r.count / packages) * 100) : 0,
+  }));
+
+  // --- LANGUAGE BREAKDOWN ---
+  const langRows = db.prepare(`
+    SELECT language, COUNT(*) as count
+    FROM projects WHERE language IS NOT NULL AND language != ''
+    GROUP BY language ORDER BY count DESC
+  `).all() as { language: string; count: number }[];
+  const langTotal = langRows.reduce((s, r) => s + r.count, 0);
+  const languageBreakdown = langRows.map((r) => ({
+    ...r,
+    pct: langTotal > 0 ? Math.round((r.count / langTotal) * 100) : 0,
+  }));
+
+  // --- HALL OF FAME ---
+  const longestReadme = db.prepare(`
+    SELECT name, LENGTH(readme_html) as length FROM projects
+    WHERE readme_html IS NOT NULL AND readme_html != ''
+    ORDER BY LENGTH(readme_html) DESC LIMIT 1
+  `).get() as { name: string; length: number } | undefined;
+
+  const speedDemon = db.prepare(`
+    SELECT p.name, COUNT(r.id) as count FROM projects p
+    JOIN releases r ON r.project_id = p.id
+    GROUP BY p.id ORDER BY count DESC LIMIT 1
+  `).get() as { name: string; count: number } | undefined;
+
+  const tagHoarder = db.prepare(`
+    SELECT p.name, COUNT(t.id) as count FROM projects p
+    JOIN tags t ON t.project_id = p.id
+    GROUP BY p.id ORDER BY count DESC LIMIT 1
+  `).get() as { name: string; count: number } | undefined;
+
+  const soloWarrior = db.prepare(`
+    SELECT name, stars, forks,
+           CASE WHEN forks > 0 THEN CAST(stars AS REAL) / forks ELSE stars END as ratio
+    FROM projects WHERE stars > 0
+    ORDER BY ratio DESC LIMIT 1
+  `).get() as { name: string; stars: number; forks: number; ratio: number } | undefined;
+
+  const licenseRebel = db.prepare(`
+    SELECT name, stars FROM projects
+    WHERE license IS NULL OR license = '' OR LOWER(license) = 'unknown'
+    ORDER BY stars DESC LIMIT 1
+  `).get() as { name: string; stars: number } | undefined;
+
+  const dinosaur = db.prepare(`
+    SELECT name, created_at FROM projects ORDER BY created_at ASC LIMIT 1
+  `).get() as { name: string; created_at: string } | undefined;
+
+  const freshest = db.prepare(`
+    SELECT name, created_at FROM projects ORDER BY created_at DESC LIMIT 1
+  `).get() as { name: string; created_at: string } | undefined;
+
+  // --- FUN FACTS ---
+  const avgNameLen = db.prepare("SELECT AVG(LENGTH(name)) as avg FROM projects").get() as { avg: number };
+  const uniqueTags = (db.prepare("SELECT COUNT(DISTINCT tag) as c FROM tags").get() as { c: number }).c;
+  const mcpCount = (db.prepare("SELECT COUNT(*) as c FROM projects WHERE LOWER(category) LIKE '%mcp%'").get() as { c: number }).c;
+
+  // Estimate word count from readme_html (rough: chars / 5)
+  const totalReadmeChars = (db.prepare("SELECT COALESCE(SUM(LENGTH(readme_html)),0) as c FROM projects").get() as { c: number }).c;
+  const estimatedWords = totalReadmeChars / 5;
+  const novelCount = Math.round((estimatedWords / 80000) * 10) / 10;
+
+  return {
+    totals: {
+      packages,
+      releases,
+      tags,
+      categories,
+      verified,
+      totalStars: starForkSums.totalStars,
+      totalForks: starForkSums.totalForks,
+      languages,
+      avgStars,
+      readmeCoverage,
+    },
+    topByStars,
+    topByVitality,
+    topVerified,
+    licenseBreakdown,
+    languageBreakdown,
+    hallOfFame: {
+      longestReadme: longestReadme || null,
+      speedDemon: speedDemon || null,
+      tagHoarder: tagHoarder || null,
+      soloWarrior: soloWarrior || null,
+      licenseRebel: licenseRebel || null,
+      dinosaur: dinosaur || null,
+      freshest: freshest || null,
+    },
+    funFacts: {
+      totalStarsDollars: starForkSums.totalStars,
+      avgNameLength: Math.round(avgNameLen.avg || 0),
+      verifiedPct: packages > 0 ? Math.round((verified / packages) * 100) : 0,
+      mcpServerCount: mcpCount,
+      novelCount,
+      uniqueTags,
+      tagsPerPackage: packages > 0 ? Math.round((uniqueTags / packages) * 10) / 10 : 0,
+    },
+  };
+}
+
 export function updateProjectGithubData(
   projectId: number,
   data: { stars: number; forks: number; language: string; readme_html: string }

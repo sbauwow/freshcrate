@@ -41,6 +41,8 @@ export default function RootLayout({
               <Link href="/compare" className="text-black hover:text-fm-link no-underline">compare</Link>
               <span className="text-[#999]">|</span>
               <Link href="/api" className="text-black hover:text-fm-link no-underline">api</Link>
+              <span className="text-[#999]">|</span>
+              <Link href="/stats" className="text-black hover:text-fm-link no-underline">stats</Link>
             </nav>
           </div>
         </div>

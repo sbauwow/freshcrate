@@ -67,6 +67,28 @@ The sidebar pulls live data (cached 1hr):
 - **Latest Research** — papers from HuggingFace Daily Papers + arXiv cs.AI/cs.CL
 - **Trending Models** — top models from HuggingFace trending API
 
+### Dependency Graph & License Audit
+
+Every project page includes a dependency scanner that:
+
+1. Fetches `package.json`, `requirements.txt`, `pyproject.toml`, `Cargo.toml`, or `go.mod` from the repo
+2. Resolves each dependency's license from **npm**, **PyPI**, or **crates.io** registries
+3. Classifies licenses as permissive / copyleft / weak copyleft / unknown
+4. Runs a **license audit** that detects:
+   - Copyleft dependencies in permissive projects
+   - AGPL network-use trigger (source disclosure for API use)
+   - GPL-2.0 / Apache-2.0 incompatibility
+   - Unknown or missing licenses on runtime deps
+5. Produces a **score (0-100)** and visual breakdown
+
+Scan via the UI button on any project page, the API, or in batch:
+
+```bash
+npm run scan-deps              # scan all unscanned packages
+npm run scan-deps:all          # rescan everything
+node scripts/scan-deps.mjs --name my-package  # scan one
+```
+
 ### Sidebar Resources
 
 Curated links for agents:
@@ -77,6 +99,8 @@ Curated links for agents:
 - PyPI and npm agent package searches
 - Papers With Code, GitHub #ai-agent
 - Leaderboards: Open LLM, LM Arena, SWE-bench, Aider
+- Open source foundations (OSI, FSF, Linux Foundation, Apache, CNCF)
+- Licensing education for agents (license families, key rules, reference links)
 
 ## MCP Server
 
@@ -141,6 +165,8 @@ npm run mcp
 | `/api/search?q=` | GET | Search packages (FTS5) |
 | `/api/categories` | GET | List categories with counts |
 | `/api/enrich` | POST | Agent enrichment — send `{ url }`, get pre-filled package data |
+| `/api/projects/[name]/deps` | GET | Get cached dependencies + license audit |
+| `/api/projects/[name]/deps` | POST | Trigger fresh dependency scan |
 | `/api/research` | GET | Latest papers + trending models |
 | `/feed.xml` | GET | Atom feed of latest releases |
 
@@ -160,9 +186,10 @@ freshcrate/
     not-found.tsx         # Custom 404 page
     components/
       research-feed.tsx   # Live research sidebar (client component)
+      dep-graph.tsx       # Dependency graph + license audit (client component)
     api/
       projects/route.ts   # Package list + submit
-      projects/[name]/    # Single package endpoint
+      projects/[name]/    # Single package + verify + deps endpoints
       search/route.ts     # Search endpoint
       categories/route.ts # Category listing
       enrich/route.ts     # GitHub repo enrichment agent
@@ -171,14 +198,18 @@ freshcrate/
     db.ts                 # SQLite init, seed, singleton
     queries.ts            # All database queries (JSDoc'd)
     categories.ts         # Shared category rules + constants
+    deps.ts               # Dependency scanner, license resolver, audit engine
     migrate.ts            # SQL migration runner
   mcp/
     server.ts             # MCP server (8 tools, 2 resources)
   migrations/
     001_initial_schema.sql
     002_fts5_search.sql
+    ...
+    008_dependencies.sql
   scripts/
     populate.mjs          # Bulk GitHub import pipeline with OAuth
+    scan-deps.mjs         # Batch dependency scanner + license audit
     migrate.mjs           # Standalone migration CLI
   tests/
     queries.test.ts       # Query layer tests (31 tests)
@@ -195,6 +226,8 @@ npm run dev          # start dev server (localhost:3000)
 npm test             # run test suite (31 tests)
 npm run migrate      # apply database migrations
 npm run mcp          # start MCP server (stdio)
+npm run scan-deps    # scan dependencies + license audit
+npm run scan-deps:all # rescan all packages
 npm run build        # production build
 npm run lint         # eslint
 ```

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getProjectByName, getProjectReleases, getProjectWithReadme, getSimilarProjects } from "@/lib/queries";
 import { getVerificationStatus } from "@/lib/verify";
 import { notFound } from "next/navigation";
+import DepGraph from "@/app/components/dep-graph";
 
 export default async function ProjectPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
@@ -95,6 +96,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Dependencies & License Audit */}
+        <div className="mt-6">
+          <h3 className="text-[12px] font-bold text-fm-green border-b border-fm-border pb-1 mb-3">
+            Dependencies &amp; License Audit
+          </h3>
+          <DepGraph projectName={project.name} />
         </div>
 
         {/* Similar packages */}
