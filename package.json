@@ -23,7 +23,9 @@
     "monitor": "node scripts/monitor.mjs",
     "monitor:dry": "node scripts/monitor.mjs --dry-run",
     "enrich": "node scripts/enrich.mjs",
-    "enrich:dry": "node scripts/enrich.mjs --dry-run"
+    "enrich:dry": "node scripts/enrich.mjs --dry-run",
+    "verify": "node scripts/verify.mjs",
+    "verify:dry": "node scripts/verify.mjs --dry-run"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

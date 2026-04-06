@@ -41,6 +41,7 @@ import {
   rebuildSearchIndex,
 } from "../lib/queries.js";
 import { CATEGORIES, categorize } from "../lib/categories.js";
+import { verifyAndStore } from "../lib/verify.js";
 
 // ── Server Setup ──────────────────────────────────────────────────────
 
@@ -382,6 +383,40 @@ server.tool(
         },
       ],
     };
+  }
+);
+
+server.tool(
+  "verify_package",
+  "Run verification checks against a package and store the results. Checks GitHub repo existence, activity, license, stars, etc.",
+  {
+    name: z.string().describe("Package name to verify (e.g., 'langchain')"),
+  },
+  async ({ name }) => {
+    const project = getProjectByName(name);
+    if (!project) {
+      return {
+        content: [{ type: "text" as const, text: `Package "${name}" not found.` }],
+        isError: true,
+      };
+    }
+
+    try {
+      const result = await verifyAndStore(project.id);
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        content: [{ type: "text" as const, text: `Verification failed: ${(err as Error).message}` }],
+        isError: true,
+      };
+    }
   }
 );
 

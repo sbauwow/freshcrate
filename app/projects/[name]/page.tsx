@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getProjectByName, getProjectReleases, getProjectWithReadme, getSimilarProjects } from "@/lib/queries";
+import { getVerificationStatus } from "@/lib/verify";
 import { notFound } from "next/navigation";
 
 export default async function ProjectPage({ params }: { params: Promise<{ name: string }> }) {
@@ -10,6 +11,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
   const releases = getProjectReleases(project.id);
   const enriched = getProjectWithReadme(name);
   const similar = getSimilarProjects(project.id, project.category, project.tags, 5);
+  const verification = getVerificationStatus(project.id);
 
   const urgencyColors: Record<string, string> = {
     Low: "text-fm-urgency-low",
@@ -146,6 +148,45 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
               <span>{new Date(project.created_at).toLocaleDateString()}</span>
             </div>
           </div>
+        </div>
+
+        {/* Verification status */}
+        <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
+          <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
+            Verification
+          </h3>
+          {verification ? (
+            <div className="space-y-2 text-[11px]">
+              <div>
+                {verification.verified ? (
+                  <span className="inline-block bg-green-900/30 text-green-400 border border-green-700/50 px-2 py-0.5 rounded text-[10px] font-bold">
+                    ✓ Verified ({verification.score}/100)
+                  </span>
+                ) : (
+                  <span className="inline-block bg-red-900/30 text-red-400 border border-red-700/50 px-2 py-0.5 rounded text-[10px] font-bold">
+                    ✗ Failed ({verification.score}/100)
+                  </span>
+                )}
+              </div>
+              <div className="space-y-0.5">
+                {verification.checks.map((c) => (
+                  <div key={c.check} className="flex items-center gap-1">
+                    <span className={c.passed ? "text-green-400" : "text-red-400"}>
+                      {c.passed ? "✓" : "✗"}
+                    </span>
+                    <span className="text-fm-text-light">{c.check}</span>
+                  </div>
+                ))}
+              </div>
+              {verification.verified_at && (
+                <div className="text-fm-text-light text-[10px] pt-1 border-t border-fm-border/30">
+                  Verified: {new Date(verification.verified_at).toLocaleDateString()}
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-[10px] text-fm-text-light">Not yet verified</p>
+          )}
         </div>
 
         {/* GitHub stats badges */}

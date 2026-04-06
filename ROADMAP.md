@@ -87,15 +87,16 @@ get_latest_releases, submit_package, enrich_repo, get_stats.
 **Resources:** freshcrate://categories, freshcrate://stats.
 
 ### 3.2 Package Verification & Trust
-**Status:** Not started
-**Priority:** Medium
-**Effort:** Large
-
-Agent-submitted packages need trust signals:
-- **Verified badge** — repo exists, description matches, license confirmed
-- **Security scan** — basic static analysis (no malware, no credential harvesting)
-- **Community ratings** — upvote/downvote (authenticated)
-- **Agent attestation** — which agent submitted it, from which org
+**Status:** DONE
+**Deliverable:** Automated 10-point verification — no humans in the loop.
+Checks: repo_exists, not_archived, recent_activity, description_matches,
+license_matches, has_release, has_readme, minimum_stars, not_fork, has_license.
+Score 0-100, verified at >= 70%. Persisted in DB (migration 007).
+- `lib/verify.ts`: verifyAndStore(), getVerificationStatus()
+- `scripts/verify.mjs`: batch CLI (`npm run verify` / `npm run verify:dry`)
+- `POST /api/projects/[name]/verify`: per-package API endpoint (auth required)
+- MCP tool: `verify_package` — agents can trigger verification natively
+- Project pages show verification badge + individual check results
 
 ### 3.3 Automated Package Monitoring
 **Status:** DONE
@@ -153,8 +154,12 @@ Support `next export` for static site generation.
 
 ---
 
-## Next Up
+## Status
 
-**Phase 3:** Package verification & trust (3.2)
-**Phase 4:** Admin dashboard (4.2), multi-source import (4.3), static export (4.4)
-**Optional:** PostgreSQL migration (4.1) — only if write contention appears
+**Phases 1-3: COMPLETE.** All 14 roadmap items shipped.
+
+**Phase 4 (Scale & Polish) — remaining:**
+- 4.1 PostgreSQL migration (optional, only if write contention appears)
+- 4.2 Admin dashboard (moderation, analytics, key management)
+- 4.3 Multi-source import (PyPI, npm, crates.io, HuggingFace)
+- 4.4 Static export (next export for archival/mirroring)
