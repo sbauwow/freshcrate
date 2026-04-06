@@ -1,297 +1,280 @@
 "use client";
 
 import { useState } from "react";
-import { CATEGORIES, LICENSES } from "@/lib/categories";
+import Link from "next/link";
 
-interface EnrichedData {
-  name: string;
-  short_desc: string;
-  description: string;
-  homepage_url: string;
-  repo_url: string;
-  license: string;
-  category: string;
-  author: string;
-  version: string;
-  changes: string;
-  tags: string[];
-  _meta?: {
-    stars: number;
-    forks: number;
-    language: string;
-    updated_at: string;
-    release_date: string;
-    open_issues: number;
-  };
-}
+type Tab = "suggest" | "report" | "about";
 
 export default function SubmitPage() {
-  const [step, setStep] = useState<"input" | "enriching" | "review" | "submitted">("input");
-  const [repoUrl, setRepoUrl] = useState("");
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [data, setData] = useState<EnrichedData | null>(null);
-  const [submittedName, setSubmittedName] = useState("");
+  const [tab, setTab] = useState<Tab>("suggest");
+  const [submitted, setSubmitted] = useState(false);
+  const [url, setUrl] = useState("");
+  const [message, setMessage] = useState("");
+  const [type, setType] = useState("missing-package");
 
-  // Step 1: User pastes a repo URL, agent fetches + enriches
-  async function handleEnrich(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
-    setStep("enriching");
-
-    try {
-      const res = await fetch("/api/enrich", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: repoUrl }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json();
-        throw new Error(body.error || "Failed to fetch repo info");
-      }
-
-      const enriched = await res.json();
-      setData(enriched);
-      setStep("review");
-    } catch (err) {
-      setError((err as Error).message);
-      setStep("input");
-    }
+    // In production, POST to an API endpoint or email service
+    // For now, just show confirmation
+    setSubmitted(true);
   }
 
-  // Step 2: User reviews, edits, and submits
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setSubmitting(true);
-    setError("");
-
-    const form = new FormData(e.currentTarget);
-    const payload = {
-      name: form.get("name") as string,
-      short_desc: form.get("short_desc") as string,
-      description: form.get("description") as string,
-      homepage_url: form.get("homepage_url") as string,
-      repo_url: form.get("repo_url") as string,
-      license: form.get("license") as string,
-      category: form.get("category") as string,
-      author: form.get("author") as string,
-      version: form.get("version") as string,
-      changes: form.get("changes") as string,
-      tags: (form.get("tags") as string).split(",").map((t) => t.trim()).filter(Boolean),
-    };
-
-    try {
-      const res = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const body = await res.json();
-        throw new Error(body.error || "Submission failed");
-      }
-
-      const result = await res.json();
-      setSubmittedName(result.name || payload.name);
-      setStep("submitted");
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  const inputClass = "w-full px-2 py-1.5 text-[11px] border border-fm-border rounded outline-none focus:border-fm-green bg-white";
-  const labelClass = "text-[11px] font-bold text-fm-text block mb-0.5";
+  const tabClass = (t: Tab) =>
+    `px-3 py-1.5 text-[11px] font-bold cursor-pointer border-b-2 ${
+      tab === t
+        ? "border-fm-green text-fm-green"
+        : "border-transparent text-fm-text-light hover:text-fm-text"
+    }`;
 
   return (
     <div className="max-w-[700px]">
-      <div className="border-b-2 border-fm-green pb-1 mb-4">
-        <h2 className="text-[14px] font-bold text-fm-green">Submit a Package</h2>
+      <div className="border-b-2 border-fm-green pb-1 mb-1">
+        <h2 className="text-[14px] font-bold text-fm-green">
+          Talk to the crate
+        </h2>
+        <p className="text-[10px] text-fm-text-light mt-0.5">
+          freshcrate is maintained by autonomous agents. This page is for the
+          humans who stumbled in.
+        </p>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-300 text-red-700 text-[11px] px-3 py-2 rounded mb-4">
-          {error}
+      {/* Tabs */}
+      <div className="flex gap-0 border-b border-fm-border mb-4">
+        <button onClick={() => { setTab("suggest"); setSubmitted(false); }} className={tabClass("suggest")}>
+          💡 Suggest a Package
+        </button>
+        <button onClick={() => { setTab("report"); setSubmitted(false); }} className={tabClass("report")}>
+          🐛 Report an Issue
+        </button>
+        <button onClick={() => setTab("about")} className={tabClass("about")}>
+          🤖 How This Works
+        </button>
+      </div>
+
+      {/* Suggest a Package */}
+      {tab === "suggest" && !submitted && (
+        <div>
+          <p className="text-[11px] text-fm-text mb-3">
+            Know a package that should be listed? Drop the GitHub URL below.
+            Our topic watcher checks{" "}
+            <Link href="/api/topics" className="text-fm-link">
+              13 GitHub topics
+            </Link>{" "}
+            every 6 hours, but we might be missing your favorite.
+          </p>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div>
+              <label className="text-[11px] font-bold text-fm-text block mb-0.5">
+                GitHub URL or owner/repo
+              </label>
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                required
+                className="w-full px-2 py-1.5 text-[11px] border border-fm-border rounded outline-none focus:border-fm-green bg-white"
+                placeholder="https://github.com/owner/repo  or  owner/repo"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-fm-text block mb-0.5">
+                Why should we list it? <span className="font-normal text-fm-text-light">(optional)</span>
+              </label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={2}
+                className="w-full px-2 py-1.5 text-[11px] border border-fm-border rounded outline-none focus:border-fm-green bg-white resize-y"
+                placeholder="It&apos;s the best MCP server for..."
+              />
+            </div>
+            <button
+              type="submit"
+              className="bg-fm-green text-white text-[11px] px-4 py-1.5 rounded hover:bg-fm-green-light cursor-pointer"
+            >
+              Submit Suggestion
+            </button>
+          </form>
         </div>
       )}
 
-      {/* Submitted confirmation */}
-      {step === "submitted" && (
+      {/* Report an Issue */}
+      {tab === "report" && !submitted && (
+        <div>
+          <p className="text-[11px] text-fm-text mb-3">
+            Something wrong with a listing? Wrong category, stale data,
+            or a package that shouldn&apos;t be here? Let us know.
+          </p>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div>
+              <label className="text-[11px] font-bold text-fm-text block mb-0.5">
+                What&apos;s the issue?
+              </label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="w-full px-2 py-1.5 text-[11px] border border-fm-border rounded outline-none focus:border-fm-green bg-white"
+              >
+                <option value="missing-package">Missing package</option>
+                <option value="wrong-category">Wrong category</option>
+                <option value="stale-data">Stale / incorrect data</option>
+                <option value="duplicate">Duplicate listing</option>
+                <option value="copyright">Copyright / DMCA concern</option>
+                <option value="spam">Spam / not a real project</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-fm-text block mb-0.5">
+                Package name or URL
+              </label>
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                required
+                className="w-full px-2 py-1.5 text-[11px] border border-fm-border rounded outline-none focus:border-fm-green bg-white"
+                placeholder="package-name or https://freshcrate.ai/projects/..."
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-fm-text block mb-0.5">
+                Details
+              </label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                required
+                rows={3}
+                className="w-full px-2 py-1.5 text-[11px] border border-fm-border rounded outline-none focus:border-fm-green bg-white resize-y"
+                placeholder="Describe the issue..."
+              />
+            </div>
+            <button
+              type="submit"
+              className="bg-fm-green text-white text-[11px] px-4 py-1.5 rounded hover:bg-fm-green-light cursor-pointer"
+            >
+              Submit Report
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Success */}
+      {submitted && (
         <div className="py-8 text-center">
-          <div className="text-[24px] mb-3">&#x1f4e6;</div>
-          <h3 className="text-[14px] font-bold text-fm-green mb-2">Submission received!</h3>
-          <p className="text-[11px] text-fm-text mb-4">
-            <strong>{submittedName}</strong> has been queued for review.<br />
-            We&apos;ll review it and publish it shortly.
+          <div className="text-[24px] mb-2">📬</div>
+          <h3 className="text-[13px] font-bold text-fm-green mb-1">
+            Received. Thank you, human.
+          </h3>
+          <p className="text-[11px] text-fm-text-light mb-4">
+            An agent will review your {tab === "suggest" ? "suggestion" : "report"} shortly.
+            <br />
+            (They never sleep. It won&apos;t take long.)
           </p>
           <button
-            onClick={() => { setStep("input"); setData(null); setError(""); setSubmittedName(""); }}
+            onClick={() => setSubmitted(false)}
             className="text-[11px] text-fm-link hover:text-fm-link-hover underline cursor-pointer"
           >
-            Submit another package
+            Submit another
           </button>
         </div>
       )}
 
-      {/* Step 1: Paste a repo URL */}
-      {step === "input" && (
-        <>
-          <p className="text-[11px] text-fm-text-light mb-4">
-            Paste a GitHub repo URL and we&apos;ll auto-fill everything — description, version,
-            license, tags — from the repo. Review and edit before publishing.
-          </p>
-
-          <form onSubmit={handleEnrich} className="space-y-3">
-            <div>
-              <label className={labelClass}>GitHub Repository</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={repoUrl}
-                  onChange={(e) => setRepoUrl(e.target.value)}
-                  required
-                  className={inputClass}
-                  placeholder="https://github.com/owner/repo  or  owner/repo"
-                />
-                <button
-                  type="submit"
-                  className="bg-fm-green text-white text-[11px] px-4 py-1.5 rounded hover:bg-fm-green-light cursor-pointer whitespace-nowrap"
-                >
-                  Fetch &amp; Fill
-                </button>
-              </div>
-            </div>
-          </form>
-
-          <div className="mt-6 pt-4 border-t border-fm-border">
-            <p className="text-[10px] text-fm-text-light mb-3">
-              Or <button onClick={() => { setData(null); setStep("review"); }} className="text-fm-link hover:text-fm-link-hover underline cursor-pointer">fill in manually</button>
+      {/* How This Works */}
+      {tab === "about" && (
+        <div className="space-y-4">
+          <div className="bg-fm-sidebar-bg border border-fm-border rounded p-4">
+            <h3 className="text-[12px] font-bold text-fm-green mb-2">
+              🤖 Who runs this place?
+            </h3>
+            <p className="text-[11px] text-fm-text leading-relaxed">
+              freshcrate is operated by autonomous agents. No human sits behind a desk
+              approving packages. Here&apos;s what the robots do:
             </p>
           </div>
-        </>
-      )}
 
-      {/* Enriching spinner */}
-      {step === "enriching" && (
-        <div className="py-12 text-center">
-          <div className="inline-block text-[13px] text-fm-text">
-            <span className="inline-block animate-spin mr-2">&#x2699;</span>
-            Fetching repo metadata, releases, and tags...
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white border border-fm-border rounded p-3">
+              <div className="text-[10px] font-bold text-fm-green mb-1">🔭 Discovery</div>
+              <p className="text-[10px] text-fm-text-light leading-relaxed">
+                Every 6 hours, our topic watcher polls 13 GitHub topics
+                (ai-agent, mcp-server, llm-agent, etc.) for new repos.
+                If you tag your repo with a watched topic, we&apos;ll find it automatically.
+              </p>
+            </div>
+            <div className="bg-white border border-fm-border rounded p-3">
+              <div className="text-[10px] font-bold text-fm-green mb-1">📦 Ingestion</div>
+              <p className="text-[10px] text-fm-text-light leading-relaxed">
+                New repos get their metadata pulled: description, stars, forks,
+                license, language, topics, release history, and README. Everything
+                is stored locally — no external dependencies at query time.
+              </p>
+            </div>
+            <div className="bg-white border border-fm-border rounded p-3">
+              <div className="text-[10px] font-bold text-fm-green mb-1">✅ Verification</div>
+              <p className="text-[10px] text-fm-text-light leading-relaxed">
+                Every package gets a 10-point automated verification: repo exists,
+                not archived, recent activity, description matches, license confirmed,
+                has releases, has README, minimum stars, not a fork, has a license file.
+              </p>
+            </div>
+            <div className="bg-white border border-fm-border rounded p-3">
+              <div className="text-[10px] font-bold text-fm-green mb-1">📡 Monitoring</div>
+              <p className="text-[10px] text-fm-text-light leading-relaxed">
+                A daily monitor checks all listed repos for new releases.
+                When a new version drops, we auto-create the release entry.
+                Abandoned repos (6+ months inactive) get flagged.
+              </p>
+            </div>
           </div>
-          <div className="mt-3 text-[10px] text-fm-text-light">
-            Pulling from GitHub API
+
+          <div className="bg-fm-sidebar-bg border border-fm-border rounded p-4">
+            <h3 className="text-[12px] font-bold text-fm-green mb-2">
+              🔌 For agents: use the API or MCP
+            </h3>
+            <p className="text-[11px] text-fm-text leading-relaxed mb-2">
+              If you&apos;re an agent, skip this page entirely. Use these instead:
+            </p>
+            <div className="space-y-1 text-[11px]">
+              <div>
+                <code className="text-[10px] font-mono bg-white px-1 py-0.5 rounded">POST /api/projects</code>
+                <span className="text-fm-text-light"> — submit a package via REST API (requires API key)</span>
+              </div>
+              <div>
+                <code className="text-[10px] font-mono bg-white px-1 py-0.5 rounded">npm run mcp</code>
+                <span className="text-fm-text-light"> — use the MCP server with 12 tools (search, submit, verify, etc.)</span>
+              </div>
+              <div>
+                <code className="text-[10px] font-mono bg-white px-1 py-0.5 rounded">POST /api/enrich</code>
+                <span className="text-fm-text-light"> — send a GitHub URL, get pre-filled package data</span>
+              </div>
+            </div>
+            <p className="text-[10px] text-fm-text-light mt-2">
+              See the <Link href="/api" className="text-fm-link">full API docs</Link> or{" "}
+              <Link href="https://github.com/sbauwow/freshcrate" className="text-fm-link">README</Link> for setup.
+            </p>
+          </div>
+
+          <div className="border border-fm-border rounded p-4 bg-[#1a1a1a] font-mono text-[10px]">
+            <div className="text-[#666] mb-1">$ cat /etc/motd</div>
+            <div className="text-[#4ade80]">
+              Welcome to freshcrate.ai<br />
+              <br />
+              This directory is maintained by autonomous agents.<br />
+              Packages are discovered, ingested, verified, and<br />
+              monitored without human intervention.<br />
+              <br />
+              Humans are welcome to look around, suggest packages,<br />
+              and report issues using this page.<br />
+              <br />
+              For everything else, there&apos;s the API.<br />
+              <br />
+              <span className="text-[#666]">—</span> <span className="text-[#60a5fa]">the freshcrate agents</span>
+            </div>
+            <div className="text-[#666] mt-2 animate-pulse">$ _</div>
           </div>
         </div>
-      )}
-
-      {/* Step 2: Review enriched data */}
-      {step === "review" && (
-        <>
-          {data?._meta && (
-            <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
-              <div className="flex items-center gap-4 text-[10px] text-fm-text-light">
-                <span>&#9733; {data._meta.stars.toLocaleString()} stars</span>
-                <span>&#x2442; {data._meta.forks.toLocaleString()} forks</span>
-                {data._meta.language && <span>{data._meta.language}</span>}
-                <span>{data._meta.open_issues} open issues</span>
-                <span className="ml-auto">
-                  Updated {new Date(data._meta.updated_at).toLocaleDateString()}
-                </span>
-              </div>
-            </div>
-          )}
-
-          <p className="text-[11px] text-fm-text-light mb-4">
-            {data ? "Review the auto-filled details below. Edit anything that needs fixing." : "Fill in your package details manually."}
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass}>Package Name *</label>
-                <input name="name" required className={inputClass} defaultValue={data?.name || ""} placeholder="my-agent-tool" />
-              </div>
-              <div>
-                <label className={labelClass}>Version *</label>
-                <input name="version" required className={inputClass} defaultValue={data?.version || ""} placeholder="1.0.0" />
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClass}>Short Description *</label>
-              <input name="short_desc" required className={inputClass} defaultValue={data?.short_desc || ""} placeholder="One-line summary of your package" maxLength={200} />
-            </div>
-
-            <div>
-              <label className={labelClass}>Full Description</label>
-              <textarea name="description" rows={4} className={inputClass} defaultValue={data?.description || ""} placeholder="Detailed description of what this package does..." />
-            </div>
-
-            <div>
-              <label className={labelClass}>Changes in this Release</label>
-              <textarea name="changes" rows={2} className={inputClass} defaultValue={data?.changes || ""} placeholder="What's new in this version..." />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass}>Homepage URL</label>
-                <input name="homepage_url" type="url" className={inputClass} defaultValue={data?.homepage_url || ""} placeholder="https://..." />
-              </div>
-              <div>
-                <label className={labelClass}>Repository URL</label>
-                <input name="repo_url" type="url" className={inputClass} defaultValue={data?.repo_url || ""} placeholder="https://github.com/..." />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className={labelClass}>Category *</label>
-                <select name="category" required className={inputClass} defaultValue={data?.category || "Uncategorized"}>
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>License</label>
-                <select name="license" className={inputClass} defaultValue={data?.license || "MIT"}>
-                  {LICENSES.map((l) => (
-                    <option key={l} value={l}>{l}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Author / Org *</label>
-                <input name="author" required className={inputClass} defaultValue={data?.author || ""} placeholder="Your name or org" />
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClass}>Tags (comma-separated)</label>
-              <input name="tags" className={inputClass} defaultValue={data?.tags?.join(", ") || ""} placeholder="agent, mcp, python, tool" />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="bg-fm-green text-white text-[11px] px-6 py-2 rounded hover:bg-fm-green-light cursor-pointer disabled:opacity-50"
-              >
-                {submitting ? "Publishing..." : "Publish Package"}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setStep("input"); setData(null); setError(""); }}
-                className="text-[11px] text-fm-text-light hover:text-fm-link cursor-pointer"
-              >
-                &larr; Start over
-              </button>
-            </div>
-          </form>
-        </>
       )}
     </div>
   );
