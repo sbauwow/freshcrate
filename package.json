@@ -25,7 +25,9 @@
     "enrich": "node scripts/enrich.mjs",
     "enrich:dry": "node scripts/enrich.mjs --dry-run",
     "verify": "node scripts/verify.mjs",
-    "verify:dry": "node scripts/verify.mjs --dry-run"
+    "verify:dry": "node scripts/verify.mjs --dry-run",
+    "pipeline": "node scripts/pipeline.mjs",
+    "pipeline:clear": "node scripts/pipeline.mjs --clear"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

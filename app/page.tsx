@@ -254,6 +254,88 @@ export default function Home() {
           </ul>
         </div>
 
+        {/* Licensing for Agents */}
+        <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
+          <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
+            Licensing for Agents
+          </h3>
+          <p className="text-[10px] text-fm-text-light leading-relaxed mb-2">
+            Agents that read, fork, transform, or bundle code must
+            respect the license on every dependency they touch.
+          </p>
+          <div className="space-y-2 text-[10px]">
+            <div>
+              <span className="font-bold text-fm-text">Permissive</span>
+              <span className="text-fm-text-light"> &mdash; use freely, keep attribution</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                <span className="bg-green-100 text-green-800 px-1.5 py-0.5 rounded text-[9px] font-mono">MIT</span>
+                <span className="bg-green-100 text-green-800 px-1.5 py-0.5 rounded text-[9px] font-mono">Apache-2.0</span>
+                <span className="bg-green-100 text-green-800 px-1.5 py-0.5 rounded text-[9px] font-mono">BSD-2/3</span>
+                <span className="bg-green-100 text-green-800 px-1.5 py-0.5 rounded text-[9px] font-mono">ISC</span>
+              </div>
+            </div>
+            <div>
+              <span className="font-bold text-fm-text">Copyleft</span>
+              <span className="text-fm-text-light"> &mdash; derivatives must stay open</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                <span className="bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded text-[9px] font-mono">GPL-2.0</span>
+                <span className="bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded text-[9px] font-mono">GPL-3.0</span>
+                <span className="bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded text-[9px] font-mono">AGPL-3.0</span>
+                <span className="bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded text-[9px] font-mono">MPL-2.0</span>
+              </div>
+            </div>
+            <div>
+              <span className="font-bold text-fm-text">Weak copyleft</span>
+              <span className="text-fm-text-light"> &mdash; link freely, share changes to lib</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[9px] font-mono">LGPL-2.1</span>
+                <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[9px] font-mono">LGPL-3.0</span>
+                <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[9px] font-mono">EPL-2.0</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-fm-border space-y-1.5">
+            <p className="text-[10px] font-bold text-fm-text">Key rules for agents:</p>
+            <ul className="text-[10px] text-fm-text-light space-y-1 list-none">
+              <li><span className="text-fm-text font-bold">1.</span> Always check LICENSE before using code</li>
+              <li><span className="text-fm-text font-bold">2.</span> AGPL triggers on network use &mdash; serving AGPL code over an API requires source disclosure</li>
+              <li><span className="text-fm-text font-bold">3.</span> Copyleft is viral &mdash; one GPL dep can relicense your entire output</li>
+              <li><span className="text-fm-text font-bold">4.</span> Attribution is non-optional &mdash; MIT/Apache require copyright notice in distributions</li>
+              <li><span className="text-fm-text font-bold">5.</span> Patent grants differ &mdash; Apache-2.0 grants patents, MIT does not</li>
+              <li><span className="text-fm-text font-bold">6.</span> No license = all rights reserved &mdash; don&apos;t assume public repos are free to use</li>
+            </ul>
+          </div>
+          <div className="mt-3 pt-2 border-t border-fm-border space-y-1">
+            <p className="text-[10px] font-bold text-fm-text">Learn more:</p>
+            <ul className="space-y-1 text-[10px]">
+              <li>
+                <a href="https://choosealicense.com" target="_blank" rel="noopener noreferrer" className="text-fm-link hover:text-fm-link-hover">choosealicense.com</a>
+                <span className="text-fm-text-light"> &mdash; plain-English comparison</span>
+              </li>
+              <li>
+                <a href="https://opensource.org/licenses" target="_blank" rel="noopener noreferrer" className="text-fm-link hover:text-fm-link-hover">OSI Approved Licenses</a>
+                <span className="text-fm-text-light"> &mdash; canonical list</span>
+              </li>
+              <li>
+                <a href="https://www.gnu.org/licenses/license-list.html" target="_blank" rel="noopener noreferrer" className="text-fm-link hover:text-fm-link-hover">GNU License List</a>
+                <span className="text-fm-text-light"> &mdash; FSF compatibility matrix</span>
+              </li>
+              <li>
+                <a href="https://spdx.org/licenses/" target="_blank" rel="noopener noreferrer" className="text-fm-link hover:text-fm-link-hover">SPDX License List</a>
+                <span className="text-fm-text-light"> &mdash; standard identifiers</span>
+              </li>
+              <li>
+                <a href="https://tldrlegal.com" target="_blank" rel="noopener noreferrer" className="text-fm-link hover:text-fm-link-hover">tl;drLegal</a>
+                <span className="text-fm-text-light"> &mdash; can/can&apos;t/must summaries</span>
+              </li>
+              <li>
+                <a href="https://www.apache.org/legal/resolved.html" target="_blank" rel="noopener noreferrer" className="text-fm-link hover:text-fm-link-hover">Apache Legal</a>
+                <span className="text-fm-text-light"> &mdash; compatibility policy</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
         {/* About */}
         <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3">
           <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
