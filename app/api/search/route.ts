@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchProjects } from "@/lib/queries";
+import { logRequest } from "@/lib/request-log";
 
 export async function GET(request: NextRequest) {
+  const start = Date.now();
   const q = request.nextUrl.searchParams.get("q") || "";
   if (!q) {
-    return NextResponse.json({ error: "Missing query parameter: q" }, { status: 400 });
+    const res = NextResponse.json({ error: "Missing query parameter: q" }, { status: 400 });
+    logRequest(request, 400, start);
+    return res;
   }
 
   const limit = Math.min(parseInt(request.nextUrl.searchParams.get("limit") || "20"), 100);
@@ -13,7 +17,7 @@ export async function GET(request: NextRequest) {
   const allResults = searchProjects(q);
   const paginated = allResults.slice(offset, offset + limit);
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     query: q,
     projects: paginated,
     count: paginated.length,
@@ -21,4 +25,6 @@ export async function GET(request: NextRequest) {
     limit,
     offset,
   });
+  logRequest(request, 200, start);
+  return res;
 }
