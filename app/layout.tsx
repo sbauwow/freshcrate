@@ -56,6 +56,8 @@ export default function RootLayout({
               <Link href="/api" className="text-black hover:text-fm-link no-underline">api</Link>
               <span className="text-[#999]">|</span>
               <Link href="/stats" className="text-black hover:text-fm-link no-underline">stats</Link>
+              <span className="text-[#999]">|</span>
+              <Link href="/learn" className="text-black hover:text-fm-link no-underline">learn 📦</Link>
             </nav>
             <NavClock />
           </div>
@@ -100,6 +102,8 @@ export default function RootLayout({
               <Link href="/api" className="hover:text-fm-link" style={{ color: "#9990b0" }}>API</Link>
               <span style={{ color: "#c8c0d8" }}>{" | "}</span>
               <Link href="/submit" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Submit</Link>
+              <span style={{ color: "#c8c0d8" }}>{" | "}</span>
+              <Link href="/learn" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Learn</Link>
               <span style={{ color: "#c8c0d8" }}>{" | "}</span>
               <Link href="/privacy" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Privacy</Link>
               <span style={{ color: "#c8c0d8" }}>{" | "}</span>
