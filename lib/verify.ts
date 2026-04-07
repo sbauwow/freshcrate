@@ -262,7 +262,18 @@ export function getVerificationStatus(projectId: number): VerificationResult | n
   if (!row || row.verification_json === "{}") return null;
 
   try {
-    return JSON.parse(row.verification_json);
+    const data = JSON.parse(row.verification_json);
+    // Handle legacy format where checks is {name: bool} instead of [{check, passed, detail}]
+    if (data.checks && !Array.isArray(data.checks)) {
+      data.checks = Object.entries(data.checks).map(([check, passed]) => ({
+        check,
+        passed: !!passed,
+        detail: "",
+      }));
+      data.verified = (data.score ?? 0) >= 70;
+      data.verified_at = data.checked_at || data.verified_at;
+    }
+    return data;
   } catch {
     return null;
   }
