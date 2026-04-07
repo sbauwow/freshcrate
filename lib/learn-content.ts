@@ -7,6 +7,13 @@
  * never assuming prior knowledge.
  */
 
+export interface QuizQuestion {
+  question: string;
+  choices: string[];
+  correct: number;              // index into choices
+  explanation: string;
+}
+
 export interface MiniCrate {
   slug: string;
   number: number;
@@ -20,6 +27,7 @@ export interface MiniCrate {
   sections: Section[];
   thinkAboutIt: string[];       // discussion questions
   tryThis: string[];            // hands-on activities
+  quiz: QuizQuestion[];         // end-of-crate quiz
   funFact: string;
   nextCrate: string | null;     // slug of next lesson
 }
@@ -89,6 +97,32 @@ AI is NOT one thing. There are narrow AIs (good at one specific task, like playi
       "Write down 5 things you did today. For each one, guess whether AI could do it too.",
       "Ask someone who's been in tech for 10+ years what they thought AI would look like today. How close were they?"
     ],
+    quiz: [
+      {
+        question: "What does the 'artificial' in Artificial Intelligence mean?",
+        choices: ["Fake or not real", "Made by humans", "Digital only", "Robotic"],
+        correct: 1,
+        explanation: "'Artificial' simply means 'made by humans' — it doesn't mean fake. AI is real intelligence created by people rather than occurring naturally."
+      },
+      {
+        question: "What is 'hallucination' in AI?",
+        choices: ["When AI becomes self-aware", "When AI confidently produces incorrect information", "When AI processes images", "When AI runs out of memory"],
+        correct: 1,
+        explanation: "AI hallucination is when a model confidently generates information that sounds plausible but is factually wrong. It's a well-known limitation of current AI systems."
+      },
+      {
+        question: "Which of these is an example of narrow AI?",
+        choices: ["A robot that can do any human task", "A chess-playing program", "A sentient computer", "An AI with human emotions"],
+        correct: 1,
+        explanation: "A chess program is narrow AI — it's excellent at one specific task but can't do anything else. All current AI is narrow, even impressive chatbots."
+      },
+      {
+        question: "When was the term 'Artificial Intelligence' first coined?",
+        choices: ["1943", "1950", "1956", "1997"],
+        correct: 2,
+        explanation: "The term was coined at the 1956 Dartmouth workshop. Researchers were wildly optimistic, thinking human-level AI was about 20 years away."
+      },
+    ],
     funFact: "The term 'bug' in computing comes from 1947 when an actual moth got stuck in a relay of the Harvard Mark II computer. Grace Hopper taped the moth into the logbook and wrote 'First actual case of bug being found.' The moth is still in the Smithsonian.",
     nextCrate: "how-machines-learn"
   },
@@ -154,6 +188,32 @@ Training big AI models is expensive. Training GPT-4 reportedly cost over $100 mi
       "Play 20 Questions with a friend. Notice how each answer narrows down the possibilities — that's similar to how decision trees work in ML!",
       "Collect 20 objects and sort them into groups WITHOUT deciding categories in advance. That's unsupervised learning!",
       "Try Google's Teachable Machine (teachablemachine.withgoogle.com) — train your own image classifier in your browser, no coding needed."
+    ],
+    quiz: [
+      {
+        question: "What's the key difference between traditional programming and machine learning?",
+        choices: ["ML is faster", "In ML, the computer figures out the rules from examples instead of being told them", "ML uses more memory", "Traditional programming can't use data"],
+        correct: 1,
+        explanation: "Traditional programming: you write rules. Machine learning: you provide examples and the computer discovers the rules itself by adjusting internal parameters."
+      },
+      {
+        question: "In supervised learning, what does the computer receive during training?",
+        choices: ["Only questions", "Only answers", "Both questions and answers", "Neither — it explores on its own"],
+        correct: 2,
+        explanation: "Supervised learning provides both inputs (questions) and correct outputs (answers). The model learns to map one to the other."
+      },
+      {
+        question: "Which type of learning does AlphaGo use to master the game of Go?",
+        choices: ["Supervised learning", "Unsupervised learning", "Reinforcement learning", "Transfer learning"],
+        correct: 2,
+        explanation: "Reinforcement learning — the agent plays games, receives rewards for winning and penalties for losing, and improves through trial and error."
+      },
+      {
+        question: "Why was diverse, representative training data highlighted as critical?",
+        choices: ["It makes training faster", "It reduces storage costs", "Without it, the model fails on groups it never saw", "It's a legal requirement"],
+        correct: 2,
+        explanation: "If a model only sees certain types of examples, it performs poorly on anything outside that narrow range. Diverse data leads to models that work for everyone."
+      },
     ],
     funFact: "Google's cat detector (2012) was one of the first big deep learning breakthroughs. Researchers fed a neural network 10 million YouTube thumbnails and it taught itself to recognize cats — without ever being told what a cat looks like. The internet's obsession with cat videos literally advanced AI research.",
     nextCrate: "data-the-fuel"
@@ -221,6 +281,26 @@ YOUR OWN DATA — For specific tasks, companies collect their own. A hospital mi
       "Take 30 photos of things in your room. Try to label them into categories. How hard is it to make consistent labels?",
       "Look at the MNIST dataset online (it's just handwritten numbers). Can YOU tell what some of the messy ones say? That's the labeling problem.",
       "Count how many times in one day you generate data that could theoretically be used to train AI."
+    ],
+    quiz: [
+      {
+        question: "What does 'garbage in, garbage out' mean in the context of AI?",
+        choices: ["AI produces literal garbage", "Bad training data leads to bad model performance", "AI should be used to manage waste", "Training uses too much energy"],
+        correct: 1,
+        explanation: "If you train a model on poor-quality, biased, or incorrect data, the model will produce poor-quality, biased, or incorrect results."
+      },
+      {
+        question: "Why did an AI hiring tool discriminate against women?",
+        choices: ["It was programmed to be biased", "It was trained on historically biased hiring data", "Women submitted fewer applications", "The algorithm had a bug"],
+        correct: 1,
+        explanation: "The model learned from 10 years of hiring data from a male-dominated industry. It reflected the historical bias in the data, not intentional discrimination."
+      },
+      {
+        question: "What is 'synthetic data'?",
+        choices: ["Data collected from sensors", "Artificially generated data that mimics real data", "Data stored in the cloud", "Encrypted data"],
+        correct: 1,
+        explanation: "Synthetic data is generated artificially (often by another AI) to augment limited real datasets. It's useful when real data is scarce or privacy-sensitive."
+      },
     ],
     funFact: "In 2016, Microsoft launched a chatbot called Tay on Twitter. Within 24 hours, internet trolls had taught it to post incredibly offensive things by flooding it with toxic data. Microsoft shut it down in less than a day. The lesson: your AI is only as good (or as terrible) as the data people feed it.",
     nextCrate: "neural-networks"
@@ -293,6 +373,26 @@ The amount you adjust each time is called the learning rate. Too big? You'll ove
       "Visit playground.tensorflow.org and build neural networks in your browser. Change the layers, neurons, and data to see what happens.",
       "Try to teach yourself a new card game using ONLY trial and error (no reading rules). That's reinforcement learning — similar to how neural networks learn."
     ],
+    quiz: [
+      {
+        question: "What makes deep learning 'deep'?",
+        choices: ["It understands deep concepts", "It uses many hidden layers", "It requires deep thinking to design", "It processes data deeply"],
+        correct: 1,
+        explanation: "'Deep' simply refers to the number of hidden layers in the neural network. More layers = deeper network. It's not about philosophical depth."
+      },
+      {
+        question: "What is backpropagation?",
+        choices: ["Sending data backwards through the internet", "The process of adjusting weights by working backwards from the error", "A backup system for neural networks", "Reversing bad predictions"],
+        correct: 1,
+        explanation: "Backpropagation calculates how much each weight contributed to the error, then adjusts them backwards through the layers to reduce future errors."
+      },
+      {
+        question: "What happens if the learning rate is too high?",
+        choices: ["The model learns perfectly", "The model overshoots and never settles on good weights", "Training goes faster with no downsides", "The computer overheats"],
+        correct: 1,
+        explanation: "A learning rate that's too high causes the model to make overly large adjustments, overshooting the optimal weights and failing to converge."
+      },
+    ],
     funFact: "The original idea for artificial neural networks came from a 1943 paper by Warren McCulloch and Walter Pitts. They designed a mathematical model of a neuron using simple logic gates. The catch? Nobody had computers powerful enough to run their ideas for decades. McCulloch never saw his work become the foundation of modern AI.",
     nextCrate: "computer-vision"
   },
@@ -362,6 +462,26 @@ IMAGE GENERATION — "Here's a new image of a cat wearing a top hat on the moon 
       "Take the same photo of an object in 5 different lighting conditions. See how different the pixels look — this is why computer vision is hard!",
       "Try Google Lens on your phone (or Google Image search on desktop). Upload unusual objects and see if it can identify them.",
       "Draw a simple 5x5 grid on paper. Fill each cell with a number (0 = white, 1 = black). Have a friend try to guess what you drew. This is how low-resolution images work."
+    ],
+    quiz: [
+      {
+        question: "How does a computer 'see' an image?",
+        choices: ["Through a camera lens", "As a grid of numbers representing pixel colors", "By understanding shapes like humans do", "Using light sensors"],
+        correct: 1,
+        explanation: "Every digital image is a grid of pixels, and each pixel is represented by numbers (RGB values 0-255). A computer processes these numbers, not visual concepts."
+      },
+      {
+        question: "What was special about AlexNet in 2012?",
+        choices: ["It was the first neural network", "It massively outperformed all previous image recognition systems", "It was the smallest model ever built", "It could generate images"],
+        correct: 1,
+        explanation: "AlexNet crushed the ImageNet competition by a huge margin, improving accuracy more than all previous years combined. It made deep learning mainstream."
+      },
+      {
+        question: "What's the difference between object detection and image classification?",
+        choices: ["They're the same thing", "Classification names what's in the image; detection also locates where objects are", "Detection is faster", "Classification works on video, detection on photos"],
+        correct: 1,
+        explanation: "Classification answers 'what is this?' Detection answers 'what is it AND where is it?' by drawing bounding boxes around objects."
+      },
     ],
     funFact: "The ImageNet dataset was created by professor Fei-Fei Li and her team, who used Amazon Mechanical Turk to get 49,000 workers from 167 countries to hand-label 14 million images. The project took 2.5 years. When she first proposed the idea, many colleagues said it was pointless. It ended up being one of the most important datasets in AI history.",
     nextCrate: "nlp-language"
@@ -435,6 +555,26 @@ The "Large" in LLM refers to the number of parameters. GPT-3 had 175 billion. Mo
       "Try the 'predict the next word' game with a friend. Say a sentence and have them guess the next word. How often are they right? That's what LLMs do billions of times.",
       "Write a paragraph and replace every 5th word with '___'. Can you fill them back in? That's a simplified version of what masked language models (like BERT) do during training.",
       "Ask an AI chatbot the same question 5 times. Do you get exactly the same answer? Why not? (Hint: it has a 'temperature' setting that adds randomness.)"
+    ],
+    quiz: [
+      {
+        question: "What is the core trick behind Large Language Models?",
+        choices: ["Understanding grammar rules", "Predicting the next word", "Memorizing entire books", "Translating between languages"],
+        correct: 1,
+        explanation: "LLMs are fundamentally next-word predictors. When done at massive scale (billions of parameters, trillions of training words), this simple objective produces surprisingly capable systems."
+      },
+      {
+        question: "What does the 'T' in GPT stand for?",
+        choices: ["Text", "Trained", "Transformer", "Turing"],
+        correct: 2,
+        explanation: "GPT = Generative Pre-trained Transformer. The Transformer architecture, introduced in the 2017 'Attention Is All You Need' paper, is the foundation."
+      },
+      {
+        question: "What is the key innovation of the Transformer architecture?",
+        choices: ["Faster processing speed", "The attention mechanism — learning which parts of the input to focus on", "Using less data", "Running on mobile devices"],
+        correct: 1,
+        explanation: "Attention lets the model learn which words are relevant to each other, even across long distances in the text. This is what makes Transformers so effective at language."
+      },
     ],
     funFact: "The 'Attention Is All You Need' paper that introduced Transformers has been cited over 100,000 times. The title was inspired by a Beatles song. Several of the original eight authors have since left Google to start their own AI companies, collectively worth billions of dollars. One paper, many billionaires.",
     nextCrate: "training-your-own"
@@ -522,6 +662,26 @@ NOT UNDERSTANDING THE PROBLEM — Building a model before clearly defining what 
       "If you know any Python, try Google Colab. Load the Iris flower dataset (it's built into scikit-learn) and train a classifier. The whole thing is ~10 lines of code.",
       "Create a paper-based 'decision tree' classifier. Write down yes/no questions that lead to identifying different animals. That's literally a machine learning algorithm!"
     ],
+    quiz: [
+      {
+        question: "What is 'overfitting'?",
+        choices: ["When a model is too large to run", "When a model memorizes training data but fails on new data", "When training takes too long", "When the model is too simple"],
+        correct: 1,
+        explanation: "Overfitting means the model learned the training data's noise and quirks rather than general patterns. It performs great on training data but poorly on anything new."
+      },
+      {
+        question: "Why should you NEVER test a model on the same data you trained it on?",
+        choices: ["It's too slow", "It would give a misleadingly high accuracy", "The computer might crash", "It's against the law"],
+        correct: 1,
+        explanation: "Testing on training data is like giving students the exact test they memorized. High scores mean nothing about real understanding. Always use separate test data."
+      },
+      {
+        question: "What percentage of a data scientist's time is typically spent on data cleaning?",
+        choices: ["About 10%", "About 30%", "About 80%", "About 5%"],
+        correct: 2,
+        explanation: "Data preparation and cleaning is roughly 80% of the work in a real ML project. Building the actual model is the comparatively easy part."
+      },
+    ],
     funFact: "The first time a neural network was used commercially was in 1989, for reading handwritten zip codes on mail envelopes at the US Postal Service. It was designed by Yann LeCun, who later became the chief AI scientist at Meta. Postal workers hated it at first, but it processed mail faster and more accurately than humans.",
     nextCrate: "ai-ethics"
   },
@@ -595,6 +755,26 @@ ENVIRONMENTAL IMPACT — Training one large AI model can emit as much carbon as 
       "Look up 3 news stories about AI bias. For each one, identify: What data caused the bias? Who was harmed? How could it have been prevented?",
       "Write an 'AI Ethics Constitution' — your 5 rules for how AI should be developed and used. Compare with a friend's rules.",
       "Find a deepfake detection tool online and test it with some images. How accurate is it? What could go wrong if we rely on these tools?"
+    ],
+    quiz: [
+      {
+        question: "Why does AI inherit human biases?",
+        choices: ["Programmers deliberately add bias", "AI learns from human data, which contains human biases", "Computers are naturally biased", "Only certain AI models have bias"],
+        correct: 1,
+        explanation: "AI learns patterns from data. If the data reflects historical biases (which it almost always does), the AI reproduces and sometimes amplifies those biases."
+      },
+      {
+        question: "What is a 'deepfake'?",
+        choices: ["A very convincing password", "AI-generated fake video or audio of real people", "A deep learning error", "A type of computer virus"],
+        correct: 1,
+        explanation: "Deepfakes use AI to generate realistic video or audio of people saying or doing things they never actually did. The technology is getting cheaper and harder to detect."
+      },
+      {
+        question: "When AI makes a harmful decision, who bears responsibility?",
+        choices: ["Only the AI itself", "It's a complex question involving developers, companies, and deployers", "Nobody — it's just a machine", "Only the end user"],
+        correct: 1,
+        explanation: "AI accountability is an unsolved problem. Responsibility is shared among those who build, deploy, and use AI systems — which is why governance and regulation matter."
+      },
     ],
     funFact: "In 2018, the European Union passed GDPR, which includes the 'right to explanation' — if an AI makes a decision about you, you have the legal right to know why. This is actually really hard technically because many AI models are 'black boxes' where even the creators can't fully explain individual decisions. Laws and technology don't always move at the same speed.",
     nextCrate: "generative-ai"
@@ -679,6 +859,26 @@ The honest answer is: it's complicated, it's evolving, and we'll probably spend 
       "Try an AI image generator (many have free tiers). Generate 10 images and rate them. How many look 'real'? What gives away the fakes?",
       "Write a short story paragraph. Then ask an AI to write one on the same topic. Compare. What's different about the AI's writing?",
       "Try 'prompt engineering' — write different prompts to get the same AI to produce wildly different results. How much does word choice matter?"
+    ],
+    quiz: [
+      {
+        question: "How do diffusion models generate images?",
+        choices: ["By copying and pasting from existing images", "By starting with noise and progressively removing it, guided by a text prompt", "By drawing pixel by pixel like a human", "By searching the internet for matching images"],
+        correct: 1,
+        explanation: "Diffusion models learn to reverse a noise-adding process. During generation, they start with random noise and denoise it step by step, using the text prompt to guide what emerges."
+      },
+      {
+        question: "What did GANs (Generative Adversarial Networks) use to improve image generation?",
+        choices: ["A single large network", "Two networks competing — a generator and a discriminator", "Manual pixel correction", "Pre-made image templates"],
+        correct: 1,
+        explanation: "GANs pit a generator (creates fakes) against a discriminator (detects fakes). They improve by competing, like a forger and detective training each other."
+      },
+      {
+        question: "Why is AI-generated art controversial?",
+        choices: ["It's always low quality", "It raises questions about creativity, copyright, and impact on human artists", "It uses too much electricity", "It can only produce abstract art"],
+        correct: 1,
+        explanation: "The debate spans who owns the output, whether it's 'real' art, whether training on artists' work without consent is ethical, and how it affects livelihoods."
+      },
     ],
     funFact: "In 2022, an AI-generated image called 'Théâtre D'opéra Spatial' won first prize at the Colorado State Fair's art competition. The artist, Jason Allen, used Midjourney to create it. Real artists were outraged. Allen's response: 'Art is dead, dude. It's over. AI won. Humans lost.' The debate is still raging.",
     nextCrate: "agents-and-the-future"
@@ -768,6 +968,26 @@ The future isn't something that happens to you. It's something you build.`
       "Design an AI agent on paper. What's its goal? What tools does it have? What decisions can it make on its own vs. needing human approval? Draw a flowchart of its decision process.",
       "Pick a problem in your workplace or community. How could an AI agent help solve it? What data would it need? What could go wrong?",
       "Write a short essay: 'A Day in 2035.' Describe how AI might be part of everyday life. Be specific — not just 'robots everywhere' but exactly how AI helps with specific tasks."
+    ],
+    quiz: [
+      {
+        question: "What's the key difference between a chatbot and an AI agent?",
+        choices: ["Agents are faster", "Agents can take actions in the world, not just generate text", "Chatbots use newer technology", "There is no difference"],
+        correct: 1,
+        explanation: "A chatbot responds to prompts with text. An agent has tools (browser, code editor, APIs) and autonomy — it decides what actions to take to accomplish a goal."
+      },
+      {
+        question: "What is the 'ReAct' pattern in AI agents?",
+        choices: ["React.js framework for AI", "A loop of Reason + Act — think about what to do, then do it, then observe results", "A chemical reaction simulation", "Reacting to user emotions"],
+        correct: 1,
+        explanation: "ReAct (Reason + Act) is the core agent loop: observe the situation, reason about next steps using an LLM, take an action with a tool, observe the result, repeat."
+      },
+      {
+        question: "What does AGI stand for, and does it exist today?",
+        choices: ["Automated General Interface — yes", "Artificial General Intelligence — no, not yet", "Advanced GPU Integration — yes", "Artificial Graphical Intelligence — no"],
+        correct: 1,
+        explanation: "AGI means AI that can learn and perform any intellectual task a human can. It doesn't exist yet. All current AI, even impressive chatbots, is narrow AI — good at specific tasks only."
+      },
     ],
     funFact: "The first website ever (info.cern.ch) had no images, no JavaScript, no AI — just hyperlinks. That was 1991. Thirty-five years later, we have AI agents that can build entire websites from a text description. If progress continues at this rate, in another decade today's AI will look as primitive as that first website does to us now.",
     nextCrate: null

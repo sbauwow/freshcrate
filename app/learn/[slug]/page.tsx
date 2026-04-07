@@ -8,6 +8,7 @@ import {
   type MiniCrate,
 } from "@/lib/learn-content";
 import { CrateCompleteToggle } from "@/app/components/crate-progress";
+import { CrateQuiz } from "@/app/components/crate-quiz";
 
 export async function generateStaticParams() {
   return getAllCrates().map((crate) => ({ slug: crate.slug }));
@@ -21,9 +22,21 @@ export async function generateMetadata({
   const { slug } = await params;
   const crate = getCrate(slug);
   if (!crate) return { title: "Not Found | freshcrate" };
+  const title = `Crate #${crate.number}: ${crate.title} — Mini Crates | freshcrate`;
+  const description = `${crate.subtitle} — ${getDifficultyLabel(crate.difficulty).replace(/^. /, "")} · ~${crate.estimatedMinutes} min`;
   return {
-    title: `Crate #${crate.number}: ${crate.title} — Mini Crates | freshcrate`,
-    description: crate.subtitle,
+    title,
+    description,
+    openGraph: {
+      title: `${crate.emoji} Crate #${crate.number}: ${crate.title}`,
+      description,
+      url: `https://freshcrate.ai/learn/${crate.slug}`,
+    },
+    twitter: {
+      card: "summary" as const,
+      title: `${crate.emoji} Crate #${crate.number}: ${crate.title}`,
+      description,
+    },
   };
 }
 
@@ -188,6 +201,11 @@ export default async function CratePage({
           {crate.funFact}
         </p>
       </div>
+
+      {/* ── Quiz ── */}
+      {crate.quiz.length > 0 && (
+        <CrateQuiz questions={crate.quiz} slug={crate.slug} />
+      )}
 
       {/* ── Previous / Next Navigation ── */}
       <div className="border-t border-fm-border pt-3 flex items-center justify-between">

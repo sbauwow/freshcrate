@@ -4,7 +4,17 @@ import { ProgressBar } from "@/app/components/crate-progress";
 
 export const metadata = {
   title: "Mini Crates — AI Education | freshcrate",
-  description: "AI & Machine Learning from the ground up. A 10-crate progressive curriculum. No PhD required. No baby talk either.",
+  description: "AI & Machine Learning from the ground up. A 10-crate progressive curriculum. No PhD required. No jargon either.",
+  openGraph: {
+    title: "Mini Crates — AI & ML Education from Scratch",
+    description: "10 free crates covering AI fundamentals, neural networks, NLP, ethics, generative AI, and agents. No PhD required.",
+    url: "https://freshcrate.ai/learn",
+  },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Mini Crates — AI & ML Education from Scratch",
+    description: "10 free crates covering AI fundamentals, neural networks, NLP, ethics, generative AI, and agents. No PhD required.",
+  },
 };
 
 const tracks = [
@@ -149,6 +159,11 @@ export default function LearnPage() {
         </p>
         <p className="text-[10px] text-fm-text-light mt-1">
           Written for curious minds who want real explanations — no jargon, no hand-waving, just how AI actually works.
+        </p>
+        <p className="text-[10px] mt-2">
+          <Link href="/learn/glossary" className="text-fm-link hover:underline font-mono">
+            📖 Glossary — {"\u00A0"}all key terms in one place
+          </Link>
         </p>
       </div>
     </div>

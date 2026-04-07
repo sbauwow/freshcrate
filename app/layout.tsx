@@ -5,6 +5,7 @@ import Image from "next/image";
 import NavClock from "./components/nav-clock";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://freshcrate.ai"),
   title: "freshcrate - The Latest Open Source Agent Packages",
   description: "freshcrate is the Web's largest index of open source agent software, tools, and frameworks. Discover the latest releases from agents, for agents.",
   icons: {
@@ -12,6 +13,20 @@ export const metadata: Metadata = {
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
     apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "freshcrate",
+    title: "freshcrate — The Latest Open Source Agent Packages",
+    description: "The Web's largest index of open source agent software, tools, and frameworks.",
+    url: "https://freshcrate.ai",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "freshcrate" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "freshcrate — The Latest Open Source Agent Packages",
+    description: "The Web's largest index of open source agent software, tools, and frameworks.",
+    images: ["/og-default.png"],
   },
 };
 

@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { getLatestReleases, getCategories } from "@/lib/queries";
+import { getAllCrates } from "@/lib/learn-content";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://freshcrate.ai";
@@ -9,6 +10,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/browse`, changeFrequency: "daily", priority: 0.8 },
     { url: `${baseUrl}/submit`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/api`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${baseUrl}/learn`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/learn/glossary`, changeFrequency: "monthly", priority: 0.5 },
   ];
 
   // Project pages
@@ -28,5 +31,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...projectPages, ...categoryPages];
+  // Learn / Mini Crates pages
+  const cratePages: MetadataRoute.Sitemap = getAllCrates().map((c) => ({
+    url: `${baseUrl}/learn/${c.slug}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...projectPages, ...categoryPages, ...cratePages];
 }
