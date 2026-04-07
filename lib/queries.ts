@@ -50,7 +50,7 @@ export function getLatestReleases(limit = 20, offset = 0): ProjectWithRelease[] 
            (SELECT COUNT(*) FROM releases r3 WHERE r3.project_id = p.id) as release_count
     FROM projects p
     JOIN releases r ON r.project_id = p.id
-    WHERE r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+    WHERE r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
     ORDER BY
       CASE WHEN (SELECT COUNT(*) FROM releases r4 WHERE r4.project_id = p.id) > 1
         THEN r.created_at
@@ -89,7 +89,7 @@ export function getProjectByName(name: string): ProjectWithRelease | null {
            r.urgency as latest_urgency, r.created_at as release_date
     FROM projects p
     JOIN releases r ON r.project_id = p.id
-    WHERE p.name = ? AND r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+    WHERE p.name = ? AND r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
   `).get(name) as ProjectWithRelease | undefined;
 
   if (!row) return null;
@@ -127,7 +127,7 @@ export function getProjectsByCategory(category: string): ProjectWithRelease[] {
            r.urgency as latest_urgency, r.created_at as release_date
     FROM projects p
     JOIN releases r ON r.project_id = p.id
-    WHERE p.category = ? AND r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+    WHERE p.category = ? AND r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
     ORDER BY p.name
   `).all(category) as ProjectWithRelease[];
 
@@ -143,14 +143,14 @@ export function searchProjects(query: string): ProjectWithRelease[] {
   const db = getDb();
 
   try {
-    // Try FTS5 search on name, short_desc, description with BM25 ranking,
+    // Try FTS5 search on name, short_desc, description, readme_text with BM25 ranking,
     // unioned with a LIKE search on tags (not in the FTS index)
     const rows = db.prepare(`
       SELECT DISTINCT p.*, r.version as latest_version, r.changes as latest_changes,
              r.urgency as latest_urgency, r.created_at as release_date
       FROM projects p
       JOIN releases r ON r.project_id = p.id
-      WHERE r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+      WHERE r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
         AND (
           p.id IN (
             SELECT rowid FROM projects_fts WHERE projects_fts MATCH ?
@@ -177,10 +177,10 @@ export function searchProjects(query: string): ProjectWithRelease[] {
       FROM projects p
       JOIN releases r ON r.project_id = p.id
       LEFT JOIN tags t ON t.project_id = p.id
-      WHERE r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
-        AND (p.name LIKE ? OR p.short_desc LIKE ? OR p.description LIKE ? OR t.tag LIKE ? OR p.author LIKE ?)
+      WHERE r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
+        AND (p.name LIKE ? OR p.short_desc LIKE ? OR p.description LIKE ? OR p.readme_text LIKE ? OR t.tag LIKE ? OR p.author LIKE ?)
       ORDER BY r.created_at DESC
-    `).all(like, like, like, like, like) as ProjectWithRelease[];
+    `).all(like, like, like, like, like, like) as ProjectWithRelease[];
 
     return rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
   }
@@ -262,7 +262,7 @@ export function getProjectWithReadme(name: string): ProjectWithReadme | null {
            r.urgency as latest_urgency, r.created_at as release_date
     FROM projects p
     JOIN releases r ON r.project_id = p.id
-    WHERE p.name = ? AND r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+    WHERE p.name = ? AND r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
   `).get(name) as ProjectWithReadme | undefined;
 
   if (!row) return null;
@@ -293,7 +293,7 @@ export function getSimilarProjects(
       FROM projects p
       JOIN releases r ON r.project_id = p.id
       WHERE p.id != ? AND p.category = ?
-        AND r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+        AND r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
       ORDER BY r.created_at DESC
       LIMIT ?
     `).all(projectId, category, limit) as ProjectWithRelease[];
@@ -310,7 +310,7 @@ export function getSimilarProjects(
     FROM projects p
     JOIN releases r ON r.project_id = p.id
     WHERE p.id != ?
-      AND r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+      AND r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
       AND (p.category = ? OR p.id IN (SELECT t.project_id FROM tags t WHERE t.tag IN (${placeholders})))
     ORDER BY relevance DESC, r.created_at DESC
     LIMIT ?
@@ -414,8 +414,9 @@ export function getFullStats(): FullStats {
     SELECT p.name, r.version, r.urgency, r.created_at as release_date, p.category
     FROM projects p
     JOIN releases r ON r.project_id = p.id
-    WHERE r.id = (SELECT MAX(r2.id) FROM releases r2 WHERE r2.project_id = p.id)
+    WHERE r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
       AND r.created_at >= datetime('now', '-30 days')
+      AND r.created_at <= datetime('now')
     ORDER BY r.created_at DESC
     LIMIT 20
   `).all() as { name: string; version: string; urgency: string; release_date: string; category: string }[];

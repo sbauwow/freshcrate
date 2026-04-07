@@ -39,12 +39,14 @@ function timeAgo(dateStr: string): string {
   const now = new Date();
   const date = new Date(dateStr);
   const diff = now.getTime() - date.getTime();
+  if (diff < 0) return "just now";
   const hours = Math.floor(diff / (1000 * 60 * 60));
   if (hours < 1) return "just now";
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days}d ago`;
-  return `${Math.floor(days / 30)}mo ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
 }
 
 export default function Home() {

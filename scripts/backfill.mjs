@@ -233,6 +233,16 @@ async function main() {
           const existing = checkRelease.get(project.id, tag.name);
           if (existing) continue;
 
+          // Fetch the tag's commit date from the Git API
+          let tagDate = null;
+          if (tag.commit?.sha) {
+            const commitData = await ghFetch(
+              `https://api.github.com/repos/${owner}/${repo}/git/commits/${tag.commit.sha}`
+            );
+            tagDate = commitData?.committer?.date || commitData?.author?.date || null;
+            await sleep(GITHUB_TOKEN ? 50 : 500);
+          }
+
           if (DRY_RUN) {
             releasesAdded++;
           } else {
@@ -241,8 +251,8 @@ async function main() {
                 project.id,
                 tag.name,
                 `Tag ${tag.name}`,
-                "Low",
-                new Date().toISOString() // tags don't have dates easily
+                urgencyFromAge(tagDate),
+                tagDate || new Date().toISOString()
               );
               releasesAdded++;
             } catch {}
