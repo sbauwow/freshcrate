@@ -123,7 +123,7 @@ AI is NOT one thing. There are narrow AIs (good at one specific task, like playi
         explanation: "The term was coined at the 1956 Dartmouth workshop. Researchers were wildly optimistic, thinking human-level AI was about 20 years away."
       },
     ],
-    funFact: "The term 'bug' in computing comes from 1947 when an actual moth got stuck in a relay of the Harvard Mark II computer. Grace Hopper taped the moth into the logbook and wrote 'First actual case of bug being found.' The moth is still in the Smithsonian.",
+    funFact: "In 1947, an actual moth was found stuck in a relay of the Harvard Mark II computer. The team taped it into the logbook with the note 'First actual case of bug being found.' Grace Hopper loved telling this story, helping popularize the term 'bug' in computing — though engineers had already used the word for technical glitches since Edison's time. The moth is still in the Smithsonian.",
     nextCrate: "how-machines-learn"
   },
 
@@ -776,7 +776,7 @@ ENVIRONMENTAL IMPACT — Training one large AI model can emit as much carbon as 
         explanation: "AI accountability is an unsolved problem. Responsibility is shared among those who build, deploy, and use AI systems — which is why governance and regulation matter."
       },
     ],
-    funFact: "In 2018, the European Union passed GDPR, which includes the 'right to explanation' — if an AI makes a decision about you, you have the legal right to know why. This is actually really hard technically because many AI models are 'black boxes' where even the creators can't fully explain individual decisions. Laws and technology don't always move at the same speed.",
+    funFact: "The EU's GDPR (adopted 2016, enforced 2018) effectively gives people the right to 'meaningful information about the logic involved' when AI makes decisions about them. In practice, this is incredibly hard because many AI models are 'black boxes' where even the creators can't fully explain individual decisions. Laws and technology don't always move at the same speed.",
     nextCrate: "generative-ai"
   },
 

@@ -9,6 +9,21 @@ import {
 } from "@/lib/learn-content";
 import { CrateCompleteToggle } from "@/app/components/crate-progress";
 import { CrateQuiz } from "@/app/components/crate-quiz";
+import {
+  NeuralNetworkDiagram,
+  CNNFilterDiagram,
+  AttentionDiagram,
+  DiffusionDiagram,
+  AgentLoopDiagram,
+} from "@/app/components/learn-diagrams";
+
+const CRATE_DIAGRAMS: Record<string, React.ReactNode> = {
+  "neural-networks": <NeuralNetworkDiagram />,
+  "computer-vision": <CNNFilterDiagram />,
+  "nlp-language": <AttentionDiagram />,
+  "generative-ai": <DiffusionDiagram />,
+  "agents-and-the-future": <AgentLoopDiagram />,
+};
 
 export async function generateStaticParams() {
   return getAllCrates().map((crate) => ({ slug: crate.slug }));
@@ -147,6 +162,8 @@ export default async function CratePage({
             <h2 className="text-[14px] font-bold text-fm-text border-b border-fm-border pb-1 mb-3">
               {section.heading}
             </h2>
+            {/* Diagram after the first section for crates that have one */}
+            {i === 0 && CRATE_DIAGRAMS[crate.slug] && CRATE_DIAGRAMS[crate.slug]}
             <div className="text-[13px] text-fm-text leading-[1.7] space-y-3">
               {section.body.split("\n\n").map((paragraph, j) => (
                 <p key={j} className="whitespace-pre-line">
