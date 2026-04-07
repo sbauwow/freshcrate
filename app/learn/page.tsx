@@ -50,8 +50,30 @@ const tracks = [
 export default function LearnPage() {
   const crates = getAllCrates();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: "Mini Crates — AI & ML Education",
+    description: "A 10-crate progressive curriculum teaching AI and machine learning from the ground up. Free, no prerequisites.",
+    provider: { "@type": "Organization", name: "freshcrate", url: "https://freshcrate.ai" },
+    url: "https://freshcrate.ai/learn",
+    inLanguage: "en",
+    isAccessibleForFree: true,
+    numberOfCredits: crates.length,
+    hasCourseInstance: crates.map((c) => ({
+      "@type": "LearningResource",
+      name: `Crate #${c.number}: ${c.title}`,
+      url: `https://freshcrate.ai/learn/${c.slug}`,
+      timeRequired: `PT${c.estimatedMinutes}M`,
+    })),
+  };
+
   return (
     <div className="flex flex-col gap-5">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Header */}
       <div className="border-b-2 border-fm-green pb-3">
         <h1 className="text-[16px] font-bold text-fm-green">Mini Crates 📦</h1>

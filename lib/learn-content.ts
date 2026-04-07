@@ -14,6 +14,12 @@ export interface QuizQuestion {
   explanation: string;
 }
 
+export interface GoDeeper {
+  title: string;
+  url: string;
+  type: "paper" | "video" | "article" | "tool" | "course";
+}
+
 export interface MiniCrate {
   slug: string;
   number: number;
@@ -28,6 +34,7 @@ export interface MiniCrate {
   thinkAboutIt: string[];       // discussion questions
   tryThis: string[];            // hands-on activities
   quiz: QuizQuestion[];         // end-of-crate quiz
+  goDeeper: GoDeeper[];         // curated reading/watching list
   funFact: string;
   nextCrate: string | null;     // slug of next lesson
 }
@@ -123,6 +130,11 @@ AI is NOT one thing. There are narrow AIs (good at one specific task, like playi
         explanation: "The term was coined at the 1956 Dartmouth workshop. Researchers were wildly optimistic, thinking human-level AI was about 20 years away."
       },
     ],
+    goDeeper: [
+      { title: "Computing Machinery and Intelligence — Alan Turing (1950)", url: "https://phil415.pbworks.com/f/TuringComputing.pdf", type: "paper" },
+      { title: "AI: A Modern Approach — the standard textbook", url: "https://aima.cs.berkeley.edu/", type: "course" },
+      { title: "But what is a neural network? — 3Blue1Brown (video)", url: "https://www.youtube.com/watch?v=aircAruvnKk", type: "video" },
+    ],
     funFact: "In 1947, an actual moth was found stuck in a relay of the Harvard Mark II computer. The team taped it into the logbook with the note 'First actual case of bug being found.' Grace Hopper loved telling this story, helping popularize the term 'bug' in computing — though engineers had already used the word for technical glitches since Edison's time. The moth is still in the Smithsonian.",
     nextCrate: "how-machines-learn"
   },
@@ -215,6 +227,11 @@ Training big AI models is expensive. Training GPT-4 reportedly cost over $100 mi
         explanation: "If a model only sees certain types of examples, it performs poorly on anything outside that narrow range. Diverse data leads to models that work for everyone."
       },
     ],
+    goDeeper: [
+      { title: "Google Teachable Machine — train a model in your browser", url: "https://teachablemachine.withgoogle.com", type: "tool" },
+      { title: "StatQuest: Machine Learning Fundamentals (video series)", url: "https://www.youtube.com/playlist?list=PLblh5JKOoLUICTaGLRoHQDuF_7q2GfuJF", type: "video" },
+      { title: "Machine Learning Crash Course — Google", url: "https://developers.google.com/machine-learning/crash-course", type: "course" },
+    ],
     funFact: "Google's cat detector (2012) was one of the first big deep learning breakthroughs. Researchers fed a neural network 10 million YouTube thumbnails and it taught itself to recognize cats — without ever being told what a cat looks like. The internet's obsession with cat videos literally advanced AI research.",
     nextCrate: "data-the-fuel"
   },
@@ -301,6 +318,11 @@ YOUR OWN DATA — For specific tasks, companies collect their own. A hospital mi
         correct: 1,
         explanation: "Synthetic data is generated artificially (often by another AI) to augment limited real datasets. It's useful when real data is scarce or privacy-sensitive."
       },
+    ],
+    goDeeper: [
+      { title: "Datasheets for Datasets — Gebru et al.", url: "https://arxiv.org/abs/1803.09010", type: "paper" },
+      { title: "Kaggle — thousands of real-world datasets", url: "https://www.kaggle.com/datasets", type: "tool" },
+      { title: "Survival of the Best Fit — interactive bias game", url: "https://www.survivalofthebestfit.com/", type: "tool" },
     ],
     funFact: "In 2016, Microsoft launched a chatbot called Tay on Twitter. Within 24 hours, internet trolls had taught it to post incredibly offensive things by flooding it with toxic data. Microsoft shut it down in less than a day. The lesson: your AI is only as good (or as terrible) as the data people feed it.",
     nextCrate: "neural-networks"
@@ -393,6 +415,11 @@ The amount you adjust each time is called the learning rate. Too big? You'll ove
         explanation: "A learning rate that's too high causes the model to make overly large adjustments, overshooting the optimal weights and failing to converge."
       },
     ],
+    goDeeper: [
+      { title: "But what is a neural network? — 3Blue1Brown (video)", url: "https://www.youtube.com/watch?v=aircAruvnKk", type: "video" },
+      { title: "TensorFlow Playground — build neural nets in your browser", url: "https://playground.tensorflow.org", type: "tool" },
+      { title: "Neural Networks and Deep Learning — free online book", url: "http://neuralnetworksanddeeplearning.com/", type: "course" },
+    ],
     funFact: "The original idea for artificial neural networks came from a 1943 paper by Warren McCulloch and Walter Pitts. They designed a mathematical model of a neuron using simple logic gates. The catch? Nobody had computers powerful enough to run their ideas for decades. McCulloch never saw his work become the foundation of modern AI.",
     nextCrate: "computer-vision"
   },
@@ -482,6 +509,11 @@ IMAGE GENERATION — "Here's a new image of a cat wearing a top hat on the moon 
         correct: 1,
         explanation: "Classification answers 'what is this?' Detection answers 'what is it AND where is it?' by drawing bounding boxes around objects."
       },
+    ],
+    goDeeper: [
+      { title: "How Convolutional Neural Networks work — Brandon Rohrer (video)", url: "https://www.youtube.com/watch?v=FmpDIaiMIeA", type: "video" },
+      { title: "ImageNet Classification with Deep CNNs — AlexNet paper", url: "https://papers.nips.cc/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html", type: "paper" },
+      { title: "Google Lens — try computer vision on your phone", url: "https://lens.google/", type: "tool" },
     ],
     funFact: "The ImageNet dataset was created by professor Fei-Fei Li and her team, who used Amazon Mechanical Turk to get 49,000 workers from 167 countries to hand-label 14 million images. The project took 2.5 years. When she first proposed the idea, many colleagues said it was pointless. It ended up being one of the most important datasets in AI history.",
     nextCrate: "nlp-language"
@@ -575,6 +607,11 @@ The "Large" in LLM refers to the number of parameters. GPT-3 had 175 billion. Mo
         correct: 1,
         explanation: "Attention lets the model learn which words are relevant to each other, even across long distances in the text. This is what makes Transformers so effective at language."
       },
+    ],
+    goDeeper: [
+      { title: "Attention Is All You Need — the original Transformer paper", url: "https://arxiv.org/abs/1706.03762", type: "paper" },
+      { title: "The Illustrated Transformer — Jay Alammar", url: "https://jalammar.github.io/illustrated-transformer/", type: "article" },
+      { title: "Let's build GPT from scratch — Andrej Karpathy (video)", url: "https://www.youtube.com/watch?v=kCc8FmEb1nY", type: "video" },
     ],
     funFact: "The 'Attention Is All You Need' paper that introduced Transformers has been cited over 100,000 times. The title was inspired by a Beatles song. Several of the original eight authors have since left Google to start their own AI companies, collectively worth billions of dollars. One paper, many billionaires.",
     nextCrate: "training-your-own"
@@ -682,6 +719,11 @@ NOT UNDERSTANDING THE PROBLEM — Building a model before clearly defining what 
         explanation: "Data preparation and cleaning is roughly 80% of the work in a real ML project. Building the actual model is the comparatively easy part."
       },
     ],
+    goDeeper: [
+      { title: "Google Teachable Machine — train classifiers, no code", url: "https://teachablemachine.withgoogle.com", type: "tool" },
+      { title: "Google Colab — free Jupyter notebooks with GPU", url: "https://colab.research.google.com", type: "tool" },
+      { title: "Practical Deep Learning for Coders — fast.ai (free course)", url: "https://course.fast.ai/", type: "course" },
+    ],
     funFact: "The first time a neural network was used commercially was in 1989, for reading handwritten zip codes on mail envelopes at the US Postal Service. It was designed by Yann LeCun, who later became the chief AI scientist at Meta. Postal workers hated it at first, but it processed mail faster and more accurately than humans.",
     nextCrate: "ai-ethics"
   },
@@ -775,6 +817,11 @@ ENVIRONMENTAL IMPACT — Training one large AI model can emit as much carbon as 
         correct: 1,
         explanation: "AI accountability is an unsolved problem. Responsibility is shared among those who build, deploy, and use AI systems — which is why governance and regulation matter."
       },
+    ],
+    goDeeper: [
+      { title: "Weapons of Math Destruction — Cathy O'Neil (book)", url: "https://en.wikipedia.org/wiki/Weapons_of_Math_Destruction", type: "article" },
+      { title: "AI Fairness 360 — IBM's open source bias toolkit", url: "https://aif360.res.ibm.com/", type: "tool" },
+      { title: "Coded Bias — Netflix documentary on facial recognition bias", url: "https://www.codedbias.com/", type: "video" },
     ],
     funFact: "The EU's GDPR (adopted 2016, enforced 2018) effectively gives people the right to 'meaningful information about the logic involved' when AI makes decisions about them. In practice, this is incredibly hard because many AI models are 'black boxes' where even the creators can't fully explain individual decisions. Laws and technology don't always move at the same speed.",
     nextCrate: "generative-ai"
@@ -879,6 +926,11 @@ The honest answer is: it's complicated, it's evolving, and we'll probably spend 
         correct: 1,
         explanation: "The debate spans who owns the output, whether it's 'real' art, whether training on artists' work without consent is ethical, and how it affects livelihoods."
       },
+    ],
+    goDeeper: [
+      { title: "High-Resolution Image Synthesis with Diffusion Models — the paper behind Stable Diffusion", url: "https://arxiv.org/abs/2112.10752", type: "paper" },
+      { title: "The Illustrated Stable Diffusion — Jay Alammar", url: "https://jalammar.github.io/illustrated-stable-diffusion/", type: "article" },
+      { title: "Generative AI exists because of the transformer — Ars Technica", url: "https://arstechnica.com/science/2023/07/a-jargon-free-explanation-of-how-ai-large-language-models-work/", type: "article" },
     ],
     funFact: "In 2022, an AI-generated image called 'Théâtre D'opéra Spatial' won first prize at the Colorado State Fair's art competition. The artist, Jason Allen, used Midjourney to create it. Real artists were outraged. Allen's response: 'Art is dead, dude. It's over. AI won. Humans lost.' The debate is still raging.",
     nextCrate: "agents-and-the-future"
@@ -988,6 +1040,11 @@ The future isn't something that happens to you. It's something you build.`
         correct: 1,
         explanation: "AGI means AI that can learn and perform any intellectual task a human can. It doesn't exist yet. All current AI, even impressive chatbots, is narrow AI — good at specific tasks only."
       },
+    ],
+    goDeeper: [
+      { title: "ReAct: Synergizing Reasoning and Acting in LLMs — the foundational agent paper", url: "https://arxiv.org/abs/2210.03629", type: "paper" },
+      { title: "What are AI agents? — Anthropic", url: "https://www.anthropic.com/research/building-effective-agents", type: "article" },
+      { title: "freshcrate — browse real agent packages and tools", url: "https://freshcrate.ai/browse", type: "tool" },
     ],
     funFact: "The first website ever (info.cern.ch) had no images, no JavaScript, no AI — just hyperlinks. That was 1991. Thirty-five years later, we have AI agents that can build entire websites from a text description. If progress continues at this rate, in another decade today's AI will look as primitive as that first website does to us now.",
     nextCrate: null

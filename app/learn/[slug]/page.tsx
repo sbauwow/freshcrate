@@ -81,8 +81,31 @@ export default async function CratePage({
     .map((s) => getCrate(s))
     .filter(Boolean) as MiniCrate[];
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+    name: `Crate #${crate.number}: ${crate.title}`,
+    description: crate.subtitle,
+    educationalLevel: crate.difficulty === "starter" ? "Beginner" : crate.difficulty === "builder" ? "Intermediate" : "Advanced",
+    timeRequired: `PT${crate.estimatedMinutes}M`,
+    isPartOf: {
+      "@type": "Course",
+      name: "Mini Crates — AI & ML Education",
+      url: "https://freshcrate.ai/learn",
+      provider: { "@type": "Organization", name: "freshcrate", url: "https://freshcrate.ai" },
+    },
+    url: `https://freshcrate.ai/learn/${crate.slug}`,
+    inLanguage: "en",
+    isAccessibleForFree: true,
+    keywords: crate.tags.join(", "),
+  };
+
   return (
     <div className="flex flex-col gap-5 max-w-3xl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ── Breadcrumb ── */}
       <nav className="text-[11px] text-fm-text-light font-mono flex items-center gap-1 flex-wrap">
         <Link href="/learn" className="text-fm-link hover:underline">
@@ -208,6 +231,38 @@ export default async function CratePage({
           ))}
         </ol>
       </div>
+
+      {/* ── Go Deeper ── */}
+      {crate.goDeeper.length > 0 && (
+        <div className="border border-[#6f6f6f] bg-[#dddddd] rounded p-4">
+          <h2 className="text-[14px] font-bold text-fm-text mb-3">
+            📚 Go Deeper
+          </h2>
+          <ul className="space-y-2">
+            {crate.goDeeper.map((link, i) => {
+              const icons: Record<string, string> = {
+                paper: "📄", video: "🎬", article: "📰", tool: "🔧", course: "🎓",
+              };
+              return (
+                <li key={i} className="text-[12px]">
+                  <span className="mr-1.5">{icons[link.type] || "🔗"}</span>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-fm-link hover:underline"
+                  >
+                    {link.title}
+                  </a>
+                  <span className="text-[9px] text-fm-text-light ml-1.5 font-mono">
+                    {link.type}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {/* ── Fun Fact ── */}
       <div className="border-2 border-fm-green bg-fm-green/5 rounded p-4">
