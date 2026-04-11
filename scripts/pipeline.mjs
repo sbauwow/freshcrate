@@ -6,7 +6,8 @@
  * Runs all steps in sequence:
  *   1. Migrate — apply pending database migrations
  *   2. Populate — search GitHub, import packages with full metadata
- *   3. Verify — run automated 10-point verification on all packages
+ *   3. Refresh Releases — poll existing projects for new releases
+ *   4. Verify — run automated 10-point verification on all packages
  *
  * Usage:
  *   GITHUB_TOKEN=<token> node scripts/pipeline.mjs
@@ -54,7 +55,10 @@ run("Database Migrations", "node scripts/migrate.mjs");
 const populateArgs = args.replace("--dry-run", "").trim();
 run("Populate from GitHub", `node scripts/populate.mjs ${populateArgs}`);
 
-// Step 3: Verify
+// Step 3: Refresh releases on existing projects (populate.mjs only inserts releases for *new* projects)
+run("Refresh Releases", `node scripts/refresh-releases.mjs ${DRY ? "--dry-run" : ""}`);
+
+// Step 4: Verify
 run("Verify Packages", `node scripts/verify.mjs ${DRY ? "--dry-run" : ""}`);
 
 console.log(`\n${"═".repeat(60)}`);
