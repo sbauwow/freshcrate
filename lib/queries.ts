@@ -36,24 +36,69 @@ export interface ProjectWithRelease extends Project {
   tags: string[];
 }
 
+export type ReleaseSort = "newest" | "oldest" | "stars" | "name";
+
+export interface LatestReleaseOptions {
+  category?: string;
+  language?: string;
+  sort?: ReleaseSort;
+}
+
 /**
- * @description Fetches the most recent project releases, ordered by release date.
+ * @description Fetches latest project releases with optional category/language filters and sort mode.
  * @param limit - Maximum number of results to return (default: 20)
  * @param offset - Number of results to skip for pagination (default: 0)
+ * @param options - Optional filters + sort behavior
  * @returns Array of projects with their latest release info and tags
  */
-export function getLatestReleases(limit = 20, offset = 0): ProjectWithRelease[] {
+export function getLatestReleases(
+  limit = 20,
+  offset = 0,
+  options: LatestReleaseOptions = {}
+): ProjectWithRelease[] {
   const db = getDb();
-  const rows = db.prepare(`
+
+  const where: string[] = [
+    "r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)",
+  ];
+  const params: (string | number)[] = [];
+
+  if (options.category) {
+    where.push("p.category = ?");
+    params.push(options.category);
+  }
+
+  if (options.language) {
+    if (options.language === "__unknown__") {
+      where.push("(p.language IS NULL OR p.language = '')");
+    } else {
+      where.push("p.language = ?");
+      params.push(options.language);
+    }
+  }
+
+  const orderBy: Record<ReleaseSort, string> = {
+    newest: "r.created_at DESC",
+    oldest: "r.created_at ASC",
+    stars: "COALESCE(p.stars, 0) DESC, r.created_at DESC",
+    name: "LOWER(p.name) ASC",
+  };
+
+  const sort: ReleaseSort = options.sort ?? "newest";
+  const sortSql = orderBy[sort] ?? orderBy.newest;
+
+  const sql = `
     SELECT p.*, r.version as latest_version, r.changes as latest_changes,
            r.urgency as latest_urgency, r.created_at as release_date,
            (SELECT COUNT(*) FROM releases r3 WHERE r3.project_id = p.id) as release_count
     FROM projects p
     JOIN releases r ON r.project_id = p.id
-    WHERE r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
-    ORDER BY r.created_at DESC
+    WHERE ${where.join(" AND ")}
+    ORDER BY ${sortSql}
     LIMIT ? OFFSET ?
-  `).all(limit, offset) as ProjectWithRelease[];
+  `;
+
+  const rows = db.prepare(sql).all(...params, limit, offset) as ProjectWithRelease[];
 
   return rows.map((row) => ({
     ...row,
@@ -108,6 +153,21 @@ export function getProjectReleases(projectId: number): Release[] {
 export function getCategories(): { category: string; count: number }[] {
   const db = getDb();
   return db.prepare("SELECT category, COUNT(*) as count FROM projects GROUP BY category ORDER BY count DESC").all() as { category: string; count: number }[];
+}
+
+/**
+ * @description Gets all languages with project counts for filter UIs.
+ * @returns Array of language/count pairs sorted by popularity
+ */
+export function getLanguages(): { language: string; count: number }[] {
+  const db = getDb();
+  return db.prepare(`
+    SELECT language, COUNT(*) as count
+    FROM projects
+    WHERE language IS NOT NULL AND language != ''
+    GROUP BY language
+    ORDER BY count DESC, language ASC
+  `).all() as { language: string; count: number }[];
 }
 
 /**

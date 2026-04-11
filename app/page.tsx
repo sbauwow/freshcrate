@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getLatestReleases, getCategories, getStats } from "@/lib/queries";
+import { getLatestReleases, getCategories, getStats, getLanguages, type ReleaseSort } from "@/lib/queries";
 import { computeLifecycle } from "@/lib/lifecycle";
 import ResearchFeed from "./components/research-feed";
 
@@ -49,10 +49,35 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(days / 365)}y ago`;
 }
 
-export default function Home() {
-  const releases = getLatestReleases(20);
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string; category?: string; language?: string }>;
+}) {
+  const params = await searchParams;
   const categories = getCategories();
+  const languages = getLanguages();
   const stats = getStats();
+
+  const rawSort = typeof params.sort === "string" ? params.sort : "newest";
+  const allowedSorts: ReleaseSort[] = ["newest", "oldest", "stars", "name"];
+  const sort: ReleaseSort = allowedSorts.includes(rawSort as ReleaseSort)
+    ? (rawSort as ReleaseSort)
+    : "newest";
+
+  const categorySet = new Set(categories.map((c) => c.category));
+  const languageSet = new Set(languages.map((l) => l.language));
+
+  const category =
+    typeof params.category === "string" && categorySet.has(params.category)
+      ? params.category
+      : undefined;
+  const language =
+    typeof params.language === "string" && languageSet.has(params.language)
+      ? params.language
+      : undefined;
+
+  const releases = getLatestReleases(50, 0, { sort, category, language });
 
   return (
     <div className="flex flex-col md:flex-row gap-5">
@@ -63,7 +88,52 @@ export default function Home() {
           <span className="text-[10px] text-fm-text-light">{stats.projects} packages indexed</span>
         </div>
 
+        <form method="GET" className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-2 mb-3 text-[10px]">
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="flex flex-col gap-0.5">
+              <span className="text-fm-text-light">Sort</span>
+              <select name="sort" defaultValue={sort} className="border border-fm-border bg-white px-1 py-0.5 text-[10px]">
+                <option value="newest">Newest release</option>
+                <option value="oldest">Oldest release</option>
+                <option value="stars">Most stars</option>
+                <option value="name">Name A→Z</option>
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-0.5">
+              <span className="text-fm-text-light">Category</span>
+              <select name="category" defaultValue={category ?? ""} className="border border-fm-border bg-white px-1 py-0.5 text-[10px]">
+                <option value="">All categories</option>
+                {categories.map((c) => (
+                  <option key={c.category} value={c.category}>{c.category}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-0.5">
+              <span className="text-fm-text-light">Language</span>
+              <select name="language" defaultValue={language ?? ""} className="border border-fm-border bg-white px-1 py-0.5 text-[10px]">
+                <option value="">All languages</option>
+                {languages.map((l) => (
+                  <option key={l.language} value={l.language}>{l.language}</option>
+                ))}
+              </select>
+            </label>
+
+            <button type="submit" className="border border-[#999] bg-[#dddddd] text-black px-2 py-0.5 font-bold hover:bg-[#cccccc]">
+              Apply
+            </button>
+            <Link href="/" className="text-fm-link hover:text-fm-link-hover">Reset</Link>
+            <span className="ml-auto text-fm-text-light">Showing {releases.length} results</span>
+          </div>
+        </form>
+
         <div className="space-y-0">
+          {releases.length === 0 && (
+            <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 text-[11px] text-fm-text-light italic">
+              No releases match these filters.
+            </div>
+          )}
           {releases.map((project, i) => (
             <div
               key={project.id}
