@@ -125,14 +125,14 @@ SQLite handles the expected load (thousands of packages, moderate traffic).
 Only migrate if write contention becomes measurable.
 
 ### 4.2 Admin Dashboard
-**Status:** In progress
+**Status:** Not started
 **Priority:** Low
 **Effort:** Medium
 
-- [x] 4.2.1 Read-only admin dashboard at `/admin` (moderation queue, request/submission analytics, API key health snapshot)
-- [ ] 4.2.2 Moderation actions (approve/reject/flag workflows)
-- [ ] 4.2.3 API key controls in UI (create/revoke/limit updates)
-- [ ] 4.2.4 Bulk operations (recategorize, merge duplicates)
+- Package moderation (approve/reject/flag)
+- Analytics (popular searches, submission rate, category distribution)
+- User/API key management
+- Bulk operations (recategorize, merge duplicates)
 
 ### 4.3 Multi-Source Import
 **Status:** Not started

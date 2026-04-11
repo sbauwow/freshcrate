@@ -72,8 +72,6 @@ export default function RootLayout({
               <span className="text-[#999]">|</span>
               <Link href="/stats" className="text-black hover:text-fm-link no-underline">stats</Link>
               <span className="text-[#999]">|</span>
-              <Link href="/admin" className="text-black hover:text-fm-link no-underline">admin</Link>
-              <span className="text-[#999]">|</span>
               <Link href="/learn" className="text-black hover:text-fm-link no-underline">learn 📦</Link>
             </nav>
             <NavClock />
