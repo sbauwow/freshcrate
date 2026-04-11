@@ -820,7 +820,7 @@ ENVIRONMENTAL IMPACT — Training one large AI model can emit as much carbon as 
     ],
     goDeeper: [
       { title: "Weapons of Math Destruction — Cathy O'Neil (book)", url: "https://en.wikipedia.org/wiki/Weapons_of_Math_Destruction", type: "article" },
-      { title: "AI Fairness 360 — IBM's open source bias toolkit", url: "https://aif360.res.ibm.com/", type: "tool" },
+      { title: "AI Fairness 360 — IBM's open source bias toolkit", url: "https://github.com/Trusted-AI/AIF360", type: "tool" },
       { title: "Coded Bias — Netflix documentary on facial recognition bias", url: "https://www.codedbias.com/", type: "video" },
     ],
     funFact: "The EU's GDPR (adopted 2016, enforced 2018) effectively gives people the right to 'meaningful information about the logic involved' when AI makes decisions about them. In practice, this is incredibly hard because many AI models are 'black boxes' where even the creators can't fully explain individual decisions. Laws and technology don't always move at the same speed.",
@@ -847,12 +847,12 @@ ENVIRONMENTAL IMPACT — Training one large AI model can emit as much carbon as 
 
 Text: ChatGPT, Claude, and others write essays, code, and poetry
 Images: DALL-E, Midjourney, and Stable Diffusion create art from text descriptions
-Audio: AI generates music, clone voices, and create sound effects
+Audio: AI generates music, clones voices, and creates sound effects
 Video: Sora and others generate entire video clips from text
 Code: GitHub Copilot writes code alongside you
 3D: AI generates 3D models and environments
 
-This is the generative AI revolution, and it's happening right now. The quality has gone from "laughably bad" to "indistinguishable from human work" in about 3 years. That's terrifyingly fast.`
+This is the generative AI revolution, and it's happening right now. In many domains, quality has gone from "laughably bad" to output that can be hard to distinguish from human work in just a few years. That's a very fast shift.`
       },
       {
         heading: "How Image Generation Works (Simplified)",
@@ -1046,7 +1046,7 @@ The future isn't something that happens to you. It's something you build.`
       { title: "What are AI agents? — Anthropic", url: "https://www.anthropic.com/research/building-effective-agents", type: "article" },
       { title: "freshcrate — browse real agent packages and tools", url: "https://freshcrate.ai/browse", type: "tool" },
     ],
-    funFact: "The first website ever (info.cern.ch) had no images, no JavaScript, no AI — just hyperlinks. That was 1991. Thirty-five years later, we have AI agents that can build entire websites from a text description. If progress continues at this rate, in another decade today's AI will look as primitive as that first website does to us now.",
+    funFact: "The first website ever (info.cern.ch) had no images, no JavaScript, no AI — just hyperlinks. That was 1991. Decades later, we have AI agents that can build entire websites from a text description. If progress continues at this rate, in another decade today's AI may look primitive compared with what comes next.",
     nextCrate: null
   }
 ];

@@ -46,11 +46,13 @@ export async function generateMetadata({
       title: `${crate.emoji} Crate #${crate.number}: ${crate.title}`,
       description,
       url: `https://freshcrate.ai/learn/${crate.slug}`,
+      images: [{ url: `/learn/${crate.slug}/opengraph-image` }],
     },
     twitter: {
-      card: "summary" as const,
+      card: "summary_large_image" as const,
       title: `${crate.emoji} Crate #${crate.number}: ${crate.title}`,
       description,
+      images: [`/learn/${crate.slug}/opengraph-image`],
     },
   };
 }

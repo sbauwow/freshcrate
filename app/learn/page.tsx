@@ -1,19 +1,22 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllCrates, getDifficultyLabel, getDifficultyColor } from "@/lib/learn-content";
 import { ProgressBar } from "@/app/components/crate-progress";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Mini Crates — AI Education | freshcrate",
   description: "AI & Machine Learning from the ground up. A 10-crate progressive curriculum. No PhD required. No jargon either.",
   openGraph: {
     title: "Mini Crates — AI & ML Education from Scratch",
     description: "10 free crates covering AI fundamentals, neural networks, NLP, ethics, generative AI, and agents. No PhD required.",
     url: "https://freshcrate.ai/learn",
+    images: [{ url: "/learn/opengraph-image" }],
   },
   twitter: {
-    card: "summary_large_image" as const,
+    card: "summary_large_image",
     title: "Mini Crates — AI & ML Education from Scratch",
     description: "10 free crates covering AI fundamentals, neural networks, NLP, ethics, generative AI, and agents. No PhD required.",
+    images: ["/learn/opengraph-image"],
   },
 };
 
