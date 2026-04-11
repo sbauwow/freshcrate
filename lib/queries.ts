@@ -44,6 +44,12 @@ export interface LatestReleaseOptions {
   sort?: ReleaseSort;
 }
 
+export interface AuthorSummary {
+  author: string;
+  package_count: number;
+  total_stars: number;
+}
+
 /**
  * @description Fetches latest project releases with optional category/language filters and sort mode.
  * @param limit - Maximum number of results to return (default: 20)
@@ -187,6 +193,45 @@ export function getProjectsByCategory(category: string): ProjectWithRelease[] {
   `).all(category) as ProjectWithRelease[];
 
   return rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
+}
+
+/**
+ * @description Fetches all projects for an author with latest release info.
+ * @param author - Exact author name to match
+ * @returns Projects by that author ordered by stars then release recency
+ */
+export function getProjectsByAuthor(author: string): ProjectWithRelease[] {
+  const db = getDb();
+  const rows = db.prepare(`
+    SELECT p.*, r.version as latest_version, r.changes as latest_changes,
+           r.urgency as latest_urgency, r.created_at as release_date,
+           (SELECT COUNT(*) FROM releases r3 WHERE r3.project_id = p.id) as release_count
+    FROM projects p
+    JOIN releases r ON r.project_id = p.id
+    WHERE p.author = ?
+      AND r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
+    ORDER BY COALESCE(p.stars, 0) DESC, r.created_at DESC
+  `).all(author) as ProjectWithRelease[];
+
+  return rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
+}
+
+/**
+ * @description Gets all distinct authors with package counts and total stars.
+ * @returns Author summaries ordered by package count then stars
+ */
+export function getAuthors(limit = 1000): AuthorSummary[] {
+  const db = getDb();
+  return db.prepare(`
+    SELECT author,
+           COUNT(*) as package_count,
+           COALESCE(SUM(stars), 0) as total_stars
+    FROM projects
+    WHERE author IS NOT NULL AND TRIM(author) != ''
+    GROUP BY author
+    ORDER BY package_count DESC, total_stars DESC, author ASC
+    LIMIT ?
+  `).all(limit) as AuthorSummary[];
 }
 
 /**

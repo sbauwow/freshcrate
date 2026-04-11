@@ -139,7 +139,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
           <div className="space-y-2 text-[11px]">
             <div>
               <span className="text-fm-text-light block">Author:</span>
-              <span className="font-bold">{project.author}</span>
+              <Link href={`/author/${encodeURIComponent(project.author)}`} className="font-bold text-fm-link hover:text-fm-link-hover">
+                {project.author}
+              </Link>
             </div>
             <div>
               <span className="text-fm-text-light block">License:</span>

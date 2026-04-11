@@ -221,7 +221,7 @@ export default async function SearchPage({
                   ))}
                   <span className="text-[9px] text-fm-text-light ml-auto">
                     by{" "}
-                    <Link href={`/search?author=${encodeURIComponent(project.author)}`} className="text-fm-link hover:text-fm-link-hover">
+                    <Link href={`/author/${encodeURIComponent(project.author)}`} className="text-fm-link hover:text-fm-link-hover">
                       {project.author}
                     </Link>
                   </span>
@@ -252,7 +252,7 @@ export default async function SearchPage({
             <div className="space-y-1 text-[10px] text-fm-text-light">
               <p>🔍 <strong>Package name:</strong> <Link href="/search?q=langchain" className="text-fm-link">langchain</Link></p>
               <p>🏷️ <strong>Tag:</strong> <Link href="/search?q=mcp" className="text-fm-link">mcp</Link></p>
-              <p>👤 <strong>Maintainer:</strong> <Link href="/search?author=anthropics" className="text-fm-link">anthropics</Link></p>
+              <p>👤 <strong>Maintainer:</strong> <Link href="/author/anthropics" className="text-fm-link">anthropics</Link></p>
               <p>💬 <strong>Description:</strong> <Link href="/search?q=vector+database" className="text-fm-link">vector database</Link></p>
               <p>🔤 <strong>Language:</strong> Use the dropdown filter above</p>
               <p>📂 <strong>Category:</strong> Use the dropdown filter, or <Link href="/browse" className="text-fm-link">browse all</Link></p>
