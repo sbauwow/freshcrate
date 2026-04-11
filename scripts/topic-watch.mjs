@@ -128,6 +128,24 @@ function stripDangerousTags(html) {
     .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, "");
 }
 
+/** Strip HTML to plain text for FTS indexing. */
+function stripHtml(html) {
+  if (!html) return "";
+  return html
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#\d+;/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 50000);
+}
+
 async function main() {
   console.log(`\n🔭 freshcrate Topic Watcher${DRY_RUN ? " (DRY RUN)" : ""}\n`);
 
@@ -210,7 +228,7 @@ async function main() {
   );
   const insertTag = db.prepare("INSERT OR IGNORE INTO tags (project_id, tag) VALUES (?, ?)");
   const updateReadme = db.prepare(
-    "UPDATE projects SET readme_html = ?, readme_fetched_at = datetime('now'), last_github_sync = datetime('now') WHERE id = ?"
+    "UPDATE projects SET readme_html = ?, readme_text = ?, readme_fetched_at = datetime('now'), last_github_sync = datetime('now') WHERE id = ?"
   );
   const updateTopicStats = db.prepare(
     "UPDATE watched_topics SET last_checked_at = datetime('now'), repos_found = repos_found + ?, repos_added = repos_added + ? WHERE topic = ?"
@@ -301,7 +319,8 @@ async function main() {
           });
           if (htmlRes.ok) {
             const html = await htmlRes.text();
-            updateReadme.run(stripDangerousTags(html).slice(0, 100000), projectId);
+            const cleanHtml = stripDangerousTags(html).slice(0, 100000);
+            updateReadme.run(cleanHtml, stripHtml(cleanHtml), projectId);
           }
         }
 

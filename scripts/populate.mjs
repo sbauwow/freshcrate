@@ -28,6 +28,24 @@ const TOKEN_PATH = path.join(PROJECT_ROOT, ".freshcrate-token");
 const CLEAR = process.argv.includes("--clear");
 const FORCE_LOGIN = process.argv.includes("--login");
 
+/** Strip HTML to plain text for FTS indexing. */
+function stripHtml(html) {
+  if (!html) return "";
+  return html
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#\d+;/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 50000);
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────
 
 function loadCachedToken() {
@@ -262,7 +280,7 @@ async function main() {
     "INSERT OR IGNORE INTO tags (project_id, tag) VALUES (?, ?)"
   );
   const updateReadme = db.prepare(
-    "UPDATE projects SET readme_html = ?, readme_fetched_at = datetime('now'), last_github_sync = datetime('now') WHERE id = ?"
+    "UPDATE projects SET readme_html = ?, readme_text = ?, readme_fetched_at = datetime('now'), last_github_sync = datetime('now') WHERE id = ?"
   );
 
   const existingNames = new Set(db.prepare("SELECT name FROM projects").all().map(r => r.name));
@@ -344,7 +362,7 @@ async function main() {
           .replace(/<embed\b[^>]*>/gi, "")
           .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, "")
           .slice(0, 100000);
-        updateReadme.run(cleanHtml, projectId);
+        updateReadme.run(cleanHtml, stripHtml(cleanHtml), projectId);
       }
 
       added++;

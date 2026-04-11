@@ -24,6 +24,27 @@ const DB_PATH = path.join(PROJECT_ROOT, "freshcrate.db");
 const TOKEN_PATH = path.join(PROJECT_ROOT, ".freshcrate-token");
 
 const DRY_RUN = process.argv.includes("--dry-run");
+
+/**
+ * Strip HTML to plain text for FTS indexing.
+ * Removes tags, collapses whitespace, decodes common entities.
+ */
+function stripHtml(html) {
+  if (!html) return "";
+  return html
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")         // strip all tags
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#\d+;/g, "")           // numeric entities
+    .replace(/\s+/g, " ")             // collapse whitespace
+    .trim()
+    .slice(0, 50000);                 // cap at 50KB to keep FTS sane
+}
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || loadCachedToken() || "";
 
 function loadCachedToken() {
@@ -103,6 +124,7 @@ async function enrichProject(project) {
       .replace(/<object\b[^>]*>.*?<\/object>/gi, "")
       .replace(/<embed\b[^>]*>/gi, "")
       .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, ""),
+    readme_text: stripHtml(readmeHtml),
   };
 }
 
@@ -123,7 +145,7 @@ async function main() {
 
   const updateStmt = db.prepare(`
     UPDATE projects
-    SET stars = ?, forks = ?, language = ?, readme_html = ?,
+    SET stars = ?, forks = ?, language = ?, readme_html = ?, readme_text = ?,
         last_github_sync = ?, readme_fetched_at = ?
     WHERE id = ?
   `);
@@ -140,7 +162,7 @@ async function main() {
 
       if (!DRY_RUN) {
         const now = new Date().toISOString();
-        updateStmt.run(data.stars, data.forks, data.language, data.readme_html, now, now, project.id);
+        updateStmt.run(data.stars, data.forks, data.language, data.readme_html, data.readme_text, now, now, project.id);
       }
 
       updated++;
