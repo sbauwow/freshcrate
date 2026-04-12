@@ -58,6 +58,25 @@ export default function ApiDocsPage() {
         </section>
 
         <section>
+          <h3 className="text-[12px] font-bold text-fm-green mb-2">Legislation Tracker</h3>
+          <div className="bg-white border border-fm-border rounded p-3">
+            <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/legislation</code>
+            <div className="text-[10px] text-fm-text-light mt-1 mb-2">Returns AI governance instruments and issue watchlist by optional filters.</div>
+            <div className="text-[10px]">
+              <span className="font-bold">Parameters:</span>
+              <ul className="ml-4 mt-1 space-y-0.5">
+                <li><code className="font-mono">region</code> (optional) - e.g. Europe, North America, Asia-Pacific</li>
+                <li><code className="font-mono">status</code> (optional) - in_force, approved_not_effective, in_negotiation, proposed</li>
+                <li><code className="font-mono">theme</code> (optional) - filter by policy theme</li>
+              </ul>
+            </div>
+            <div className="mt-2 bg-fm-bg rounded p-2">
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl https://freshcrate.ai/api/legislation?region=Europe&status=in_force`}</pre>
+            </div>
+          </div>
+        </section>
+
+        <section>
           <h3 className="text-[12px] font-bold text-fm-green mb-2">Submit a Package</h3>
           <div className="bg-white border border-fm-border rounded p-3">
             <code className="text-[11px] text-fm-green font-mono font-bold">POST /api/projects</code>
