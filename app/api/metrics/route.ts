@@ -102,6 +102,22 @@ export async function GET() {
     }
   })();
 
+  const top4xxPaths = (() => {
+    try {
+      return db.prepare("SELECT path, COUNT(*) as hits FROM request_log WHERE created_at > datetime('now', '-1 day') AND status >= 400 AND status < 500 GROUP BY path ORDER BY hits DESC LIMIT 10").all() as Array<{ path: string; hits: number }>;
+    } catch {
+      return [] as Array<{ path: string; hits: number }>;
+    }
+  })();
+
+  const top4xxClients = (() => {
+    try {
+      return db.prepare("SELECT ua_family, traffic_type, COUNT(*) as hits FROM request_log WHERE created_at > datetime('now', '-1 day') AND status >= 400 AND status < 500 GROUP BY ua_family, traffic_type ORDER BY hits DESC LIMIT 10").all() as Array<{ ua_family: string; traffic_type: string; hits: number }>;
+    } catch {
+      return [] as Array<{ ua_family: string; traffic_type: string; hits: number }>;
+    }
+  })();
+
   const metrics = {
     timestamp: new Date().toISOString(),
     uptime_seconds: Math.round(process.uptime()),
@@ -139,6 +155,8 @@ export async function GET() {
     traffic_24h: {
       requests: requests24h,
       errors: errors24h,
+      top_4xx_paths: top4xxPaths,
+      top_4xx_clients: top4xxClients,
       avg_duration_ms: Math.round(avgDuration),
       page_views: (() => { try { return (db.prepare("SELECT COUNT(*) as c FROM page_views WHERE created_at > datetime('now', '-1 day')").get() as { c: number }).c; } catch { return 0; } })(),
       unique_visitors: (() => { try { return (db.prepare("SELECT COUNT(DISTINCT ip_hash) as c FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 0").get() as { c: number }).c; } catch { return 0; } })(),
@@ -163,6 +181,10 @@ export async function GET() {
     crawler_bot_24h: trafficBreakdown.find((row) => row.traffic_type === "crawler_bot")?.hits || 0,
     top_agent_24h: topAgents[0]?.ua_family || null,
     top_agent_hits_24h: topAgents[0]?.hits || 0,
+    top_4xx_path_24h: top4xxPaths[0]?.path || null,
+    top_4xx_hits_24h: top4xxPaths[0]?.hits || 0,
+    top_4xx_client_24h: top4xxClients[0]?.ua_family || null,
+    top_4xx_client_type_24h: top4xxClients[0]?.traffic_type || null,
     top_page_24h: metrics.traffic_24h.top_pages[0]?.path || null,
     top_page_views_24h: metrics.traffic_24h.top_pages[0]?.views || 0,
     top_referrer_24h: metrics.traffic_24h.top_referrers[0]?.referrer || null,
