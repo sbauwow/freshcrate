@@ -86,6 +86,22 @@ export async function GET() {
     }
   })();
 
+  const trafficBreakdown = (() => {
+    try {
+      return db.prepare("SELECT traffic_type, COUNT(*) as hits FROM page_views WHERE created_at > datetime('now', '-1 day') GROUP BY traffic_type ORDER BY hits DESC").all() as Array<{ traffic_type: string; hits: number }>;
+    } catch {
+      return [] as Array<{ traffic_type: string; hits: number }>;
+    }
+  })();
+
+  const topAgents = (() => {
+    try {
+      return db.prepare("SELECT ua_family, COUNT(*) as hits FROM page_views WHERE created_at > datetime('now', '-1 day') AND traffic_type IN ('agent_browser', 'crawler_bot', 'api_client') GROUP BY ua_family ORDER BY hits DESC LIMIT 10").all() as Array<{ ua_family: string; hits: number }>;
+    } catch {
+      return [] as Array<{ ua_family: string; hits: number }>;
+    }
+  })();
+
   const metrics = {
     timestamp: new Date().toISOString(),
     uptime_seconds: Math.round(process.uptime()),
@@ -127,6 +143,8 @@ export async function GET() {
       page_views: (() => { try { return (db.prepare("SELECT COUNT(*) as c FROM page_views WHERE created_at > datetime('now', '-1 day')").get() as { c: number }).c; } catch { return 0; } })(),
       unique_visitors: (() => { try { return (db.prepare("SELECT COUNT(DISTINCT ip_hash) as c FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 0").get() as { c: number }).c; } catch { return 0; } })(),
       bot_hits: (() => { try { return (db.prepare("SELECT COUNT(*) as c FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 1").get() as { c: number }).c; } catch { return 0; } })(),
+      traffic_breakdown: trafficBreakdown,
+      top_agents: topAgents,
       top_pages: topPages,
       top_referrers: topReferrers,
     },
@@ -139,6 +157,12 @@ export async function GET() {
     page_views_24h: metrics.traffic_24h.page_views,
     unique_visitors_24h: metrics.traffic_24h.unique_visitors,
     bot_hits_24h: metrics.traffic_24h.bot_hits,
+    human_browser_24h: trafficBreakdown.find((row) => row.traffic_type === "human_browser")?.hits || 0,
+    agent_browser_24h: trafficBreakdown.find((row) => row.traffic_type === "agent_browser")?.hits || 0,
+    api_client_24h: trafficBreakdown.find((row) => row.traffic_type === "api_client")?.hits || 0,
+    crawler_bot_24h: trafficBreakdown.find((row) => row.traffic_type === "crawler_bot")?.hits || 0,
+    top_agent_24h: topAgents[0]?.ua_family || null,
+    top_agent_hits_24h: topAgents[0]?.hits || 0,
     top_page_24h: metrics.traffic_24h.top_pages[0]?.path || null,
     top_page_views_24h: metrics.traffic_24h.top_pages[0]?.views || 0,
     top_referrer_24h: metrics.traffic_24h.top_referrers[0]?.referrer || null,
