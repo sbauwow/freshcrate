@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { log } from "@/lib/logger";
 import fs from "fs";
 import path from "path";
 
@@ -69,7 +70,23 @@ export async function GET() {
     ftsRows = (db.prepare("SELECT COUNT(*) as c FROM projects_fts").get() as { c: number }).c;
   } catch { /* FTS may not exist */ }
 
-  return NextResponse.json({
+  const topPages = (() => {
+    try {
+      return db.prepare("SELECT path, COUNT(*) as views FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 0 GROUP BY path ORDER BY views DESC LIMIT 10").all() as Array<{ path: string; views: number }>;
+    } catch {
+      return [] as Array<{ path: string; views: number }>;
+    }
+  })();
+
+  const topReferrers = (() => {
+    try {
+      return db.prepare("SELECT referrer, COUNT(*) as views FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 0 AND referrer != '' GROUP BY referrer ORDER BY views DESC LIMIT 10").all() as Array<{ referrer: string; views: number }>;
+    } catch {
+      return [] as Array<{ referrer: string; views: number }>;
+    }
+  })();
+
+  const metrics = {
     timestamp: new Date().toISOString(),
     uptime_seconds: Math.round(process.uptime()),
     memory_mb: Math.round(process.memoryUsage().rss / 1024 / 1024),
@@ -110,8 +127,23 @@ export async function GET() {
       page_views: (() => { try { return (db.prepare("SELECT COUNT(*) as c FROM page_views WHERE created_at > datetime('now', '-1 day')").get() as { c: number }).c; } catch { return 0; } })(),
       unique_visitors: (() => { try { return (db.prepare("SELECT COUNT(DISTINCT ip_hash) as c FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 0").get() as { c: number }).c; } catch { return 0; } })(),
       bot_hits: (() => { try { return (db.prepare("SELECT COUNT(*) as c FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 1").get() as { c: number }).c; } catch { return 0; } })(),
-      top_pages: (() => { try { return db.prepare("SELECT path, COUNT(*) as views FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 0 GROUP BY path ORDER BY views DESC LIMIT 10").all(); } catch { return []; } })(),
-      top_referrers: (() => { try { return db.prepare("SELECT referrer, COUNT(*) as views FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 0 AND referrer != '' GROUP BY referrer ORDER BY views DESC LIMIT 10").all(); } catch { return []; } })(),
+      top_pages: topPages,
+      top_referrers: topReferrers,
     },
+  };
+
+  log.info("traffic_metrics", {
+    requests_24h: metrics.traffic_24h.requests,
+    errors_24h: metrics.traffic_24h.errors,
+    avg_duration_ms_24h: metrics.traffic_24h.avg_duration_ms,
+    page_views_24h: metrics.traffic_24h.page_views,
+    unique_visitors_24h: metrics.traffic_24h.unique_visitors,
+    bot_hits_24h: metrics.traffic_24h.bot_hits,
+    top_page_24h: metrics.traffic_24h.top_pages[0]?.path || null,
+    top_page_views_24h: metrics.traffic_24h.top_pages[0]?.views || 0,
+    top_referrer_24h: metrics.traffic_24h.top_referrers[0]?.referrer || null,
+    top_referrer_views_24h: metrics.traffic_24h.top_referrers[0]?.views || 0,
   });
+
+  return NextResponse.json(metrics);
 }
