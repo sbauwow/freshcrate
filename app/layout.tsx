@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import Link from "next/link";
 import Image from "next/image";
 import NavClock from "./components/nav-clock";
+import PageViewBeacon from "./components/page-view-beacon";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://freshcrate.ai"),
@@ -126,9 +128,10 @@ export default function RootLayout({
             </span>
           </div>
         </footer>
-        {/* Page view beacon — 1x1 transparent GIF, no JS, no cookies */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/api/beacon" alt="" width={1} height={1} className="absolute" aria-hidden="true" />
+        {/* Page view beacon — tiny client helper so path attribution is exact */}
+        <Suspense fallback={null}>
+          <PageViewBeacon />
+        </Suspense>
       </body>
     </html>
   );

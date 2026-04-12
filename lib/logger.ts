@@ -45,6 +45,9 @@ export const log = {
     status: number;
     duration_ms: number;
     ip?: string;
+    host?: string;
+    traffic_type?: string;
+    ua_family?: string;
     user_agent?: string;
     api_key_prefix?: string;
   }) => {

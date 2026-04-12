@@ -8,6 +8,8 @@ import {
   getProjectReleases,
   getCategories,
   getProjectsByCategory,
+  getProjectsByAuthor,
+  getAuthors,
   searchProjects,
   getStats,
   submitProject,
@@ -144,6 +146,49 @@ describe("getProjectsByCategory", () => {
   it("returns empty array for empty category", () => {
     const results = getProjectsByCategory("Nonexistent Category");
     expect(results).toEqual([]);
+  });
+});
+
+describe("getProjectsByAuthor", () => {
+  it("returns projects for an exact author", () => {
+    const a1 = insertTestProject(db, { name: "alice-1", author: "Alice" });
+    const a2 = insertTestProject(db, { name: "alice-2", author: "Alice" });
+    const b1 = insertTestProject(db, { name: "bob-1", author: "Bob" });
+    db.prepare("UPDATE projects SET stars = ? WHERE id = ?").run(12, a1);
+    db.prepare("UPDATE projects SET stars = ? WHERE id = ?").run(4, a2);
+    db.prepare("UPDATE projects SET stars = ? WHERE id = ?").run(40, b1);
+
+    const results = getProjectsByAuthor("Alice");
+    expect(results).toHaveLength(2);
+    expect(results.every((p) => p.author === "Alice")).toBe(true);
+    expect(results.map((p) => p.name)).toEqual(expect.arrayContaining(["alice-1", "alice-2"]));
+  });
+
+  it("returns empty when author has no projects", () => {
+    insertTestProject(db, { name: "other", author: "Someone" });
+    expect(getProjectsByAuthor("Nobody")).toEqual([]);
+  });
+});
+
+describe("getAuthors", () => {
+  it("returns author summaries with package counts and total stars", () => {
+    const p1 = insertTestProject(db, { name: "alpha", author: "Alice" });
+    const p2 = insertTestProject(db, { name: "beta", author: "Alice" });
+    const p3 = insertTestProject(db, { name: "gamma", author: "Bob" });
+    db.prepare("UPDATE projects SET stars = ? WHERE id = ?").run(10, p1);
+    db.prepare("UPDATE projects SET stars = ? WHERE id = ?").run(5, p2);
+    db.prepare("UPDATE projects SET stars = ? WHERE id = ?").run(8, p3);
+
+    const authors = getAuthors();
+    const alice = authors.find((a) => a.author === "Alice");
+    const bob = authors.find((a) => a.author === "Bob");
+
+    expect(alice).toBeDefined();
+    expect(alice!.package_count).toBe(2);
+    expect(alice!.total_stars).toBe(15);
+    expect(bob).toBeDefined();
+    expect(bob!.package_count).toBe(1);
+    expect(bob!.total_stars).toBe(8);
   });
 });
 

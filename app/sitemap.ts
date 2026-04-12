@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { getLatestReleases, getCategories } from "@/lib/queries";
+import { getLatestReleases, getCategories, getAuthors } from "@/lib/queries";
 import { getAllCrates } from "@/lib/learn-content";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -38,5 +38,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...projectPages, ...categoryPages, ...cratePages];
+  // Author pages
+  const authorPages: MetadataRoute.Sitemap = getAuthors().map((a) => ({
+    url: `${baseUrl}/author/${encodeURIComponent(a.author)}`,
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...projectPages, ...categoryPages, ...cratePages, ...authorPages];
 }

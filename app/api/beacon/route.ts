@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { classifyTraffic } from "@/lib/traffic-classification";
 import crypto from "crypto";
 
 /**
@@ -35,15 +36,18 @@ export async function GET(request: NextRequest) {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       || request.headers.get("x-real-ip") || "";
 
-    // Extract path from referer (internal pages)
-    let path = "/";
-    try {
-      const url = new URL(referer);
-      if (url.hostname.includes("freshcrate")) {
-        path = url.pathname;
+    // Prefer explicit path param, then fall back to internal referer path
+    let path = request.nextUrl.searchParams.get("p") || "/";
+    if (!path.startsWith("/")) path = "/";
+    if (path === "/") {
+      try {
+        const url = new URL(referer);
+        if (url.hostname.includes("freshcrate")) {
+          path = url.pathname;
+        }
+      } catch {
+        // Invalid referer, keep "/"
       }
-    } catch {
-      // Invalid referer, use "/"
     }
 
     // External referrer (for traffic source tracking)
@@ -57,13 +61,14 @@ export async function GET(request: NextRequest) {
       // no referrer
     }
 
-    const isBot = BOT_PATTERNS.test(ua) ? 1 : 0;
+    const { trafficType, uaFamily, host } = classifyTraffic(request, "page");
+    const isBot = trafficType === "crawler_bot" || BOT_PATTERNS.test(ua) ? 1 : 0;
     const ipHash = hashIp(ip);
 
     const db = getDb();
     db.prepare(
-      "INSERT INTO page_views (path, referrer, ip_hash, user_agent, is_bot) VALUES (?, ?, ?, ?, ?)"
-    ).run(path, externalRef, ipHash, ua, isBot);
+      "INSERT INTO page_views (path, referrer, ip_hash, user_agent, is_bot, host, traffic_type, ua_family) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    ).run(path, externalRef, ipHash, ua, isBot, host, trafficType, uaFamily);
   } catch {
     // Never let tracking break the page
   }

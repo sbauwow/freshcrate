@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { getDb } from "./db";
 import { log } from "./logger";
+import { classifyTraffic } from "./traffic-classification";
 import { NextRequest } from "next/server";
 
 /** Module-level request counter for periodic pruning. */
@@ -35,17 +36,29 @@ export function logRequest(
     || "";
   const ip = hashIp(rawIp);
   const userAgent = (request.headers.get("user-agent") || "").slice(0, 200);
+  const { trafficType, uaFamily, host } = classifyTraffic(request, "api");
 
   // Structured log to stdout (uses hashed IP, not raw)
-  log.request({ method, path, status, duration_ms: duration, ip, user_agent: userAgent, api_key_prefix: apiKeyPrefix });
+  log.request({
+    method,
+    path,
+    status,
+    duration_ms: duration,
+    ip,
+    host,
+    traffic_type: trafficType,
+    ua_family: uaFamily,
+    user_agent: userAgent,
+    api_key_prefix: apiKeyPrefix,
+  });
 
   // Persist to DB (async-safe, fire and forget)
   try {
     const db = getDb();
     db.prepare(
-      `INSERT INTO request_log (method, path, status, duration_ms, ip, user_agent, api_key_prefix)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).run(method, path, status, duration, ip, userAgent, apiKeyPrefix || null);
+      `INSERT INTO request_log (method, path, status, duration_ms, ip, user_agent, api_key_prefix, host, traffic_type, ua_family)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(method, path, status, duration, ip, userAgent, apiKeyPrefix || null, host, trafficType, uaFamily);
   } catch {
     // Don't let logging failures break the API
   }
