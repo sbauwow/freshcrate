@@ -36,17 +36,21 @@ export default function ResearchFeed() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
     fetch("/api/research", { signal: controller.signal })
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then(setData)
-      .catch(() => {})
+      .catch(() => {
+        setData({ papers: [], trending_models: [] });
+      })
       .finally(() => {
-        clearTimeout(timeoutId);
+        clearTimeout(timeout);
         setLoading(false);
       });
+
     return () => {
-      clearTimeout(timeoutId);
+      clearTimeout(timeout);
       controller.abort();
     };
   }, []);
@@ -82,6 +86,9 @@ export default function ResearchFeed() {
       {/* Papers */}
       <SectionShell title="Latest Research">
         <ul className="space-y-2">
+          {data.papers.length === 0 && (
+            <li className="text-[10px] text-fm-text-light">Research feed temporarily unavailable.</li>
+          )}
           {data.papers.slice(0, 8).map((paper, i) => (
             <li key={i}>
               <div className="flex items-start gap-1">
@@ -128,6 +135,9 @@ export default function ResearchFeed() {
       {/* Trending Models */}
       <SectionShell title="Trending Models">
         <ul className="space-y-1.5">
+          {data.trending_models.length === 0 && (
+            <li className="text-[10px] text-fm-text-light">Model feed temporarily unavailable.</li>
+          )}
           {data.trending_models.map((model, i) => (
             <li key={i} className="flex items-start gap-1.5">
               <span className="text-[9px] text-fm-text-light mt-0.5 shrink-0">{i + 1}.</span>

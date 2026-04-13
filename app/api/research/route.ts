@@ -34,6 +34,19 @@ interface TrendingSpace {
 }
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const EXTERNAL_FETCH_TIMEOUT_MS = 7000;
+
+type FetchOptions = RequestInit & { next?: { revalidate?: number } };
+
+async function fetchWithTimeout(url: string, init?: FetchOptions): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), EXTERNAL_FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 function isNew(dateStr: string): boolean {
   return !!dateStr && Date.now() - new Date(dateStr).getTime() < SEVEN_DAYS_MS;
@@ -78,7 +91,7 @@ const UPSTREAM_TIMEOUT_MS = 4000;
 async function fetchArxivQuery(query: string, maxResults: number, source = "arXiv"): Promise<Paper[]> {
   try {
     const encoded = encodeURIComponent(query);
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://export.arxiv.org/api/query?search_query=${encoded}&sortBy=submittedDate&sortOrder=descending&max_results=${maxResults}`,
       { next: { revalidate: 3600 }, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) }
     );
@@ -92,7 +105,7 @@ async function fetchArxivQuery(query: string, maxResults: number, source = "arXi
 
 async function fetchHuggingFacePapers(limit = 10): Promise<Paper[]> {
   try {
-    const res = await fetch(`https://huggingface.co/api/daily_papers?limit=${limit}`, {
+    const res = await fetchWithTimeout(`https://huggingface.co/api/daily_papers?limit=${limit}`, {
       next: { revalidate: 3600 },
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
@@ -119,7 +132,7 @@ async function fetchHuggingFacePapers(limit = 10): Promise<Paper[]> {
 
 async function fetchHuggingFaceTrending(limit = 10): Promise<TrendingModel[]> {
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://huggingface.co/api/models?sort=trendingScore&direction=-1&limit=${limit}`,
       { next: { revalidate: 3600 }, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) }
     );
@@ -140,7 +153,7 @@ async function fetchHuggingFaceTrending(limit = 10): Promise<TrendingModel[]> {
 
 async function fetchHuggingFaceDatasets(limit = 8): Promise<TrendingDataset[]> {
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://huggingface.co/api/datasets?sort=trendingScore&direction=-1&limit=${limit}`,
       { next: { revalidate: 3600 }, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) }
     );
@@ -159,7 +172,7 @@ async function fetchHuggingFaceDatasets(limit = 8): Promise<TrendingDataset[]> {
 
 async function fetchHuggingFaceSpaces(limit = 10): Promise<TrendingSpace[]> {
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://huggingface.co/api/spaces?sort=trendingScore&direction=-1&limit=${limit}`,
       { next: { revalidate: 3600 }, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) }
     );
