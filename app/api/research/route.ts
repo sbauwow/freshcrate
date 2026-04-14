@@ -73,12 +73,14 @@ function parseArxivXml(xml: string, source = "arXiv"): Paper[] {
   return entries;
 }
 
+const UPSTREAM_TIMEOUT_MS = 4000;
+
 async function fetchArxivQuery(query: string, maxResults: number, source = "arXiv"): Promise<Paper[]> {
   try {
     const encoded = encodeURIComponent(query);
     const res = await fetch(
       `https://export.arxiv.org/api/query?search_query=${encoded}&sortBy=submittedDate&sortOrder=descending&max_results=${maxResults}`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) }
     );
     if (!res.ok) return [];
     const xml = await res.text();
@@ -92,6 +94,7 @@ async function fetchHuggingFacePapers(limit = 10): Promise<Paper[]> {
   try {
     const res = await fetch(`https://huggingface.co/api/daily_papers?limit=${limit}`, {
       next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
     if (!res.ok) return [];
 
@@ -118,7 +121,7 @@ async function fetchHuggingFaceTrending(limit = 10): Promise<TrendingModel[]> {
   try {
     const res = await fetch(
       `https://huggingface.co/api/models?sort=trendingScore&direction=-1&limit=${limit}`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) }
     );
     if (!res.ok) return [];
 
@@ -139,7 +142,7 @@ async function fetchHuggingFaceDatasets(limit = 8): Promise<TrendingDataset[]> {
   try {
     const res = await fetch(
       `https://huggingface.co/api/datasets?sort=trendingScore&direction=-1&limit=${limit}`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) }
     );
     if (!res.ok) return [];
 
@@ -158,7 +161,7 @@ async function fetchHuggingFaceSpaces(limit = 10): Promise<TrendingSpace[]> {
   try {
     const res = await fetch(
       `https://huggingface.co/api/spaces?sort=trendingScore&direction=-1&limit=${limit}`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) }
     );
     if (!res.ok) return [];
 

@@ -35,11 +35,20 @@ export default function ResearchFeed() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/research")
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    fetch("/api/research", { signal: controller.signal })
       .then((r) => r.json())
       .then(setData)
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => {
+        clearTimeout(timeoutId);
+        setLoading(false);
+      });
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, []);
 
   if (loading) {
@@ -55,7 +64,18 @@ export default function ResearchFeed() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <>
+        <SectionShell title="Latest Research">
+          <div className="text-[10px] text-fm-text-light">Unavailable</div>
+        </SectionShell>
+        <SectionShell title="Trending Models">
+          <div className="text-[10px] text-fm-text-light">Unavailable</div>
+        </SectionShell>
+      </>
+    );
+  }
 
   return (
     <>
