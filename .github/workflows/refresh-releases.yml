@@ -31,9 +31,20 @@ jobs:
             echo "::error::CRON_SECRET secret is not set in repo settings"
             exit 1
           fi
-          response=$(curl -fsS -X POST \
+          if [ -z "${REFRESH_URL:-}" ]; then
+            echo "::error::REFRESH_URL secret is not set in repo settings"
+            exit 1
+          fi
+          status=$(curl -sS -o /tmp/body -w "%{http_code}" -X POST \
             -H "Authorization: Bearer $CRON_SECRET" \
             --max-time 300 \
             "${REFRESH_URL}?limit=${LIMIT}&dry=${DRY}")
-          echo "$response"
-          echo "$response" | python3 -m json.tool
+          echo "HTTP status: $status"
+          echo "Response body:"
+          cat /tmp/body
+          echo
+          if [ "$status" != "200" ]; then
+            echo "::error::Refresh endpoint returned HTTP $status"
+            exit 1
+          fi
+          python3 -m json.tool < /tmp/body
