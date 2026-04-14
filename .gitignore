@@ -37,8 +37,7 @@ yarn-error.log*
 # freshcrate oauth token cache
 .freshcrate-token
 
-# Local SQLite DB — prod uses the Railway volume at $DB_PATH
-freshcrate.db
+# DB WAL files (ephemeral, not needed in git)
 *.db-shm
 *.db-wal
 
