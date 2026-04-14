@@ -1,0 +1,39 @@
+name: Refresh release data
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max projects to process'
+        required: false
+        default: '500'
+      dry_run:
+        description: 'Dry run (no DB writes)'
+        required: false
+        default: 'false'
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Hit refresh endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          REFRESH_URL: ${{ secrets.REFRESH_URL || 'https://freshcrateai-production.up.railway.app/api/cron/refresh-releases' }}
+          LIMIT: ${{ github.event.inputs.limit || '500' }}
+          DRY: ${{ github.event.inputs.dry_run == 'true' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "::error::CRON_SECRET secret is not set in repo settings"
+            exit 1
+          fi
+          response=$(curl -fsS -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            --max-time 300 \
+            "${REFRESH_URL}?limit=${LIMIT}&dry=${DRY}")
+          echo "$response"
+          echo "$response" | python3 -m json.tool

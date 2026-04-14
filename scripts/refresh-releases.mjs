@@ -24,8 +24,18 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
-const DB_PATH = path.join(PROJECT_ROOT, "freshcrate.db");
+const SEED_DB_PATH = path.join(PROJECT_ROOT, "freshcrate.db");
+const DB_PATH = process.env.DB_PATH || SEED_DB_PATH;
 const TOKEN_PATH = path.join(PROJECT_ROOT, ".freshcrate-token");
+
+function bootstrapVolumeIfNeeded() {
+  if (DB_PATH === SEED_DB_PATH) return;
+  if (fs.existsSync(DB_PATH)) return;
+  if (!fs.existsSync(SEED_DB_PATH)) return;
+  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+  fs.copyFileSync(SEED_DB_PATH, DB_PATH);
+  console.log(`[db] bootstrapped ${DB_PATH} from ${SEED_DB_PATH}`);
+}
 
 const DRY_RUN = process.argv.includes("--dry-run");
 
@@ -83,7 +93,10 @@ async function ghFetch(endpoint) {
 async function main() {
   console.log(`🔄 freshcrate release refresh ${DRY_RUN ? "(DRY RUN)" : ""}`);
   console.log(`   Token: ${GITHUB_TOKEN ? "✓ present" : "✗ none (slower rate limit)"}`);
+  console.log(`   DB:    ${DB_PATH}`);
   console.log(`   Sleep: ${SLEEP_MS}ms between requests\n`);
+
+  bootstrapVolumeIfNeeded();
 
   const db = new Database(DB_PATH);
   db.pragma("journal_mode = WAL");
@@ -96,11 +109,17 @@ async function main() {
   console.log(`Found ${projects.length} projects with GitHub URLs\n`);
 
   const latestReleaseStmt = db.prepare(
-    "SELECT version, created_at FROM releases WHERE project_id = ? ORDER BY created_at DESC LIMIT 1"
+    "SELECT id, version, created_at FROM releases WHERE project_id = ? ORDER BY created_at DESC LIMIT 1"
   );
   const insertReleaseStmt = db.prepare(
     "INSERT INTO releases (project_id, version, changes, urgency, created_at) VALUES (?, ?, ?, ?, ?)"
   );
+  const updateReleaseStmt = db.prepare(
+    "UPDATE releases SET version = ?, changes = ?, urgency = ?, created_at = ? WHERE id = ?"
+  );
+
+  const SYNTHETIC_VERSION_RE = /^[^@\s]+@\d{4}-\d{2}-\d{2}$/;
+  const isSynthetic = (v) => SYNTHETIC_VERSION_RE.test(v || "");
 
   let checked = 0;
   let updated = 0;
@@ -116,39 +135,69 @@ async function main() {
     process.stdout.write(`  📦 ${project.name} (${slug}) ... `);
 
     try {
+      let version;
+      let changes;
+      let releaseDate;
+
       const release = await ghFetch(`/repos/${slug}/releases/latest`);
       await sleep(SLEEP_MS);
 
-      if (!release || !release.tag_name) {
-        console.log("no release");
-        skipped++;
-        continue;
+      if (release && release.tag_name) {
+        version = release.tag_name;
+        changes = (release.body || "")
+          .slice(0, 500)
+          .replace(/\r\n/g, " ")
+          .replace(/\n/g, " ");
+        releaseDate = release.published_at || new Date().toISOString();
+      } else {
+        // No GitHub release — fall back to repo activity (pushed_at on default branch)
+        const repo = await ghFetch(`/repos/${slug}`);
+        await sleep(SLEEP_MS);
+
+        if (!repo || !repo.pushed_at) {
+          console.log("no release, no activity");
+          skipped++;
+          continue;
+        }
+
+        const branch = repo.default_branch || "main";
+        const date = repo.pushed_at.slice(0, 10);
+        version = `${branch}@${date}`;
+        changes = `Latest activity on ${branch} branch`;
+        releaseDate = repo.pushed_at;
       }
 
       const stored = latestReleaseStmt.get(project.id);
-      if (stored && stored.version === release.tag_name) {
-        console.log(`unchanged (${release.tag_name})`);
+      if (stored && stored.version === version) {
+        console.log(`unchanged (${version})`);
         unchanged++;
         continue;
       }
 
-      const version = release.tag_name;
-      const changes = (release.body || "")
-        .slice(0, 500)
-        .replace(/\r\n/g, " ")
-        .replace(/\n/g, " ");
-      const releaseDate = release.published_at || new Date().toISOString();
+      // For synthetic versions (branch@date), update the existing latest row in place
+      // to avoid bloating the releases table with one row per day of activity.
+      const replaceInPlace = stored && isSynthetic(stored.version) && isSynthetic(version);
 
-      console.log(`NEW: ${stored?.version || "(none)"} → ${version}`);
+      console.log(`${replaceInPlace ? "BUMP" : "NEW"}: ${stored?.version || "(none)"} → ${version}`);
 
       if (!DRY_RUN) {
-        insertReleaseStmt.run(
-          project.id,
-          version,
-          changes || `Latest release: ${version}`,
-          urgencyFromAge(releaseDate),
-          releaseDate
-        );
+        if (replaceInPlace) {
+          updateReleaseStmt.run(
+            version,
+            changes || `Latest release: ${version}`,
+            urgencyFromAge(releaseDate),
+            releaseDate,
+            stored.id
+          );
+        } else {
+          insertReleaseStmt.run(
+            project.id,
+            version,
+            changes || `Latest release: ${version}`,
+            urgencyFromAge(releaseDate),
+            releaseDate
+          );
+        }
       }
       updated++;
     } catch (err) {
