@@ -8,7 +8,7 @@ on:
       limit:
         description: 'Max projects to process'
         required: false
-        default: '500'
+        default: '2000'
       dry_run:
         description: 'Dry run (no DB writes)'
         required: false
@@ -23,7 +23,7 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           REFRESH_URL: ${{ secrets.REFRESH_URL || 'https://freshcrateai-production.up.railway.app/api/cron/refresh-releases' }}
-          LIMIT: ${{ github.event.inputs.limit || '500' }}
+          LIMIT: ${{ github.event.inputs.limit || '2000' }}
           DRY: ${{ github.event.inputs.dry_run == 'true' && '1' || '0' }}
         run: |
           set -euo pipefail
