@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { getDbPath } from "@/lib/db-path";
 import { log } from "@/lib/logger";
 import fs from "fs";
-import path from "path";
 
 /**
  * GET /api/metrics — Operational metrics for monitoring.
@@ -53,8 +53,7 @@ export async function GET() {
   // DB file size
   let dbSizeMb = 0;
   try {
-    const dbPath = path.join(process.cwd(), "freshcrate.db");
-    const stat = fs.statSync(dbPath);
+    const stat = fs.statSync(getDbPath());
     dbSizeMb = Math.round(stat.size / 1024 / 1024 * 10) / 10;
   } catch { /* file may not exist */ }
 

@@ -1,31 +1,20 @@
 import Database from "better-sqlite3";
-import fs from "fs";
-import path from "path";
 import { runMigrations } from "@/lib/migrate";
+import { ensureDbDir, getDbPath } from "@/lib/db-path";
 
-const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), "freshcrate.db");
-const SEED_DB_PATH = path.join(process.cwd(), "freshcrate.db");
+const DB_PATH = getDbPath();
 
 let db: Database.Database;
 
 export function getDb(): Database.Database {
   if (!db) {
-    bootstrapVolumeIfNeeded();
+    ensureDbDir(DB_PATH);
     db = new Database(DB_PATH);
     db.pragma("journal_mode = WAL");
     db.pragma("foreign_keys = ON");
     initDb(db);
   }
   return db;
-}
-
-function bootstrapVolumeIfNeeded() {
-  if (DB_PATH === SEED_DB_PATH) return;
-  if (fs.existsSync(DB_PATH)) return;
-  if (!fs.existsSync(SEED_DB_PATH)) return;
-  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-  fs.copyFileSync(SEED_DB_PATH, DB_PATH);
-  console.log(`[db] bootstrapped ${DB_PATH} from ${SEED_DB_PATH}`);
 }
 
 /** Replace the DB instance (used by tests with in-memory SQLite). */

@@ -8,6 +8,9 @@ export const metadata: Metadata = {
     "Explore the dependency ecosystem across all freshcrate packages. See the most common dependencies, heaviest packages, license risks, and ecosystem breakdown.",
 };
 
+// Dependency stats change as scans run; this page must render at request time.
+export const dynamic = "force-dynamic";
+
 /* ── Ecosystem colors ── */
 const ECO_COLORS: Record<string, string> = {
   npm: "#CB3837",

@@ -13,13 +13,16 @@ import Database from "better-sqlite3";
 import { createHash, randomBytes } from "crypto";
 import path from "path";
 import { fileURLToPath } from "url";
+import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, "..", "freshcrate.db");
+const DB_PATH = getDbPath();
 
 function hashKey(key) {
   return createHash("sha256").update(key).digest("hex");
 }
+
+ensureDbDir();
 
 const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");

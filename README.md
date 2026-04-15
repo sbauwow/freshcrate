@@ -20,7 +20,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The database seeds automatically on first run with sample packages. To populate with real packages from GitHub, run the populate pipeline (see below).
+The database seeds automatically on first run with sample packages. Default DB path is `./data/freshcrate.db`.
+Set `FRESHCRATE_DB_PATH` to override (recommended in production, e.g. `/data/freshcrate.db`).
+To populate with real packages from GitHub, run the populate pipeline (see below).
 
 ## Features
 
@@ -215,7 +217,7 @@ freshcrate/
     queries.test.ts       # Query layer tests (31 tests)
     categories.test.ts    # Category logic tests
     setup.ts              # Test helpers (in-memory SQLite)
-  freshcrate.db           # SQLite database (auto-created)
+  data/freshcrate.db      # SQLite database (auto-created, gitignored)
 ```
 
 ## Development

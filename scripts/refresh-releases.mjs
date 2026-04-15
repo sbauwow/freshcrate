@@ -21,21 +21,12 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
-const SEED_DB_PATH = path.join(PROJECT_ROOT, "freshcrate.db");
-const DB_PATH = process.env.DB_PATH || SEED_DB_PATH;
+const DB_PATH = getDbPath();
 const TOKEN_PATH = path.join(PROJECT_ROOT, ".freshcrate-token");
-
-function bootstrapVolumeIfNeeded() {
-  if (DB_PATH === SEED_DB_PATH) return;
-  if (fs.existsSync(DB_PATH)) return;
-  if (!fs.existsSync(SEED_DB_PATH)) return;
-  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-  fs.copyFileSync(SEED_DB_PATH, DB_PATH);
-  console.log(`[db] bootstrapped ${DB_PATH} from ${SEED_DB_PATH}`);
-}
 
 const DRY_RUN = process.argv.includes("--dry-run");
 
@@ -96,7 +87,7 @@ async function main() {
   console.log(`   DB:    ${DB_PATH}`);
   console.log(`   Sleep: ${SLEEP_MS}ms between requests\n`);
 
-  bootstrapVolumeIfNeeded();
+  ensureDbDir();
 
   const db = new Database(DB_PATH);
   db.pragma("journal_mode = WAL");

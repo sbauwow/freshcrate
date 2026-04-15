@@ -87,7 +87,7 @@ Keep commits atomic — one logical change per commit.
 
 1. Update `initDb()` in `lib/db.ts`
 2. Add/update queries in `lib/queries.ts` with proper TypeScript types
-3. Delete `freshcrate.db` locally to test clean creation
+3. Delete `data/freshcrate.db` locally to test clean creation
 4. If `scripts/populate.mjs` touches the changed tables, update it too
 5. Document the migration path for existing databases
 
