@@ -42,6 +42,7 @@ export interface LatestReleaseOptions {
   category?: string;
   language?: string;
   sort?: ReleaseSort;
+  verifiedOnly?: boolean;
 }
 
 export interface AuthorSummary {
@@ -88,6 +89,10 @@ export function getLatestReleases(
     }
   }
 
+  if (options.verifiedOnly) {
+    where.push("COALESCE(p.verified, 0) = 1");
+  }
+
   const orderBy: Record<ReleaseSort, string> = {
     newest: "r.created_at DESC",
     oldest: "r.created_at ASC",
@@ -115,6 +120,15 @@ export function getLatestReleases(
     ...row,
     tags: getProjectTags(row.id),
   }));
+}
+
+/**
+ * @description Fetches latest verified project releases.
+ * @param limit - Maximum number of results to return
+ * @param offset - Number of rows to skip for pagination
+ */
+export function getLatestVerifiedReleases(limit = 20, offset = 0): ProjectWithRelease[] {
+  return getLatestReleases(limit, offset, { verifiedOnly: true, sort: "newest" });
 }
 
 /**

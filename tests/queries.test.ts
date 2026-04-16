@@ -3,6 +3,7 @@ import Database from "better-sqlite3";
 import { createTestDb, insertTestProject, _resetDb } from "./setup";
 import {
   getLatestReleases,
+  getLatestVerifiedReleases,
   getProjectTags,
   getProjectByName,
   getProjectReleases,
@@ -59,6 +60,28 @@ describe("getLatestReleases", () => {
 
     const page3 = getLatestReleases(2, 4);
     expect(page3).toHaveLength(1);
+  });
+
+  it("filters by verifiedOnly option", () => {
+    const verifiedId = insertTestProject(db, { name: "verified-one" });
+    insertTestProject(db, { name: "unverified-one" });
+    db.prepare("UPDATE projects SET verified = 1 WHERE id = ?").run(verifiedId);
+
+    const verified = getLatestReleases(20, 0, { verifiedOnly: true });
+    expect(verified).toHaveLength(1);
+    expect(verified[0].name).toBe("verified-one");
+  });
+});
+
+describe("getLatestVerifiedReleases", () => {
+  it("returns only verified projects", () => {
+    const id = insertTestProject(db, { name: "verified-feed" });
+    insertTestProject(db, { name: "not-verified-feed" });
+    db.prepare("UPDATE projects SET verified = 1 WHERE id = ?").run(id);
+
+    const rows = getLatestVerifiedReleases();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].name).toBe("verified-feed");
   });
 });
 

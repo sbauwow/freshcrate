@@ -1,15 +1,15 @@
-import { getLatestReleases } from "@/lib/queries";
 import { buildAtomFeed } from "@/lib/feed-atom";
+import { getLatestVerifiedReleases } from "@/lib/queries";
 
 export function GET() {
   const baseUrl = "https://freshcrate.ai";
-  const releases = getLatestReleases(50, 0);
+  const releases = getLatestVerifiedReleases(50, 0);
 
   const feed = buildAtomFeed({
-    id: `${baseUrl}/feed.xml`,
-    selfHref: `${baseUrl}/feed.xml`,
-    title: "freshcrate",
-    subtitle: "Latest crate releases tracked by freshcrate",
+    id: `${baseUrl}/feed/verified.xml`,
+    selfHref: `${baseUrl}/feed/verified.xml`,
+    title: "freshcrate — verified",
+    subtitle: "Latest releases from verified projects",
     baseUrl,
     releases,
   });
