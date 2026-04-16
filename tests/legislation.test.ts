@@ -4,6 +4,7 @@ import {
   getLegislation,
   getLegislationFilterOptions,
   getLegislationSummary,
+  getOperatorPlaybook,
 } from "@/lib/legislation";
 
 describe("legislation dataset", () => {
@@ -49,5 +50,12 @@ describe("legislation dataset", () => {
     const rows = getGovernanceIssues("Europe");
     expect(rows.length).toBeGreaterThan(0);
     expect(rows.every((r) => r.regions.includes("Global") || r.regions.includes("Europe"))).toBe(true);
+  });
+
+  it("builds actionable operator playbook", () => {
+    const playbook = getOperatorPlaybook({ region: "Europe", q: "foundation" });
+    expect(playbook.score).toBeGreaterThan(0);
+    expect(playbook.actions.length).toBeGreaterThan(0);
+    expect(playbook.actions.some((a) => a.evidence.length > 0)).toBe(true);
   });
 });

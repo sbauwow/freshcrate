@@ -61,7 +61,7 @@ export default function ApiDocsPage() {
           <h3 className="text-[12px] font-bold text-fm-green mb-2">Legislation Tracker</h3>
           <div className="bg-white border border-fm-border rounded p-3">
             <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/legislation</code>
-            <div className="text-[10px] text-fm-text-light mt-1 mb-2">Returns AI governance instruments and issue watchlist by optional filters.</div>
+            <div className="text-[10px] text-fm-text-light mt-1 mb-2">Returns AI governance instruments, issue watchlist, and an operator playbook by optional filters.</div>
             <div className="text-[10px]">
               <span className="font-bold">Parameters:</span>
               <ul className="ml-4 mt-1 space-y-0.5">

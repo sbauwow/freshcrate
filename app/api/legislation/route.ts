@@ -4,6 +4,7 @@ import {
   getLegislation,
   getLegislationFilterOptions,
   getLegislationSummary,
+  getOperatorPlaybook,
   type GovernanceStatus,
 } from "@/lib/legislation";
 import { logRequest } from "@/lib/request-log";
@@ -27,12 +28,14 @@ export function GET(request: NextRequest) {
   const legislation = getLegislation({ region, status, theme, q: qParam });
   const issues = getGovernanceIssues(region);
   const summary = getLegislationSummary();
+  const playbook = getOperatorPlaybook({ region, status, theme, q: qParam });
 
   logRequest(request, 200, start);
   return NextResponse.json({
     filters: { region, status, theme, q: qParam },
     options,
     summary,
+    playbook,
     legislation,
     issues,
   });

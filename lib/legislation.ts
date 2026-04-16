@@ -36,6 +36,21 @@ export interface LegislationFilters {
   q?: string;
 }
 
+export interface OperatorAction {
+  id: string;
+  title: string;
+  priority: "P0" | "P1" | "P2";
+  why: string;
+  evidence: string[];
+}
+
+export interface OperatorPlaybook {
+  score: number;
+  level: "low" | "medium" | "high";
+  rationale: string;
+  actions: OperatorAction[];
+}
+
 const LEGISLATION_ITEMS: LegislationItem[] = [
   {
     id: "eu-ai-act",
@@ -263,6 +278,94 @@ const GOVERNANCE_ISSUES: GovernanceIssue[] = [
   },
 ];
 
+const ACTION_LIBRARY: Record<string, OperatorAction> = {
+  "incident-response": {
+    id: "incident-response",
+    title: "Stand up AI incident response runbook",
+    priority: "P0",
+    why: "Regimes are converging on rapid reporting, takedowns, and documented mitigations.",
+    evidence: [
+      "Named incident commander + escalation matrix",
+      "72h incident timeline template",
+      "Tabletop exercise logs for model misuse scenarios",
+    ],
+  },
+  "model-card-and-risk-register": {
+    id: "model-card-and-risk-register",
+    title: "Maintain model cards + risk register per deployed model",
+    priority: "P0",
+    why: "Explainability, traceability, and deployment controls increasingly hinge on living documentation.",
+    evidence: [
+      "Versioned model card in repo",
+      "Risk register with owner, status, and mitigation",
+      "Change-log linking model updates to risk impacts",
+    ],
+  },
+  "red-team-and-evals": {
+    id: "red-team-and-evals",
+    title: "Operationalize red-team and safety eval cadence",
+    priority: "P0",
+    why: "High-risk and foundation-model regimes require demonstrable pre/post-deployment testing.",
+    evidence: [
+      "Quarterly adversarial test reports",
+      "Safety benchmark dashboard with pass/fail thresholds",
+      "Remediation tickets tied to eval failures",
+    ],
+  },
+  "content-provenance": {
+    id: "content-provenance",
+    title: "Ship synthetic media provenance + labeling",
+    priority: "P1",
+    why: "Election and consumer-protection measures are tightening around synthetic content disclosure.",
+    evidence: [
+      "Watermarking or provenance metadata spec",
+      "User-visible labeling on generated outputs",
+      "Detection/abuse monitoring metrics",
+    ],
+  },
+  "vendor-and-procurement-pack": {
+    id: "vendor-and-procurement-pack",
+    title: "Create regulator-ready vendor assurance packet",
+    priority: "P1",
+    why: "Public-sector and enterprise procurement increasingly acts as de facto AI regulation.",
+    evidence: [
+      "Security architecture + SBOM",
+      "Data governance and retention policy",
+      "Third-party audit attestations",
+    ],
+  },
+  "oss-policy": {
+    id: "oss-policy",
+    title: "Define open-source release policy and liability perimeter",
+    priority: "P2",
+    why: "Open-weight distribution obligations are still moving; explicit guardrails reduce legal ambiguity.",
+    evidence: [
+      "OSS release decision tree",
+      "Acceptable use policy for downstream use",
+      "Exception approvals for high-risk capabilities",
+    ],
+  },
+};
+
+const THEME_TO_ACTIONS: Record<string, string[]> = {
+  "risk-tiering": ["model-card-and-risk-register", "red-team-and-evals"],
+  "foundation-models": ["model-card-and-risk-register", "red-team-and-evals", "oss-policy"],
+  "transparency": ["model-card-and-risk-register", "content-provenance"],
+  "conformity-assessment": ["red-team-and-evals", "vendor-and-procurement-pack"],
+  "high-risk-systems": ["model-card-and-risk-register", "red-team-and-evals"],
+  "impact-assessments": ["model-card-and-risk-register"],
+  "notice": ["content-provenance"],
+  "governance": ["model-card-and-risk-register", "incident-response"],
+  "liability": ["oss-policy", "incident-response"],
+  "high-impact-systems": ["model-card-and-risk-register", "red-team-and-evals"],
+  "record-keeping": ["model-card-and-risk-register"],
+  "content-controls": ["content-provenance", "incident-response"],
+  "security-assessment": ["red-team-and-evals", "vendor-and-procurement-pack"],
+  "data-governance": ["vendor-and-procurement-pack"],
+  "voluntary-assurance": ["red-team-and-evals"],
+  "procurement": ["vendor-and-procurement-pack"],
+};
+
 export function getLegislation(filters: LegislationFilters = {}): LegislationItem[] {
   const q = filters.q?.trim().toLowerCase();
 
@@ -292,6 +395,62 @@ export function getGovernanceIssues(region?: string): GovernanceIssue[] {
     if (!region) return true;
     return issue.regions.includes("Global") || issue.regions.includes(region);
   });
+}
+
+export function getOperatorPlaybook(filters: LegislationFilters = {}): OperatorPlaybook {
+  const laws = getLegislation(filters);
+  const issues = getGovernanceIssues(filters.region);
+
+  const severityWeight = issues.reduce((sum, issue) => {
+    if (issue.severity === "high") return sum + 8;
+    if (issue.severity === "medium") return sum + 4;
+    return sum + 2;
+  }, 0);
+
+  const statusWeight = laws.reduce((sum, law) => {
+    if (law.status === "in_force") return sum + 7;
+    if (law.status === "approved_not_effective") return sum + 5;
+    if (law.status === "in_negotiation") return sum + 3;
+    if (law.status === "proposed") return sum + 2;
+    return sum + 1;
+  }, 0);
+
+  const base = Math.min(100, statusWeight + severityWeight);
+  const score = Math.max(5, Math.round(base));
+
+  let level: OperatorPlaybook["level"] = "low";
+  if (score >= 60) level = "high";
+  else if (score >= 30) level = "medium";
+
+  const actionIds = new Set<string>();
+  for (const law of laws) {
+    for (const theme of law.themes) {
+      for (const actionId of THEME_TO_ACTIONS[theme] ?? []) {
+        actionIds.add(actionId);
+      }
+    }
+  }
+
+  if (issues.some((i) => i.severity === "high")) {
+    actionIds.add("incident-response");
+    actionIds.add("red-team-and-evals");
+  }
+
+  if (actionIds.size === 0) {
+    actionIds.add("model-card-and-risk-register");
+    actionIds.add("vendor-and-procurement-pack");
+  }
+
+  const priorityOrder: Record<OperatorAction["priority"], number> = { P0: 0, P1: 1, P2: 2 };
+  const actions = Array.from(actionIds)
+    .map((id) => ACTION_LIBRARY[id])
+    .filter(Boolean)
+    .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+    .slice(0, 6);
+
+  const rationale = `${laws.length} instruments + ${issues.length} governance issues in scope.`;
+
+  return { score, level, rationale, actions };
 }
 
 export function getLegislationFilterOptions() {

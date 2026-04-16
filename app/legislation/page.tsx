@@ -4,6 +4,7 @@ import {
   getLegislation,
   getLegislationFilterOptions,
   getLegislationSummary,
+  getOperatorPlaybook,
   type GovernanceStatus,
 } from "@/lib/legislation";
 
@@ -64,6 +65,7 @@ export default async function LegislationPage({
   const laws = getLegislation({ region, status, theme, q });
   const issues = getGovernanceIssues(region);
   const summary = getLegislationSummary();
+  const playbook = getOperatorPlaybook({ region, status, theme, q });
 
   return (
     <div className="flex flex-col gap-4">
@@ -143,6 +145,41 @@ export default async function LegislationPage({
           <span className="ml-auto text-fm-text-light">Showing {laws.length} instruments</span>
         </div>
       </form>
+
+      <section className="bg-white border border-fm-border rounded">
+        <div className="px-2 py-1 border-b border-fm-border bg-fm-sidebar-bg text-[11px] font-bold text-fm-green">
+          Operator playbook (standalone advantage)
+        </div>
+        <div className="p-2 space-y-2 text-[11px]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-bold text-fm-text">Regulatory pressure score:</span>
+            <span className="px-1.5 py-0.5 rounded bg-[#bbddff]/60 text-fm-link font-bold">{playbook.score}/100</span>
+            <span className={`px-1.5 py-0.5 rounded font-bold text-[9px] ${playbook.level === "high" ? "bg-red-100 text-red-800" : playbook.level === "medium" ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}`}>
+              {playbook.level}
+            </span>
+            <span className="text-fm-text-light">{playbook.rationale}</span>
+          </div>
+
+          <div className="space-y-2">
+            {playbook.actions.map((action) => (
+              <div key={action.id} className="border border-fm-border rounded p-2 bg-fm-bg/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-fm-text">{action.title}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${action.priority === "P0" ? "bg-red-100 text-red-800" : action.priority === "P1" ? "bg-yellow-100 text-yellow-800" : "bg-blue-100 text-blue-800"}`}>
+                    {action.priority}
+                  </span>
+                </div>
+                <p className="text-fm-text mb-1">{action.why}</p>
+                <ul className="list-disc ml-4 text-[10px] text-fm-text-light space-y-0.5">
+                  {action.evidence.map((ev) => (
+                    <li key={ev}>{ev}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section className="bg-white border border-fm-border rounded">
         <div className="px-2 py-1 border-b border-fm-border bg-fm-sidebar-bg text-[11px] font-bold text-fm-green">
