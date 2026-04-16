@@ -47,7 +47,7 @@ function severityPill(severity: "low" | "medium" | "high"): string {
 export default async function LegislationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ region?: string; status?: string; theme?: string }>;
+  searchParams: Promise<{ region?: string; status?: string; theme?: string; q?: string }>;
 }) {
   const params = await searchParams;
   const options = getLegislationFilterOptions();
@@ -59,8 +59,9 @@ export default async function LegislationPage({
       ? (params.status as GovernanceStatus)
       : undefined;
   const theme = typeof params.theme === "string" && options.themes.includes(params.theme) ? params.theme : undefined;
+  const q = typeof params.q === "string" && params.q.trim().length > 0 ? params.q.trim() : undefined;
 
-  const laws = getLegislation({ region, status, theme });
+  const laws = getLegislation({ region, status, theme, q });
   const issues = getGovernanceIssues(region);
   const summary = getLegislationSummary();
 
@@ -94,6 +95,17 @@ export default async function LegislationPage({
 
       <form method="GET" className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-2 text-[10px]">
         <div className="flex flex-wrap items-end gap-2">
+          <label className="flex flex-col gap-0.5 min-w-[220px]">
+            <span className="text-fm-text-light">Keyword</span>
+            <input
+              type="text"
+              name="q"
+              defaultValue={q ?? ""}
+              placeholder="e.g. foundation models, deepfake, audit"
+              className="border border-fm-border bg-white px-1 py-0.5 text-[10px]"
+            />
+          </label>
+
           <label className="flex flex-col gap-0.5">
             <span className="text-fm-text-light">Region</span>
             <select name="region" defaultValue={region ?? ""} className="border border-fm-border bg-white px-1 py-0.5 text-[10px]">

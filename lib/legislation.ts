@@ -33,6 +33,7 @@ export interface LegislationFilters {
   region?: string;
   status?: GovernanceStatus;
   theme?: string;
+  q?: string;
 }
 
 const LEGISLATION_ITEMS: LegislationItem[] = [
@@ -263,10 +264,26 @@ const GOVERNANCE_ISSUES: GovernanceIssue[] = [
 ];
 
 export function getLegislation(filters: LegislationFilters = {}): LegislationItem[] {
+  const q = filters.q?.trim().toLowerCase();
+
   return LEGISLATION_ITEMS
     .filter((item) => (filters.region ? item.region === filters.region : true))
     .filter((item) => (filters.status ? item.status === filters.status : true))
     .filter((item) => (filters.theme ? item.themes.includes(filters.theme) : true))
+    .filter((item) => {
+      if (!q) return true;
+      const haystack = [
+        item.jurisdiction,
+        item.instrument,
+        item.summary,
+        item.region,
+        ...item.themes,
+        ...item.issues,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    })
     .sort((a, b) => a.jurisdiction.localeCompare(b.jurisdiction));
 }
 

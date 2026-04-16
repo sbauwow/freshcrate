@@ -68,6 +68,7 @@ export default function ApiDocsPage() {
                 <li><code className="font-mono">region</code> (optional) - e.g. Europe, North America, Asia-Pacific</li>
                 <li><code className="font-mono">status</code> (optional) - in_force, approved_not_effective, in_negotiation, proposed</li>
                 <li><code className="font-mono">theme</code> (optional) - filter by policy theme</li>
+                <li><code className="font-mono">q</code> (optional) - keyword search across jurisdiction, instrument, summary, themes, and issues</li>
               </ul>
             </div>
             <div className="mt-2 bg-fm-bg rounded p-2">
