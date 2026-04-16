@@ -6,12 +6,16 @@ import { requireActiveManifestForHighRiskCategory } from "@/lib/agent-manifest";
 import { fireNewPackageEvent } from "@/lib/webhooks";
 import { logRequest } from "@/lib/request-log";
 import { log } from "@/lib/logger";
+import { parseProvenanceJson } from "@/lib/provenance";
 
 export async function GET(request: NextRequest) {
   const start = Date.now();
   const limit = parseInt(request.nextUrl.searchParams.get("limit") || "20");
   const offset = parseInt(request.nextUrl.searchParams.get("offset") || "0");
-  const projects = getLatestReleases(Math.min(limit, 100), Math.max(offset, 0));
+  const projects = getLatestReleases(Math.min(limit, 100), Math.max(offset, 0)).map((project) => ({
+    ...project,
+    provenance: parseProvenanceJson(project.provenance_json),
+  }));
   const res = NextResponse.json({ projects, count: projects.length });
   logRequest(request, 200, start);
   return res;

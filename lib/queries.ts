@@ -1,4 +1,5 @@
 import { getDb } from "./db";
+import { buildCanonicalKey } from "./provenance";
 
 export interface Project {
   id: number;
@@ -16,6 +17,12 @@ export interface Project {
   forks: number;
   language: string;
   verified: number;
+  source_type: string;
+  source_package_id: string;
+  source_url: string;
+  canonical_key: string;
+  provenance_json: string;
+  imported_at: string;
 }
 
 export interface Release {
@@ -373,11 +380,51 @@ export function submitProject(data: {
   version: string;
   changes: string;
   tags: string[];
+  source_type?: string;
+  source_package_id?: string;
+  source_url?: string;
+  canonical_key?: string;
+  provenance_json?: string;
 }): number {
   const db = getDb();
+
+  const sourceType = data.source_type || "manual";
+  const sourcePackageId = data.source_package_id || data.name;
+  const sourceUrl = data.source_url || data.repo_url || data.homepage_url || "";
+  const canonicalKey = data.canonical_key || buildCanonicalKey({
+    sourceType,
+    name: data.name,
+    repoUrl: data.repo_url,
+    homepageUrl: data.homepage_url,
+  });
+  const provenanceJson = data.provenance_json || JSON.stringify({
+    source_type: sourceType,
+    source_package_id: sourcePackageId,
+    source_url: sourceUrl,
+    canonical_key: canonicalKey,
+    confidence: 1,
+    matched_by: "manual_submission",
+    imported_at: new Date().toISOString(),
+  });
+
   const result = db.prepare(
-    "INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-  ).run(data.name, data.short_desc, data.description, data.homepage_url, data.repo_url, data.license, data.category, data.author);
+    "INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author, source_type, source_package_id, source_url, canonical_key, provenance_json, imported_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  ).run(
+    data.name,
+    data.short_desc,
+    data.description,
+    data.homepage_url,
+    data.repo_url,
+    data.license,
+    data.category,
+    data.author,
+    sourceType,
+    sourcePackageId,
+    sourceUrl,
+    canonicalKey,
+    provenanceJson,
+    new Date().toISOString()
+  );
 
   const projectId = result.lastInsertRowid as number;
 

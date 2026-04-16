@@ -16,6 +16,7 @@ export default function ApiDocsPage() {
           <div className="bg-white border border-fm-border rounded p-3">
             <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/projects</code>
             <div className="text-[10px] text-fm-text-light mt-1 mb-2">Returns the latest package releases, newest first.</div>
+            <div className="text-[10px] text-fm-text-light mb-2">Each project now includes provenance fields: <code className="font-mono">source_type</code>, <code className="font-mono">source_package_id</code>, <code className="font-mono">canonical_key</code>, <code className="font-mono">provenance_json</code>, <code className="font-mono">imported_at</code>.</div>
             <div className="text-[10px]">
               <span className="font-bold">Parameters:</span>
               <ul className="ml-4 mt-1 space-y-0.5">

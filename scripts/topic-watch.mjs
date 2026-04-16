@@ -25,6 +25,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
+import { buildCanonicalKey } from "./lib/canonical-id.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -221,10 +222,13 @@ async function main() {
 
   // Prepared statements
   const existingNames = new Set(db.prepare("SELECT name FROM projects").all().map(r => r.name));
+  const existingCanonical = new Set(
+    db.prepare("SELECT canonical_key FROM projects WHERE canonical_key IS NOT NULL AND canonical_key != ''").all().map(r => r.canonical_key)
+  );
 
   const insertProject = db.prepare(
-    `INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author, stars, forks, language)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author, stars, forks, language, source_type, source_package_id, source_url, canonical_key, provenance_json, imported_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const insertRelease = db.prepare(
     "INSERT INTO releases (project_id, version, changes, urgency, created_at) VALUES (?, ?, ?, ?, ?)"
@@ -261,7 +265,14 @@ async function main() {
     console.log(`   Found ${repos.length} repos (${data.total_count} total matching)`);
 
     for (const repo of repos) {
-      if (existingNames.has(repo.name)) {
+      const canonicalKey = buildCanonicalKey({
+        sourceType: "github",
+        name: repo.name,
+        repoUrl: repo.html_url,
+        homepageUrl: repo.homepage || "",
+      });
+
+      if (existingNames.has(repo.name) || existingCanonical.has(canonicalKey)) {
         topicSkipped++;
         continue;
       }
@@ -293,6 +304,7 @@ async function main() {
         console.log(`   📦 [DRY] ${repo.full_name} → ${category} (${version}) ⭐${repo.stargazers_count}`);
         topicAdded++;
         existingNames.add(repo.name);
+        if (canonicalKey) existingCanonical.add(canonicalKey);
         continue;
       }
 
@@ -301,7 +313,18 @@ async function main() {
           repo.name, shortDesc, repo.description || "",
           repo.homepage || repo.html_url, repo.html_url,
           repo.license?.spdx_id || "Unknown", category, owner,
-          repo.stargazers_count || 0, repo.forks_count || 0, repo.language || ""
+          repo.stargazers_count || 0, repo.forks_count || 0, repo.language || "",
+          "github", repo.full_name, repo.html_url, canonicalKey,
+          JSON.stringify({
+            source_type: "github",
+            source_package_id: repo.full_name,
+            source_url: repo.html_url,
+            canonical_key: canonicalKey,
+            confidence: 1,
+            matched_by: `topic:${topic}`,
+            imported_at: new Date().toISOString(),
+          }),
+          new Date().toISOString()
         );
         const projectId = result.lastInsertRowid;
 
@@ -328,6 +351,7 @@ async function main() {
         }
 
         existingNames.add(repo.name);
+        if (canonicalKey) existingCanonical.add(canonicalKey);
         topicAdded++;
         console.log(`   ✅ ${repo.full_name} → ${category} (${version}) ⭐${repo.stargazers_count}`);
       } catch (err) {

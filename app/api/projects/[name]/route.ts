@@ -5,6 +5,7 @@ import {
   getProjectReleases,
   getProjectTags,
 } from "@/lib/queries";
+import { parseProvenanceJson } from "@/lib/provenance";
 
 export async function GET(
   request: NextRequest,
@@ -25,6 +26,7 @@ export async function GET(
   logRequest(request, 200, start);
   return NextResponse.json({
     ...project,
+    provenance: parseProvenanceJson(project.provenance_json),
     tags,
     releases,
   });
