@@ -21,6 +21,8 @@ Also already shipped (previously marked incorrectly in older roadmap drafts):
 - OG/social image routes:
   - `app/learn/opengraph-image.tsx`
   - `app/learn/[slug]/opengraph-image.tsx`
+- Data-backed glossary page:
+  - `app/learn/glossary/page.tsx`
 
 ---
 

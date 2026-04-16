@@ -7,10 +7,11 @@ Keep ROADMAP.md as strategic context; use this file to ship.
 
 ---
 
-## Sprint 1 (Weeks 1–2) — Roadmap Hygiene + Distribution
+## Sprint 1 (Weeks 1–2) — Re-baseline + Already Shipped Distribution
 
 ### FC-101: Re-baseline roadmap and education roadmap
 Priority: P0
+Status: Shipped
 
 Scope:
 - Update ROADMAP.md status to match shipped reality.
@@ -22,10 +23,14 @@ Acceptance criteria:
 - No “Not started” item remains for features already present in code.
 - One source of truth for execution priority.
 
+Outcome:
+- Strategic docs re-baselined to reflect shipped freshcrate state.
+
 ---
 
 ### FC-102: Author landing pages (`/author/[name]`)
 Priority: P0
+Status: Shipped
 
 Scope:
 - New SSR route for maintainer/author profile page.
@@ -37,10 +42,14 @@ Acceptance criteria:
 - Author links appear on homepage/search/project pages.
 - Author pages included in sitemap.
 
+Outcome:
+- Implemented and live.
+
 ---
 
 ### FC-103: Tag landing pages (`/tag/[tag]`)
 Priority: P0
+Status: Shipped
 
 Scope:
 - New SSR route for tag hub page.
@@ -52,10 +61,14 @@ Acceptance criteria:
 - Tag pages are indexable and in sitemap.
 - Search-to-tag clickthrough events visible in request_log.
 
+Outcome:
+- Implemented and live.
+
 ---
 
 ### FC-104: Feed expansion (`/feed/[category].xml` + verified feed)
 Priority: P1
+Status: Shipped
 
 Scope:
 - Add category-specific Atom feeds.
@@ -66,12 +79,16 @@ Acceptance criteria:
 - `/feed/verified.xml` resolves.
 - Feeds pass basic Atom validation and include canonical links.
 
+Outcome:
+- Implemented via `/feed/[slug]` + `/feed/verified.xml`.
+
 ---
 
 ## Sprint 2 (Weeks 2–4) — Multi-source Import MVP
 
 ### FC-201: npm importer MVP
 Priority: P0
+Status: Shipped
 
 Scope:
 - Add ingestion script for npm packages using keyword/topic heuristics.
@@ -82,10 +99,14 @@ Acceptance criteria:
 - Dedupes against existing GitHub-imported records.
 - Adds source metadata (`source_type=npm`).
 
+Outcome:
+- Implemented and committed.
+
 ---
 
 ### FC-202: PyPI importer MVP
 Priority: P0
+Status: Shipped
 
 Scope:
 - Add ingestion script for PyPI packages using AI/agent/RAG/MCP signals.
@@ -96,10 +117,14 @@ Acceptance criteria:
 - Dedupes by canonical repo/homepage.
 - Adds source metadata (`source_type=pypi`).
 
+Outcome:
+- Implemented and committed.
+
 ---
 
 ### FC-203: Cross-source identity + dedupe
 Priority: P0
+Status: Shipped
 
 Scope:
 - Introduce canonical identity model (repo URL + normalized package slug + homepage).
@@ -110,10 +135,14 @@ Acceptance criteria:
 - Duplicate merge script available for existing DB rows.
 - No regressions in MCP/REST package fetch endpoints.
 
+Outcome:
+- Canonical key migration + duplicate merge tooling shipped.
+
 ---
 
 ### FC-204: Provenance UI + API exposure
 Priority: P1
+Status: Shipped
 
 Scope:
 - Surface source provenance on project pages and API payloads.
@@ -123,12 +152,16 @@ Acceptance criteria:
 - Project page displays source badges (GitHub/npm/PyPI).
 - `/api/projects` and `/api/projects/[name]` include provenance fields.
 
+Outcome:
+- Provenance now exposed in UI and API payloads.
+
 ---
 
 ## Sprint 3 (Weeks 4–6) — Ranking + Trust
 
 ### FC-301: Ranking v2 for search and browse
 Priority: P0
+Status: Next Up
 
 Scope:
 - Composite ranking formula using verification score, recency, stars/forks velocity, release cadence.
@@ -185,6 +218,7 @@ Acceptance criteria:
 
 ### FC-402: Glossary page (`/learn/glossary` data-backed)
 Priority: P1
+Status: Shipped
 
 Scope:
 - Build glossary from structured terms in `learn-content`.
@@ -193,6 +227,9 @@ Scope:
 Acceptance criteria:
 - Glossary has alphabetical index + deep links.
 - Sitemap includes glossary route (already present) with valid content.
+
+Outcome:
+- Implemented and live.
 
 ---
 
