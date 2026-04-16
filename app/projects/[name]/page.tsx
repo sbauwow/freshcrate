@@ -44,7 +44,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
             {project.tags.map((tag) => (
               <Link
                 key={tag}
-                href={`/search?q=${tag}`}
+                href={`/tag/${encodeURIComponent(tag)}`}
                 className="text-[9px] bg-fm-green/10 text-fm-green px-1.5 py-0.5 rounded hover:bg-fm-green/20"
               >
                 {tag}

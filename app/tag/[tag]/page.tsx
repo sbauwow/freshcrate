@@ -2,36 +2,37 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { computeLifecycle } from "@/lib/lifecycle";
-import { getProjectsByAuthor } from "@/lib/queries";
+import { getProjectsByTag } from "@/lib/queries";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ name: string }>;
+  params: Promise<{ tag: string }>;
 }): Promise<Metadata> {
-  const { name } = await params;
-  const author = decodeURIComponent(name);
+  const { tag } = await params;
+  const decodedTag = decodeURIComponent(tag);
   return {
-    title: `freshcrate — ${author}`,
-    description: `Projects published by ${author} on freshcrate.`,
+    title: `freshcrate — #${decodedTag}`,
+    description: `Projects tagged #${decodedTag} on freshcrate.`,
   };
 }
 
-export default async function AuthorPage({
+export default async function TagPage({
   params,
 }: {
-  params: Promise<{ name: string }>;
+  params: Promise<{ tag: string }>;
 }) {
-  const { name } = await params;
-  const author = decodeURIComponent(name);
-  const projects = getProjectsByAuthor(author);
+  const { tag } = await params;
+  const decodedTag = decodeURIComponent(tag);
+  const normalizedTag = decodedTag.trim().toLowerCase();
+  const projects = getProjectsByTag(normalizedTag);
 
   if (projects.length === 0) {
     notFound();
   }
 
   const totalStars = projects.reduce((sum, p) => sum + (p.stars || 0), 0);
-  const languageSet = new Set(projects.map((p) => p.language).filter(Boolean));
+  const authorSet = new Set(projects.map((p) => p.author).filter(Boolean));
   const categorySet = new Set(projects.map((p) => p.category).filter(Boolean));
 
   return (
@@ -40,11 +41,11 @@ export default async function AuthorPage({
         <div className="text-[10px] text-fm-text-light mb-3">
           <Link href="/" className="text-fm-link hover:text-fm-link-hover">Home</Link>
           {" > "}
-          <span className="font-bold text-fm-text">{author}</span>
+          <span className="font-bold text-fm-text">#{normalizedTag}</span>
         </div>
 
         <div className="border-b-2 border-fm-green pb-2 mb-3">
-          <h2 className="text-[14px] font-bold text-fm-green">Projects by {author}</h2>
+          <h2 className="text-[14px] font-bold text-fm-green">Tag: #{normalizedTag}</h2>
           <p className="text-[10px] text-fm-text-light mt-1">
             {projects.length} package{projects.length !== 1 ? "s" : ""} • ⭐ {totalStars.toLocaleString()} total stars
           </p>
@@ -86,21 +87,18 @@ export default async function AuthorPage({
                 <p className="text-[11px] text-fm-text">{project.short_desc}</p>
 
                 <div className="flex flex-wrap items-center gap-2 mt-1">
-                  {project.tags.slice(0, 8).map((tag) => (
+                  {project.tags.slice(0, 10).map((projectTag) => (
                     <Link
-                      key={tag}
-                      href={`/tag/${encodeURIComponent(tag)}`}
-                      className="text-[9px] bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded hover:bg-[#bbddff]"
+                      key={projectTag}
+                      href={`/tag/${encodeURIComponent(projectTag)}`}
+                      className={`text-[9px] px-1.5 py-0.5 rounded ${projectTag === normalizedTag ? "bg-fm-green/15 text-fm-green font-bold" : "bg-[#bbddff]/50 text-fm-link hover:bg-[#bbddff]"}`}
                     >
-                      {tag}
+                      {projectTag}
                     </Link>
                   ))}
-                  <Link
-                    href={`/browse?category=${encodeURIComponent(project.category)}`}
-                    className="text-[9px] text-fm-link hover:text-fm-link-hover ml-auto"
-                  >
-                    {project.category}
-                  </Link>
+                  <span className="text-[9px] text-fm-text-light ml-auto">
+                    by <Link href={`/author/${encodeURIComponent(project.author)}`} className="text-fm-link hover:text-fm-link-hover">{project.author}</Link>
+                  </span>
                 </div>
               </div>
             );
@@ -111,7 +109,7 @@ export default async function AuthorPage({
       <aside className="w-full md:w-[220px] md:shrink-0">
         <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
           <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
-            Maintainer Snapshot
+            Tag Snapshot
           </h3>
           <div className="space-y-1 text-[11px]">
             <div className="flex justify-between">
@@ -119,16 +117,16 @@ export default async function AuthorPage({
               <span className="font-bold">{projects.length}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-fm-text-light">Total stars:</span>
-              <span className="font-bold">{totalStars.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-fm-text-light">Languages:</span>
-              <span className="font-bold">{languageSet.size}</span>
+              <span className="text-fm-text-light">Authors:</span>
+              <span className="font-bold">{authorSet.size}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-fm-text-light">Categories:</span>
               <span className="font-bold">{categorySet.size}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-fm-text-light">Total stars:</span>
+              <span className="font-bold">{totalStars.toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -138,8 +136,8 @@ export default async function AuthorPage({
             Jump
           </h3>
           <div className="text-[11px] space-y-1">
-            <Link href={`/search?author=${encodeURIComponent(author)}`} className="block text-fm-link hover:text-fm-link-hover">
-              View in search
+            <Link href={`/search?q=${encodeURIComponent(normalizedTag)}`} className="block text-fm-link hover:text-fm-link-hover">
+              Search this tag
             </Link>
             <Link href="/browse" className="block text-fm-link hover:text-fm-link-hover">
               Browse categories

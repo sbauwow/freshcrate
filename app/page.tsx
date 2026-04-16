@@ -187,7 +187,7 @@ export default async function Home({
                     {project.tags.map((tag) => (
                       <Link
                         key={tag}
-                        href={`/search?q=${tag}`}
+                        href={`/tag/${encodeURIComponent(tag)}`}
                         className="text-[9px] bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded hover:bg-[#bbddff]"
                       >
                         {tag}

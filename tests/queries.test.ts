@@ -10,6 +10,8 @@ import {
   getProjectsByCategory,
   getProjectsByAuthor,
   getAuthors,
+  getTags,
+  getProjectsByTag,
   searchProjects,
   getStats,
   submitProject,
@@ -189,6 +191,40 @@ describe("getAuthors", () => {
     expect(bob).toBeDefined();
     expect(bob!.package_count).toBe(1);
     expect(bob!.total_stars).toBe(8);
+  });
+});
+
+describe("getTags", () => {
+  it("returns tags with project counts", () => {
+    insertTestProject(db, { name: "tag-a", tags: ["mcp", "agent"] });
+    insertTestProject(db, { name: "tag-b", tags: ["mcp"] });
+
+    const tags = getTags();
+    const mcp = tags.find((t) => t.tag === "mcp");
+    const agent = tags.find((t) => t.tag === "agent");
+
+    expect(mcp).toBeDefined();
+    expect(mcp!.project_count).toBe(2);
+    expect(agent).toBeDefined();
+    expect(agent!.project_count).toBe(1);
+  });
+});
+
+describe("getProjectsByTag", () => {
+  it("returns projects for an exact tag", () => {
+    insertTestProject(db, { name: "mcp-one", tags: ["mcp", "tool"] });
+    insertTestProject(db, { name: "mcp-two", tags: ["mcp"] });
+    insertTestProject(db, { name: "other", tags: ["security"] });
+
+    const results = getProjectsByTag("mcp");
+    expect(results).toHaveLength(2);
+    expect(results.map((p) => p.name)).toEqual(expect.arrayContaining(["mcp-one", "mcp-two"]));
+    expect(results.every((p) => p.tags.includes("mcp"))).toBe(true);
+  });
+
+  it("returns empty when tag has no projects", () => {
+    insertTestProject(db, { name: "other", tags: ["security"] });
+    expect(getProjectsByTag("nonexistent")).toEqual([]);
   });
 });
 
