@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://freshcrate.ai/schemas/agent-manifest.v1.schema.json",
+  "title": "Freshcrate Agent Identity and Accountability Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "manifest_id",
+    "agent",
+    "accountability",
+    "policy",
+    "auth",
+    "runtime",
+    "attestation"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "manifest_id": {
+      "type": "string",
+      "pattern": "^mfst_[a-zA-Z0-9_-]{12,}$"
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent_id", "name", "version"],
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "pattern": "^agt_[a-zA-Z0-9_-]{12,}$"
+        },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "homepage_url": { "type": "string", "format": "uri" },
+        "repo_url": { "type": "string", "format": "uri" },
+        "description": { "type": "string", "maxLength": 1000 }
+      }
+    },
+    "accountability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner_human_id", "owner_display", "escalation"],
+      "properties": {
+        "owner_human_id": {
+          "type": "string",
+          "pattern": "^hum_[a-zA-Z0-9_-]{12,}$"
+        },
+        "owner_entity_id": {
+          "type": "string",
+          "pattern": "^org_[a-zA-Z0-9_-]{8,}$"
+        },
+        "owner_display": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "jurisdiction": { "type": "string", "maxLength": 64 },
+        "escalation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["email"],
+          "properties": {
+            "email": { "type": "string", "format": "email" },
+            "pager": { "type": "string", "maxLength": 256 },
+            "policy_url": { "type": "string", "format": "uri" }
+          }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["risk_tier", "allowed_actions", "prohibited_actions"],
+      "properties": {
+        "risk_tier": { "type": "string", "enum": ["low", "medium", "high"] },
+        "allowed_actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "maxLength": 120 }
+        },
+        "prohibited_actions": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 120 }
+        },
+        "data_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "retention_days": { "type": "integer", "minimum": 0, "maximum": 3650 },
+            "stores_pii": { "type": "boolean" },
+            "pii_categories": {
+              "type": "array",
+              "items": { "type": "string", "maxLength": 80 }
+            }
+          }
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["credential_sources", "signing_keys"],
+      "properties": {
+        "credential_sources": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["api_key", "oauth", "workload_identity", "none"] }
+        },
+        "signing_keys": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kid", "alg", "public_key_pem"],
+            "properties": {
+              "kid": { "type": "string", "maxLength": 64 },
+              "alg": { "type": "string", "enum": ["Ed25519", "ES256", "RS256"] },
+              "public_key_pem": { "type": "string", "minLength": 32 }
+            }
+          }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["execution_modes"],
+      "properties": {
+        "execution_modes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "enum": ["local", "cloud", "hybrid"] }
+        },
+        "deploy_targets": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 80 }
+        },
+        "requires_gpu": { "type": "boolean" }
+      }
+    },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["issued_at", "expires_at", "signed_by", "signature"],
+      "properties": {
+        "issued_at": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "signed_by": { "type": "string", "maxLength": 120 },
+        "signature": { "type": "string", "minLength": 32 },
+        "revocation_url": { "type": "string", "format": "uri" }
+      }
+    }
+  }
+}

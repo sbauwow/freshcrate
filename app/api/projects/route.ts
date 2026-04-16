@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getLatestReleases, getProjectByName, submitProject } from "@/lib/queries";
 import { CATEGORIES } from "@/lib/categories";
 import { hasApiKeys, extractBearerToken, validateApiKey } from "@/lib/auth";
+import { requireActiveManifestForHighRiskCategory } from "@/lib/agent-manifest";
 import { fireNewPackageEvent } from "@/lib/webhooks";
 import { logRequest } from "@/lib/request-log";
 import { log } from "@/lib/logger";
@@ -83,6 +84,17 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
       logRequest(request, 400, start, keyPrefix);
+      return res;
+    }
+
+    // Basic accountability gate for high-risk categories
+    const gate = requireActiveManifestForHighRiskCategory(
+      data.category,
+      request.headers.get("x-manifest-id") || undefined
+    );
+    if (!gate.allowed) {
+      const res = NextResponse.json({ error: gate.reason || "Manifest requirement failed." }, { status: 403 });
+      logRequest(request, 403, start, keyPrefix);
       return res;
     }
 
