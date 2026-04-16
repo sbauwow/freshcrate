@@ -3,6 +3,7 @@ import Database from "better-sqlite3";
 import { createTestDb, insertTestProject, _resetDb } from "./setup";
 import {
   getLatestReleases,
+  getLatestVerifiedReleases,
   getProjectTags,
   getProjectByName,
   getProjectReleases,
@@ -10,6 +11,8 @@ import {
   getProjectsByCategory,
   getProjectsByAuthor,
   getAuthors,
+  getTags,
+  getProjectsByTag,
   searchProjects,
   getStats,
   submitProject,
@@ -57,6 +60,28 @@ describe("getLatestReleases", () => {
 
     const page3 = getLatestReleases(2, 4);
     expect(page3).toHaveLength(1);
+  });
+
+  it("filters by verifiedOnly option", () => {
+    const verifiedId = insertTestProject(db, { name: "verified-one" });
+    insertTestProject(db, { name: "unverified-one" });
+    db.prepare("UPDATE projects SET verified = 1 WHERE id = ?").run(verifiedId);
+
+    const verified = getLatestReleases(20, 0, { verifiedOnly: true });
+    expect(verified).toHaveLength(1);
+    expect(verified[0].name).toBe("verified-one");
+  });
+});
+
+describe("getLatestVerifiedReleases", () => {
+  it("returns only verified projects", () => {
+    const id = insertTestProject(db, { name: "verified-feed" });
+    insertTestProject(db, { name: "not-verified-feed" });
+    db.prepare("UPDATE projects SET verified = 1 WHERE id = ?").run(id);
+
+    const rows = getLatestVerifiedReleases();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].name).toBe("verified-feed");
   });
 });
 
@@ -189,6 +214,40 @@ describe("getAuthors", () => {
     expect(bob).toBeDefined();
     expect(bob!.package_count).toBe(1);
     expect(bob!.total_stars).toBe(8);
+  });
+});
+
+describe("getTags", () => {
+  it("returns tags with project counts", () => {
+    insertTestProject(db, { name: "tag-a", tags: ["mcp", "agent"] });
+    insertTestProject(db, { name: "tag-b", tags: ["mcp"] });
+
+    const tags = getTags();
+    const mcp = tags.find((t) => t.tag === "mcp");
+    const agent = tags.find((t) => t.tag === "agent");
+
+    expect(mcp).toBeDefined();
+    expect(mcp!.project_count).toBe(2);
+    expect(agent).toBeDefined();
+    expect(agent!.project_count).toBe(1);
+  });
+});
+
+describe("getProjectsByTag", () => {
+  it("returns projects for an exact tag", () => {
+    insertTestProject(db, { name: "mcp-one", tags: ["mcp", "tool"] });
+    insertTestProject(db, { name: "mcp-two", tags: ["mcp"] });
+    insertTestProject(db, { name: "other", tags: ["security"] });
+
+    const results = getProjectsByTag("mcp");
+    expect(results).toHaveLength(2);
+    expect(results.map((p) => p.name)).toEqual(expect.arrayContaining(["mcp-one", "mcp-two"]));
+    expect(results.every((p) => p.tags.includes("mcp"))).toBe(true);
+  });
+
+  it("returns empty when tag has no projects", () => {
+    insertTestProject(db, { name: "other", tags: ["security"] });
+    expect(getProjectsByTag("nonexistent")).toEqual([]);
   });
 });
 

@@ -213,7 +213,7 @@ export default async function SearchPage({
                   {project.tags.map((tag) => (
                     <Link
                       key={tag}
-                      href={`/search?q=${tag}`}
+                      href={`/tag/${encodeURIComponent(tag)}`}
                       className="text-[9px] bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded hover:bg-[#bbddff]"
                     >
                       {tag}
@@ -251,7 +251,7 @@ export default async function SearchPage({
             <h3 className="text-[11px] font-bold text-fm-green mb-2">Search tips</h3>
             <div className="space-y-1 text-[10px] text-fm-text-light">
               <p>🔍 <strong>Package name:</strong> <Link href="/search?q=langchain" className="text-fm-link">langchain</Link></p>
-              <p>🏷️ <strong>Tag:</strong> <Link href="/search?q=mcp" className="text-fm-link">mcp</Link></p>
+              <p>🏷️ <strong>Tag:</strong> <Link href="/tag/mcp" className="text-fm-link">mcp</Link></p>
               <p>👤 <strong>Maintainer:</strong> <Link href="/author/anthropics" className="text-fm-link">anthropics</Link></p>
               <p>💬 <strong>Description:</strong> <Link href="/search?q=vector+database" className="text-fm-link">vector database</Link></p>
               <p>🔤 <strong>Language:</strong> Use the dropdown filter above</p>

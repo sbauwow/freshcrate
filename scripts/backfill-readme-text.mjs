@@ -9,9 +9,10 @@
 import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
+import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, "..", "freshcrate.db");
+const DB_PATH = getDbPath();
 
 function stripHtml(html) {
   if (!html) return "";
@@ -29,6 +30,8 @@ function stripHtml(html) {
     .trim()
     .slice(0, 50000);
 }
+
+ensureDbDir();
 
 const db = new Database(DB_PATH);
 

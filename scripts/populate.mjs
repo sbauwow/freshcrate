@@ -18,11 +18,12 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 import { exec } from "child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
-const DB_PATH = path.join(PROJECT_ROOT, "freshcrate.db");
+const DB_PATH = getDbPath();
 const TOKEN_PATH = path.join(PROJECT_ROOT, ".freshcrate-token");
 
 const CLEAR = process.argv.includes("--clear");
@@ -235,6 +236,7 @@ async function main() {
   }
 
   // Open DB and run migrations
+  ensureDbDir();
   const db = new Database(DB_PATH);
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");

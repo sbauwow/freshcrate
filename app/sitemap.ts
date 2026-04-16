@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { getLatestReleases, getCategories, getAuthors } from "@/lib/queries";
+import { getLatestReleases, getCategories, getAuthors, getTags } from "@/lib/queries";
 import { getAllCrates } from "@/lib/learn-content";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: baseUrl, changeFrequency: "daily", priority: 1.0 },
     { url: `${baseUrl}/browse`, changeFrequency: "daily", priority: 0.8 },
     { url: `${baseUrl}/submit`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${baseUrl}/legislation`, changeFrequency: "daily", priority: 0.7 },
     { url: `${baseUrl}/api`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${baseUrl}/learn`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/learn/glossary`, changeFrequency: "monthly", priority: 0.5 },
@@ -45,5 +46,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...projectPages, ...categoryPages, ...cratePages, ...authorPages];
+  // Tag pages
+  const tagPages: MetadataRoute.Sitemap = getTags().map((t) => ({
+    url: `${baseUrl}/tag/${encodeURIComponent(t.tag)}`,
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...projectPages, ...categoryPages, ...cratePages, ...authorPages, ...tagPages];
 }

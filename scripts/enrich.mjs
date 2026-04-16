@@ -17,10 +17,11 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
-const DB_PATH = path.join(PROJECT_ROOT, "freshcrate.db");
+const DB_PATH = getDbPath();
 const TOKEN_PATH = path.join(PROJECT_ROOT, ".freshcrate-token");
 
 const DRY_RUN = process.argv.includes("--dry-run");
@@ -132,6 +133,8 @@ async function main() {
   console.log(`🔧 freshcrate enrichment ${DRY_RUN ? "(DRY RUN)" : ""}`);
   console.log(`   Token: ${GITHUB_TOKEN ? "✓ present" : "✗ none (slower rate limit)"}`);
   console.log(`   Sleep: ${SLEEP_MS}ms between requests\n`);
+
+  ensureDbDir();
 
   const db = new Database(DB_PATH);
   const projects = db.prepare(

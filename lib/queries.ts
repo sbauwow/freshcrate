@@ -42,12 +42,18 @@ export interface LatestReleaseOptions {
   category?: string;
   language?: string;
   sort?: ReleaseSort;
+  verifiedOnly?: boolean;
 }
 
 export interface AuthorSummary {
   author: string;
   package_count: number;
   total_stars: number;
+}
+
+export interface TagSummary {
+  tag: string;
+  project_count: number;
 }
 
 /**
@@ -83,6 +89,10 @@ export function getLatestReleases(
     }
   }
 
+  if (options.verifiedOnly) {
+    where.push("COALESCE(p.verified, 0) = 1");
+  }
+
   const orderBy: Record<ReleaseSort, string> = {
     newest: "r.created_at DESC",
     oldest: "r.created_at ASC",
@@ -110,6 +120,15 @@ export function getLatestReleases(
     ...row,
     tags: getProjectTags(row.id),
   }));
+}
+
+/**
+ * @description Fetches latest verified project releases.
+ * @param limit - Maximum number of results to return
+ * @param offset - Number of rows to skip for pagination
+ */
+export function getLatestVerifiedReleases(limit = 20, offset = 0): ProjectWithRelease[] {
+  return getLatestReleases(limit, offset, { verifiedOnly: true, sort: "newest" });
 }
 
 /**
@@ -232,6 +251,45 @@ export function getAuthors(limit = 1000): AuthorSummary[] {
     ORDER BY package_count DESC, total_stars DESC, author ASC
     LIMIT ?
   `).all(limit) as AuthorSummary[];
+}
+
+/**
+ * @description Gets all distinct tags with project counts.
+ * @returns Tag summaries ordered by project_count then alphabetically
+ */
+export function getTags(limit = 1000): TagSummary[] {
+  const db = getDb();
+  return db.prepare(`
+    SELECT tag,
+           COUNT(DISTINCT project_id) as project_count
+    FROM tags
+    WHERE tag IS NOT NULL AND TRIM(tag) != ''
+    GROUP BY tag
+    ORDER BY project_count DESC, tag ASC
+    LIMIT ?
+  `).all(limit) as TagSummary[];
+}
+
+/**
+ * @description Fetches all projects for a tag with latest release info.
+ * @param tag - Exact tag value to match (stored lowercase)
+ * @returns Projects with this tag ordered by stars then release recency
+ */
+export function getProjectsByTag(tag: string): ProjectWithRelease[] {
+  const db = getDb();
+  const rows = db.prepare(`
+    SELECT DISTINCT p.*, r.version as latest_version, r.changes as latest_changes,
+           r.urgency as latest_urgency, r.created_at as release_date,
+           (SELECT COUNT(*) FROM releases r3 WHERE r3.project_id = p.id) as release_count
+    FROM projects p
+    JOIN tags t ON t.project_id = p.id
+    JOIN releases r ON r.project_id = p.id
+    WHERE t.tag = ?
+      AND r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
+    ORDER BY COALESCE(p.stars, 0) DESC, r.created_at DESC
+  `).all(tag) as ProjectWithRelease[];
+
+  return rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
 }
 
 /**

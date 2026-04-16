@@ -8,9 +8,10 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, "..", "freshcrate.db");
+const DB_PATH = getDbPath();
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || (() => {
   try {
@@ -103,6 +104,8 @@ const LANDMARKS = [
 
 async function main() {
   console.log(`\n🌟 Seeding landmark projects\n`);
+
+  ensureDbDir();
 
   const db = new Database(DB_PATH);
   db.pragma("journal_mode = WAL");

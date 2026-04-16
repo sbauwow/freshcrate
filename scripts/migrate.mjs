@@ -9,10 +9,11 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
-const DB_PATH = path.join(PROJECT_ROOT, "freshcrate.db");
+const DB_PATH = getDbPath();
 const MIGRATIONS_DIR = path.join(PROJECT_ROOT, "migrations");
 
 function runMigrations(db) {
@@ -72,6 +73,7 @@ function runMigrations(db) {
 
 // Main
 console.log(`[migrate] Database: ${DB_PATH}`);
+ensureDbDir();
 const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");

@@ -11,12 +11,40 @@ export default function SubmitPage() {
   const [url, setUrl] = useState("");
   const [message, setMessage] = useState("");
   const [type, setType] = useState("missing-package");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // In production, POST to an API endpoint or email service
-    // For now, just show confirmation
-    setSubmitted(true);
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/human-contact", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          tab,
+          type,
+          url: url.trim(),
+          message: message.trim(),
+          page: "/submit",
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Could not send message.");
+      }
+
+      setSubmitted(true);
+      setUrl("");
+      setMessage("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send message.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const tabClass = (t: Tab) =>
@@ -50,6 +78,12 @@ export default function SubmitPage() {
           🤖 How This Works
         </button>
       </div>
+
+      {error && (
+        <div className="mb-3 rounded border border-red-300 bg-red-50 px-3 py-2 text-[11px] text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Suggest a Package */}
       {tab === "suggest" && !submitted && (
@@ -90,9 +124,10 @@ export default function SubmitPage() {
             </div>
             <button
               type="submit"
-              className="bg-fm-green text-white text-[11px] px-4 py-1.5 rounded hover:bg-fm-green-light cursor-pointer"
+              disabled={submitting}
+              className="bg-fm-green text-white text-[11px] px-4 py-1.5 rounded hover:bg-fm-green-light cursor-pointer disabled:opacity-60"
             >
-              Submit Suggestion
+              {submitting ? "Sending..." : "Submit Suggestion"}
             </button>
           </form>
         </div>
@@ -152,9 +187,10 @@ export default function SubmitPage() {
             </div>
             <button
               type="submit"
-              className="bg-fm-green text-white text-[11px] px-4 py-1.5 rounded hover:bg-fm-green-light cursor-pointer"
+              disabled={submitting}
+              className="bg-fm-green text-white text-[11px] px-4 py-1.5 rounded hover:bg-fm-green-light cursor-pointer disabled:opacity-60"
             >
-              Submit Report
+              {submitting ? "Sending..." : "Submit Report"}
             </button>
           </form>
         </div>

@@ -12,7 +12,7 @@ MCP servers, frameworks, and libraries.
 **Language:** TypeScript (strict mode)
 **Package manager:** npm (package-lock.json present — do NOT use yarn/pnpm)
 **Node version:** 18+ (uses fetch natively)
-**Database:** SQLite file at `./freshcrate.db` (auto-created on first run)
+**Database:** SQLite file at `./data/freshcrate.db` by default (auto-created on first run). Override with `FRESHCRATE_DB_PATH`.
 
 ## Project Map
 
@@ -39,7 +39,7 @@ freshcrate/
 │   └── queries.ts                # All database queries (typed)
 ├── scripts/
 │   └── populate.mjs              # Bulk GitHub import pipeline with OAuth
-├── freshcrate.db                 # SQLite database (gitignored, auto-created)
+├── data/freshcrate.db            # SQLite database (gitignored, auto-created)
 ├── .env.example                  # Environment variables template
 └── package.json                  # Dependencies and scripts
 ```
@@ -105,7 +105,7 @@ Category assignment uses regex-based rules (duplicated in `api/enrich/route.ts` 
 
 ### Modifying the Schema
 1. Edit `initDb()` in `lib/db.ts`
-2. For dev: delete `freshcrate.db` and restart (auto-recreates)
+2. For dev: delete `data/freshcrate.db` and restart (auto-recreates)
 3. For prod: write a migration (not yet implemented — see ROADMAP)
 
 ## Testing

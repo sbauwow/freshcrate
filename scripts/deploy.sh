@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # freshcrate deploy script
-# Populates the DB locally with Railway env vars, then pushes to GitHub.
+# Pushes code changes to GitHub; runtime DB lives outside git.
 # Railway auto-redeploys on push.
 #
 # Usage: bash scripts/deploy.sh
@@ -11,20 +11,15 @@ set -e
 echo "🔧 freshcrate deploy pipeline"
 echo ""
 
-# 1. Populate DB
-echo "📦 Step 1: Populating database..."
-railway run node scripts/populate.mjs --clear
+# 1. Optional local refresh (does not commit DB)
+echo "📦 Step 1: Optional local database refresh..."
+railway run node scripts/populate.mjs --clear || true
 echo ""
 
-# 2. Stage the DB
-echo "💾 Step 2: Staging database..."
-git add freshcrate.db
-echo ""
-
-# 3. Commit everything else too
-echo "📝 Step 3: Committing..."
+# 2. Commit code/config only
+echo "📝 Step 2: Committing..."
 git add -A
-git commit -m "deploy: refresh db + latest changes $(date '+%Y-%m-%d %H:%M')"
+git commit -m "deploy: latest changes $(date '+%Y-%m-%d %H:%M')"
 echo ""
 
 # 4. Push — Railway auto-redeploys

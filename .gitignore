@@ -37,9 +37,11 @@ yarn-error.log*
 # freshcrate oauth token cache
 .freshcrate-token
 
-# DB WAL files (ephemeral, not needed in git)
+# SQLite database state (never commit)
+*.db
 *.db-shm
 *.db-wal
+/data/
 
 # vercel
 .vercel

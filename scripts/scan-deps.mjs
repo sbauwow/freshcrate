@@ -13,9 +13,10 @@
 import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
+import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, "..", "freshcrate.db");
+const DB_PATH = getDbPath();
 
 const ALL = process.argv.includes("--all");
 const nameIdx = process.argv.indexOf("--name");
@@ -91,6 +92,8 @@ function classify(spdx) {
 
 async function main() {
   console.log("📦 freshcrate Dependency Scanner\n");
+
+  ensureDbDir();
 
   const db = new Database(DB_PATH);
   db.pragma("journal_mode = WAL");
