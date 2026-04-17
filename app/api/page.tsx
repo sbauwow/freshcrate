@@ -59,6 +59,25 @@ export default function ApiDocsPage() {
         </section>
 
         <section>
+          <h3 className="text-[12px] font-bold text-fm-green mb-2">Orchestra</h3>
+          <div className="bg-white border border-fm-border rounded p-3">
+            <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/orchestra</code>
+            <div className="text-[10px] text-fm-text-light mt-1 mb-2">Returns freshcrate's opinionated patterns, anti-patterns, and operator playbook for orchestrating agents.</div>
+            <div className="text-[10px]">
+              <span className="font-bold">Parameters:</span>
+              <ul className="ml-4 mt-1 space-y-0.5">
+                <li><code className="font-mono">theme</code> (optional) - e.g. delegation, supervision, review, grounding</li>
+                <li><code className="font-mono">stage</code> (optional) - prototype, team, production</li>
+                <li><code className="font-mono">q</code> (optional) - keyword search across titles, summaries, best practices, and anti-patterns</li>
+              </ul>
+            </div>
+            <div className="mt-2 bg-fm-bg rounded p-2">
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl "https://freshcrate.ai/api/orchestra?theme=delegation&stage=production"`}</pre>
+            </div>
+          </div>
+        </section>
+
+        <section>
           <h3 className="text-[12px] font-bold text-fm-green mb-2">Legislation Tracker</h3>
           <div className="bg-white border border-fm-border rounded p-3">
             <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/legislation</code>

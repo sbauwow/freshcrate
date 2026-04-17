@@ -62,6 +62,8 @@ export default function RootLayout({
               <span className="text-[#999]">|</span>
               <Link href="/research" className="text-black hover:text-fm-link no-underline">research</Link>
               <span className="text-[#999]">|</span>
+              <Link href="/orchestra" className="text-black hover:text-fm-link no-underline">orchestra</Link>
+              <span className="text-[#999]">|</span>
               <Link href="/legislation" className="text-black hover:text-fm-link no-underline">legislation</Link>
               <span className="text-[#999]">|</span>
               <Link href="/languages" className="text-black hover:text-fm-link no-underline">languages</Link>
@@ -123,6 +125,8 @@ export default function RootLayout({
               <Link href="/submit" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Submit</Link>
               <span style={{ color: "#c8c0d8" }}>{" | "}</span>
               <Link href="/learn" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Learn</Link>
+              <span style={{ color: "#c8c0d8" }}>{" | "}</span>
+              <Link href="/orchestra" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Orchestra</Link>
               <span style={{ color: "#c8c0d8" }}>{" | "}</span>
               <Link href="/legislation" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Legislation</Link>
               <span style={{ color: "#c8c0d8" }}>{" | "}</span>
