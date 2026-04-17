@@ -59,6 +59,26 @@ export default function ApiDocsPage() {
         </section>
 
         <section>
+          <h3 className="text-[12px] font-bold text-fm-green mb-2">Workbench</h3>
+          <div className="bg-white border border-fm-border rounded p-3">
+            <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/workbench</code>
+            <div className="text-[10px] text-fm-text-light mt-1 mb-2">Returns freshcrate Agent Edition bundles, install modes, and the minimal-agentic-substrate playbook.</div>
+            <div className="text-[10px]">
+              <span className="font-bold">Parameters:</span>
+              <ul className="ml-4 mt-1 space-y-0.5">
+                <li><code className="font-mono">persona</code> (optional) - solo-dev, research, automation, security, local-models</li>
+                <li><code className="font-mono">target</code> (optional) - currently <code className="font-mono">ubuntu-24.04-x86_64</code></li>
+                <li><code className="font-mono">mode</code> (optional) - <code className="font-mono">headless</code> or <code className="font-mono">light-desktop</code></li>
+                <li><code className="font-mono">q</code> (optional) - keyword search across philosophy, packages, checks, and anti-goals</li>
+              </ul>
+            </div>
+            <div className="mt-2 bg-fm-bg rounded p-2">
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl "https://freshcrate.ai/api/workbench?persona=automation&mode=headless"`}</pre>
+            </div>
+          </div>
+        </section>
+
+        <section>
           <h3 className="text-[12px] font-bold text-fm-green mb-2">Orchestra</h3>
           <div className="bg-white border border-fm-border rounded p-3">
             <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/orchestra</code>
