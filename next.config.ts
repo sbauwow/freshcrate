@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
+import * as path from "path";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["better-sqlite3"],
+  turbopack: {
+    root: path.join(process.cwd()),
+  },
   async headers() {
     return [
       {
