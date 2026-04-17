@@ -136,4 +136,22 @@ describe("agent manifest registry", () => {
       })
     ).toThrow(/active manifest/i);
   });
+
+  it("rejects receipt append when agent_id does not match manifest owner agent", () => {
+    registerAgentManifest(sampleManifest, { owner_attestation: "attest-blob" });
+
+    expect(() =>
+      appendAgentActionReceipt({
+        manifest_id: sampleManifest.manifest_id,
+        agent_id: "agt_other_agent_9999",
+        action_id: "act_wrong_agent",
+        action_type: "tool_execution",
+        risk_tier: "high",
+        target: "github.com/org/repo",
+        policy_decision: "allow",
+        outcome: "success",
+        signature: "sig_wrong_agent",
+      })
+    ).toThrow(/agent_id/i);
+  });
 });

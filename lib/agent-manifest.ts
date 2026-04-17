@@ -396,6 +396,18 @@ export function appendAgentActionReceipt(
     throw new Error("Cannot append receipt without active manifest.");
   }
 
+  const manifestRow = db
+    .prepare("SELECT agent_id FROM agent_manifests WHERE manifest_id = ?")
+    .get(input.manifest_id) as { agent_id: string } | undefined;
+
+  if (!manifestRow) {
+    throw new Error("Manifest not found for receipt append.");
+  }
+
+  if (manifestRow.agent_id !== input.agent_id) {
+    throw new Error("Receipt agent_id does not match manifest agent_id.");
+  }
+
   const receipt_id = `rcpt_${input.action_id}_${Date.now()}`;
 
   db.prepare(
