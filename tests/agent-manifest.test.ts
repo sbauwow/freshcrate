@@ -109,9 +109,9 @@ describe("agent manifest registry", () => {
       target: "github.com/org/repo",
       policy_decision: "allow",
       outcome: "success",
-      input_hash: "sha256:abc",
-      output_hash: "sha256:def",
-      signature: "sig_123",
+      input_hash: "sha256:abcdef123456",
+      output_hash: "sha256:defabc654321",
+      signature: "signature_123",
     });
 
     expect(out.stored).toBe(true);
@@ -132,7 +132,7 @@ describe("agent manifest registry", () => {
         target: "github.com/org/repo",
         policy_decision: "deny",
         outcome: "blocked",
-        signature: "sig_999",
+        signature: "signature_999",
       })
     ).toThrow(/active manifest/i);
   });
@@ -153,5 +153,79 @@ describe("agent manifest registry", () => {
         signature: "sig_wrong_agent",
       })
     ).toThrow(/agent_id/i);
+  });
+
+  it("rejects receipt append when action risk exceeds manifest risk tier", () => {
+    const mediumManifest = {
+      ...sampleManifest,
+      manifest_id: "mfst_test_manifest_medium_0001",
+      agent: {
+        ...sampleManifest.agent,
+        agent_id: "agt_test_agent_medium_0001",
+        name: "test-agent-medium",
+      },
+      accountability: {
+        ...sampleManifest.accountability,
+        owner_human_id: "hum_test_owner_medium_0001",
+      },
+      policy: {
+        ...sampleManifest.policy,
+        risk_tier: "medium",
+      },
+    };
+
+    registerAgentManifest(mediumManifest, { owner_attestation: "attest-blob" });
+
+    expect(() =>
+      appendAgentActionReceipt({
+        manifest_id: mediumManifest.manifest_id,
+        agent_id: mediumManifest.agent.agent_id,
+        action_id: "act_too_risky",
+        action_type: "deployment",
+        risk_tier: "high",
+        target: "prod-cluster",
+        policy_decision: "allow",
+        outcome: "success",
+        signature: "sig_too_risky",
+      })
+    ).toThrow(/risk tier/i);
+  });
+
+  it("rejects receipt append when enum fields are invalid", () => {
+    registerAgentManifest(sampleManifest, { owner_attestation: "attest-blob" });
+
+    expect(() =>
+      appendAgentActionReceipt({
+        manifest_id: sampleManifest.manifest_id,
+        agent_id: sampleManifest.agent.agent_id,
+        action_id: "act_invalid_enum",
+        action_type: "weird_action" as "tool_execution",
+        risk_tier: "high",
+        target: "github.com/org/repo",
+        policy_decision: "shrug" as "allow",
+        outcome: "mystery" as "success",
+        signature: "sig_invalid_enum",
+      })
+    ).toThrow(/action_type|policy_decision|outcome/i);
+  });
+
+  it("rejects receipt append when hashes are malformed", () => {
+    registerAgentManifest(sampleManifest, { owner_attestation: "attest-blob" });
+
+    expect(() =>
+      appendAgentActionReceipt({
+        manifest_id: sampleManifest.manifest_id,
+        agent_id: sampleManifest.agent.agent_id,
+        action_id: "act_bad_hash",
+        action_type: "tool_execution",
+        risk_tier: "high",
+        target: "github.com/org/repo",
+        policy_decision: "allow",
+        outcome: "success",
+        input_hash: "abc123",
+        output_hash: "sha256:",
+        signature: "sig_bad_hash",
+      })
+    ).toThrow(/hash/i);
   });
 });

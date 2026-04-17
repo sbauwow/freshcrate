@@ -20,6 +20,15 @@ export interface AgentRecommendInput {
   limit?: number;
 }
 
+export interface AgentAccountabilitySummary {
+  has_manifest: boolean;
+  status: "active" | "missing";
+  manifest_id: string | null;
+  owner_display: string | null;
+  risk_tier: "low" | "medium" | "high" | "unknown";
+  expires_at: string | null;
+}
+
 export interface AgentRecommendation {
   name: string;
   score: number;
@@ -31,6 +40,7 @@ export interface AgentRecommendation {
   release_date: string;
   tags: string[];
   rationale: string[];
+  accountability: AgentAccountabilitySummary;
 }
 
 export interface AgentCompareInput {
@@ -48,6 +58,12 @@ export interface AgentComparisonResult {
   score_delta: number;
   projectA: AgentRecommendation;
   projectB: AgentRecommendation;
+  accountability: {
+    projectA: AgentAccountabilitySummary;
+    projectB: AgentAccountabilitySummary;
+    accountable_projects: number;
+    preferred: string | null;
+  };
 }
 
 export interface PreflightCheck {
@@ -65,6 +81,7 @@ export interface AgentPreflightResult {
     pass: number;
     fail: number;
   };
+  accountability: AgentAccountabilitySummary;
 }
 
 type Candidate = {
@@ -126,11 +143,11 @@ function countSignals(text: string, signals: string[]): number {
   return hits;
 }
 
-function getActiveAccountableAgentNames(): Set<string> {
+function getActiveAccountabilityByName(): Map<string, AgentAccountabilitySummary> {
   const db = getDb();
   const rows = db
     .prepare(
-      `SELECT agent_name
+      `SELECT agent_name, manifest_id, owner_display, risk_tier, expires_at
        FROM agent_manifests
        WHERE status = 'active'
          AND revoked_at IS NULL
@@ -138,9 +155,31 @@ function getActiveAccountableAgentNames(): Set<string> {
          AND accountability_verified = 1
          AND datetime(expires_at) > datetime('now')`
     )
-    .all() as { agent_name: string }[];
+    .all() as {
+      agent_name: string;
+      manifest_id: string;
+      owner_display: string;
+      risk_tier: "low" | "medium" | "high";
+      expires_at: string;
+    }[];
 
-  return new Set(rows.map((r) => r.agent_name));
+  return new Map(
+    rows.map((row) => [
+      row.agent_name,
+      {
+        has_manifest: true,
+        status: "active" as const,
+        manifest_id: row.manifest_id,
+        owner_display: row.owner_display,
+        risk_tier: row.risk_tier || "unknown",
+        expires_at: row.expires_at,
+      },
+    ])
+  );
+}
+
+function getActiveAccountableAgentNames(): Set<string> {
+  return new Set(getActiveAccountabilityByName().keys());
 }
 
 function scoreRuntime(candidate: Candidate, input: AgentRecommendInput, rationale: string[]): number {
@@ -264,7 +303,22 @@ function scoreRisk(candidate: Candidate, input: AgentRecommendInput, ageDays: nu
   return 0;
 }
 
-function scoreCandidate(candidate: Candidate, input: AgentRecommendInput): AgentRecommendation {
+function getMissingAccountabilitySummary(): AgentAccountabilitySummary {
+  return {
+    has_manifest: false,
+    status: "missing",
+    manifest_id: null,
+    owner_display: null,
+    risk_tier: "unknown",
+    expires_at: null,
+  };
+}
+
+function scoreCandidate(
+  candidate: Candidate,
+  input: AgentRecommendInput,
+  accountabilityMap: Map<string, AgentAccountabilitySummary>
+): AgentRecommendation {
   const rationale: string[] = [];
   let score = 0;
 
@@ -315,6 +369,8 @@ function scoreCandidate(candidate: Candidate, input: AgentRecommendInput): Agent
   score += scoreReliability(candidate, rationale);
   score += scoreRisk(candidate, input, ageDays, rationale);
 
+  const accountability = accountabilityMap.get(candidate.name) || getMissingAccountabilitySummary();
+
   return {
     name: candidate.name,
     score: Number(score.toFixed(2)),
@@ -326,7 +382,12 @@ function scoreCandidate(candidate: Candidate, input: AgentRecommendInput): Agent
     release_date: candidate.release_date,
     tags: candidate.tags,
     rationale,
+    accountability,
   };
+}
+
+function getAccountabilitySummaryByName(name: string): AgentAccountabilitySummary {
+  return getActiveAccountabilityByName().get(name) || getMissingAccountabilitySummary();
 }
 
 function buildCandidateByName(name: string): Candidate | null {
@@ -356,6 +417,7 @@ function buildCandidateByName(name: string): Candidate | null {
 export function recommendProjectsForAgent(input: AgentRecommendInput): AgentRecommendation[] {
   const limit = Math.min(Math.max(input.limit ?? 10, 1), 50);
   const rows = getLatestReleases(300, 0, {});
+  const accountabilityMap = getActiveAccountabilityByName();
 
   const candidates = rows
     .map((row) => {
@@ -387,7 +449,7 @@ export function recommendProjectsForAgent(input: AgentRecommendInput): AgentReco
     return true;
   });
 
-  const scored = filtered.map((candidate) => scoreCandidate(candidate, input));
+  const scored = filtered.map((candidate) => scoreCandidate(candidate, input, accountabilityMap));
 
   return scored
     .sort((a, b) => b.score - a.score || b.stars - a.stars || a.name.localeCompare(b.name))
@@ -417,17 +479,31 @@ export function compareProjectsForAgent(
     limit: 2,
   };
 
-  const a = scoreCandidate(projectA, context);
-  const b = scoreCandidate(projectB, context);
+  const accountabilityMap = getActiveAccountabilityByName();
+  const a = scoreCandidate(projectA, context, accountabilityMap);
+  const b = scoreCandidate(projectB, context, accountabilityMap);
 
   const winner = a.score >= b.score ? a.name : b.name;
   const score_delta = Number(Math.abs(a.score - b.score).toFixed(2));
+
+  const accountability = {
+    projectA: a.accountability,
+    projectB: b.accountability,
+    accountable_projects: Number(a.accountability.has_manifest) + Number(b.accountability.has_manifest),
+    preferred:
+      a.accountability.has_manifest && !b.accountability.has_manifest
+        ? a.name
+        : b.accountability.has_manifest && !a.accountability.has_manifest
+          ? b.name
+          : null,
+  };
 
   return {
     winner,
     score_delta,
     projectA: a,
     projectB: b,
+    accountability,
   };
 }
 
@@ -440,6 +516,7 @@ export function preflightProjectForAgent(projectName: string): AgentPreflightRes
       status: "missing",
       checks: [],
       summary: { pass: 0, fail: 1 },
+      accountability: getMissingAccountabilitySummary(),
     };
   }
 
@@ -465,11 +542,12 @@ export function preflightProjectForAgent(projectName: string): AgentPreflightRes
   const pass = checks.length - fail;
 
   return {
-    project: project.name,
+    project: projectName,
     exists: true,
-    status: fail >= 2 ? "risky" : "ready",
+    status: fail === 0 ? "ready" : "risky",
     checks,
     summary: { pass, fail },
+    accountability: getAccountabilitySummaryByName(project.name),
   };
 }
 

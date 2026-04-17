@@ -90,4 +90,128 @@ describe("agent decision api", () => {
     expect(data.result).toHaveLength(1);
     expect(data.result[0].name).toBe("secure-agent");
   });
+
+  it("surfaces accountability metadata in recommend api payloads", async () => {
+    insertTestProject(db, {
+      name: "accountable-agent",
+      category: "AI Agents",
+      short_desc: "Accountable",
+      tags: ["agent"],
+    });
+
+    const register = await import("@/app/api/agents/register-manifest/route");
+    await register.POST(
+      new NextRequest("https://freshcrate.ai/api/agents/register-manifest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          manifest: {
+            schema_version: "1.0.0",
+            manifest_id: "mfst_acc_api_surface_123456",
+            agent: { agent_id: "agt_acc_api_surface_123456", name: "accountable-agent", version: "1.2.3" },
+            accountability: {
+              owner_human_id: "hum_acc_api_surface_123456",
+              owner_display: "API Surface Owner",
+              escalation: { email: "owner@example.com" },
+            },
+            policy: { risk_tier: "medium", allowed_actions: ["read"], prohibited_actions: [] },
+            auth: {
+              credential_sources: ["api_key"],
+              signing_keys: [{ kid: "k1", alg: "Ed25519", public_key_pem: "-----BEGIN PUBLIC KEY-----abc-----END PUBLIC KEY-----" }],
+            },
+            runtime: { execution_modes: ["cloud"] },
+            attestation: {
+              issued_at: "2026-04-16T00:00:00Z",
+              expires_at: "2027-04-16T00:00:00Z",
+              signed_by: "Owner",
+              signature: "signed_payload_123",
+            },
+          },
+          proof_bundle: { owner_attestation: "attest" },
+        }),
+      })
+    );
+
+    const response = await getRecommend(
+      new NextRequest("https://freshcrate.ai/api/agent/recommend?task=agent&category=AI%20Agents&limit=5")
+    );
+    const data = await response.json();
+    const rec = data.recommendations.find((item: { name: string }) => item.name === "accountable-agent");
+
+    expect(response.status).toBe(200);
+    expect(rec.accountability.has_manifest).toBe(true);
+    expect(rec.accountability.manifest_id).toBe("mfst_acc_api_surface_123456");
+    expect(rec.accountability.owner_display).toBe("API Surface Owner");
+    expect(rec.accountability.risk_tier).toBe("medium");
+  });
+
+  it("surfaces accountability metadata in compare and preflight api payloads", async () => {
+    insertTestProject(db, {
+      name: "accountable-compare-agent",
+      category: "AI Agents",
+      short_desc: "Accountable",
+      tags: ["agent", "security"],
+    });
+    insertTestProject(db, {
+      name: "plain-compare-agent",
+      category: "AI Agents",
+      short_desc: "Plain",
+      tags: ["agent", "security"],
+    });
+
+    const register = await import("@/app/api/agents/register-manifest/route");
+    await register.POST(
+      new NextRequest("https://freshcrate.ai/api/agents/register-manifest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          manifest: {
+            schema_version: "1.0.0",
+            manifest_id: "mfst_compare_api_surface_123456",
+            agent: { agent_id: "agt_compare_api_surface_123456", name: "accountable-compare-agent", version: "1.0.0" },
+            accountability: {
+              owner_human_id: "hum_compare_api_surface_123456",
+              owner_display: "Compare API Owner",
+              escalation: { email: "owner@example.com" },
+            },
+            policy: { risk_tier: "high", allowed_actions: ["read"], prohibited_actions: [] },
+            auth: {
+              credential_sources: ["api_key"],
+              signing_keys: [{ kid: "k1", alg: "Ed25519", public_key_pem: "-----BEGIN PUBLIC KEY-----abc-----END PUBLIC KEY-----" }],
+            },
+            runtime: { execution_modes: ["cloud"] },
+            attestation: {
+              issued_at: "2026-04-16T00:00:00Z",
+              expires_at: "2027-04-16T00:00:00Z",
+              signed_by: "Owner",
+              signature: "signed_payload_123",
+            },
+          },
+          proof_bundle: { owner_attestation: "attest" },
+        }),
+      })
+    );
+
+    const compareResponse = await getCompare(
+      new NextRequest(
+        "https://freshcrate.ai/api/agent/compare?a=accountable-compare-agent&b=plain-compare-agent&task=security+agent"
+      )
+    );
+    const compareData = await compareResponse.json();
+
+    expect(compareResponse.status).toBe(200);
+    expect(compareData.comparison.accountability.projectA.has_manifest).toBe(true);
+    expect(compareData.comparison.accountability.projectB.has_manifest).toBe(false);
+    expect(compareData.comparison.accountability.preferred).toBe("accountable-compare-agent");
+
+    const preflightResponse = await getPreflight(
+      new NextRequest("https://freshcrate.ai/api/agent/preflight?name=accountable-compare-agent")
+    );
+    const preflightData = await preflightResponse.json();
+
+    expect(preflightResponse.status).toBe(200);
+    expect(preflightData.preflight.accountability.has_manifest).toBe(true);
+    expect(preflightData.preflight.accountability.manifest_id).toBe("mfst_compare_api_surface_123456");
+    expect(preflightData.preflight.accountability.owner_display).toBe("Compare API Owner");
+  });
 });

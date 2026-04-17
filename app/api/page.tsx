@@ -202,6 +202,7 @@ export default function ApiDocsPage() {
                 <li><code className="font-mono">runtime</code> (optional) - <code className="font-mono">local</code> or <code className="font-mono">cloud</code></li>
                 <li><code className="font-mono">risk_tolerance</code> (optional) - <code className="font-mono">low</code>, <code className="font-mono">medium</code>, <code className="font-mono">high</code></li>
                 <li><code className="font-mono">verified_only</code> (optional) - <code className="font-mono">true</code>/<code className="font-mono">1</code> to hard-filter verified projects</li>
+                <li><code className="font-mono">require_accountability</code> (optional) - <code className="font-mono">true</code>/<code className="font-mono">1</code> to hard-filter to active accountable agents only</li>
                 <li><code className="font-mono">limit</code> (optional, default 10, max 50)</li>
               </ul>
             </div>
@@ -216,12 +217,17 @@ export default function ApiDocsPage() {
           <div className="bg-white border border-fm-border rounded p-3">
             <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/agent/compare?a=...&b=...</code>
             <div className="text-[10px] text-fm-text-light mt-1 mb-2">Scores two packages under the same context and returns winner + score delta.</div>
+            <div className="text-[10px] text-fm-text-light mb-2">Each compared project includes full accountability metadata, plus a top-level <code className="font-mono">comparison.accountability</code> summary showing manifest coverage and the preferred accountable option.</div>
             <div className="text-[10px]">
               <span className="font-bold">Parameters:</span>
               <ul className="ml-4 mt-1 space-y-0.5">
                 <li><code className="font-mono">a</code> (required) - first package name</li>
                 <li><code className="font-mono">b</code> (required) - second package name</li>
                 <li><code className="font-mono">task</code> / <code className="font-mono">category</code> / <code className="font-mono">language</code> (optional context)</li>
+                <li><code className="font-mono">runtime</code> (optional) - <code className="font-mono">local</code> or <code className="font-mono">cloud</code></li>
+                <li><code className="font-mono">risk_tolerance</code> (optional) - <code className="font-mono">low</code>, <code className="font-mono">medium</code>, or <code className="font-mono">high</code></li>
+                <li><code className="font-mono">verified_only</code> (optional) - <code className="font-mono">true</code>/<code className="font-mono">1</code> to compare only under a verified-only policy context</li>
+                <li><code className="font-mono">require_accountability</code> (optional) - <code className="font-mono">true</code>/<code className="font-mono">1</code> to compare under accountable-agent policy context</li>
               </ul>
             </div>
             <div className="mt-2 bg-fm-bg rounded p-2">
@@ -235,6 +241,7 @@ export default function ApiDocsPage() {
           <div className="bg-white border border-fm-border rounded p-3">
             <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/agent/preflight?name=...</code>
             <div className="text-[10px] text-fm-text-light mt-1 mb-2">Runs readiness checks before an agent commits to a package.</div>
+            <div className="text-[10px] text-fm-text-light mb-2">Preflight payloads now include <code className="font-mono">accountability</code> so callers can see active manifest ownership, risk tier, and expiry before acting.</div>
             <div className="text-[10px]">
               <span className="font-bold">Parameters:</span>
               <ul className="ml-4 mt-1 space-y-0.5">
@@ -291,11 +298,29 @@ export default function ApiDocsPage() {
             <div>
               <code className="text-[11px] text-fm-green font-mono font-bold">POST /api/agents/receipt</code>
               <div className="text-[10px] text-fm-text-light mt-1">Append immutable action receipt tied to an active manifest.</div>
+              <div className="text-[10px] text-fm-text-light mt-1">Receipt constraints: <code className="font-mono">action_id</code> must look like <code className="font-mono">act_*</code>; <code className="font-mono">action_type</code> must be one of <code className="font-mono">tool_execution</code>, <code className="font-mono">deployment</code>, <code className="font-mono">submission</code>, <code className="font-mono">review</code>, <code className="font-mono">policy_check</code>; <code className="font-mono">policy_decision</code> must be <code className="font-mono">allow</code>, <code className="font-mono">deny</code>, or <code className="font-mono">review_required</code>; <code className="font-mono">outcome</code> must be <code className="font-mono">success</code>, <code className="font-mono">blocked</code>, or <code className="font-mono">failure</code>; hashes must use <code className="font-mono">sha256:...</code>; receipt risk tier cannot exceed the manifest risk tier.</div>
             </div>
             <div className="mt-2 bg-fm-bg rounded p-2">
               <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -X POST https://freshcrate.ai/api/agents/verify-manifest \\
   -H "Content-Type: application/json" \\
   -d '{"manifest_id":"mfst_example_123456"}'`}</pre>
+            </div>
+            <div className="mt-2 bg-fm-bg rounded p-2">
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -X POST https://freshcrate.ai/api/agents/receipt \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "manifest_id": "mfst_example_123456",
+    "agent_id": "agt_example_123456",
+    "action_id": "act_review_123",
+    "action_type": "review",
+    "risk_tier": "medium",
+    "target": "github.com/org/repo/pull/42",
+    "policy_decision": "review_required",
+    "outcome": "blocked",
+    "input_hash": "sha256:abcdef123456",
+    "output_hash": "sha256:def456abcdef",
+    "signature": "receipt_signature_123"
+  }'`}</pre>
             </div>
           </div>
         </section>

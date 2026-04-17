@@ -213,6 +213,51 @@ describe("recommendProjectsForAgent", () => {
     expect(recs.find((r) => r.name === "accountable-agent")).toBeDefined();
     expect(recs.find((r) => r.name === "unaccountable-agent")).toBeUndefined();
   });
+
+  it("surfaces manifest accountability metadata in recommendations", () => {
+    insertTestProject(db, {
+      name: "accountable-agent",
+      category: "AI Agents",
+      short_desc: "Accountable",
+      tags: ["agent"],
+    });
+
+    registerAgentManifest(
+      {
+        schema_version: "1.0.0",
+        manifest_id: "mfst_acc_surface_123456",
+        agent: { agent_id: "agt_acc_surface_123456", name: "accountable-agent", version: "1.2.3" },
+        accountability: {
+          owner_human_id: "hum_acc_surface_123456",
+          owner_display: "Surface Owner",
+          escalation: { email: "owner@example.com" },
+        },
+        policy: { risk_tier: "medium", allowed_actions: ["read"], prohibited_actions: [] },
+        auth: {
+          credential_sources: ["api_key"],
+          signing_keys: [{ kid: "k1", alg: "Ed25519", public_key_pem: "-----BEGIN PUBLIC KEY-----abc-----END PUBLIC KEY-----" }],
+        },
+        runtime: { execution_modes: ["cloud"] },
+        attestation: {
+          issued_at: "2026-04-16T00:00:00Z",
+          expires_at: "2027-04-16T00:00:00Z",
+          signed_by: "Owner",
+          signature: "signed_payload_123",
+        },
+      },
+      { owner_attestation: "attest" }
+    );
+
+    const rec = recommendProjectsForAgent({ task: "agent", category: "AI Agents", limit: 5 }).find(
+      (r) => r.name === "accountable-agent"
+    );
+
+    expect(rec?.accountability?.has_manifest).toBe(true);
+    expect(rec?.accountability?.manifest_id).toBe("mfst_acc_surface_123456");
+    expect(rec?.accountability?.owner_display).toBe("Surface Owner");
+    expect(rec?.accountability?.risk_tier).toBe("medium");
+    expect(rec?.accountability?.status).toBe("active");
+  });
 });
 
 describe("compareProjectsForAgent", () => {
@@ -242,6 +287,52 @@ describe("compareProjectsForAgent", () => {
     expect(out.projectA.name).toBe("alpha-sec");
     expect(out.projectB.name).toBe("beta-tool");
   });
+
+  it("surfaces top-level accountability comparison metadata", () => {
+    insertTestProject(db, {
+      name: "accountable-alpha",
+      category: "AI Agents",
+      tags: ["agent", "security"],
+    });
+    insertTestProject(db, {
+      name: "plain-beta",
+      category: "AI Agents",
+      tags: ["agent", "security"],
+    });
+
+    registerAgentManifest(
+      {
+        schema_version: "1.0.0",
+        manifest_id: "mfst_compare_acc_123456",
+        agent: { agent_id: "agt_compare_acc_123456", name: "accountable-alpha", version: "1.0.0" },
+        accountability: {
+          owner_human_id: "hum_compare_acc_123456",
+          owner_display: "Compare Owner",
+          escalation: { email: "owner@example.com" },
+        },
+        policy: { risk_tier: "high", allowed_actions: ["read"], prohibited_actions: [] },
+        auth: {
+          credential_sources: ["api_key"],
+          signing_keys: [{ kid: "k1", alg: "Ed25519", public_key_pem: "-----BEGIN PUBLIC KEY-----abc-----END PUBLIC KEY-----" }],
+        },
+        runtime: { execution_modes: ["cloud"] },
+        attestation: {
+          issued_at: "2026-04-16T00:00:00Z",
+          expires_at: "2027-04-16T00:00:00Z",
+          signed_by: "Owner",
+          signature: "signed_payload_123",
+        },
+      },
+      { owner_attestation: "attest" }
+    );
+
+    const out = compareProjectsForAgent("accountable-alpha", "plain-beta", { task: "security agent" });
+
+    expect(out.accountability.projectA.has_manifest).toBe(true);
+    expect(out.accountability.projectB.has_manifest).toBe(false);
+    expect(out.accountability.accountable_projects).toBe(1);
+    expect(out.accountability.preferred).toBe("accountable-alpha");
+  });
 });
 
 describe("preflightProjectForAgent", () => {
@@ -261,6 +352,47 @@ describe("preflightProjectForAgent", () => {
     expect(out.status).toBe("risky");
     expect(out.summary.fail).toBeGreaterThan(0);
     expect(out.checks.some((c) => c.key === "repo_url" && c.ok === false)).toBe(true);
+  });
+
+  it("surfaces accountability metadata in preflight", () => {
+    insertTestProject(db, {
+      name: "preflight-agent",
+      category: "AI Agents",
+      tags: ["agent"],
+    });
+
+    registerAgentManifest(
+      {
+        schema_version: "1.0.0",
+        manifest_id: "mfst_preflight_acc_123456",
+        agent: { agent_id: "agt_preflight_acc_123456", name: "preflight-agent", version: "1.0.0" },
+        accountability: {
+          owner_human_id: "hum_preflight_acc_123456",
+          owner_display: "Preflight Owner",
+          escalation: { email: "owner@example.com" },
+        },
+        policy: { risk_tier: "medium", allowed_actions: ["read"], prohibited_actions: [] },
+        auth: {
+          credential_sources: ["api_key"],
+          signing_keys: [{ kid: "k1", alg: "Ed25519", public_key_pem: "-----BEGIN PUBLIC KEY-----abc-----END PUBLIC KEY-----" }],
+        },
+        runtime: { execution_modes: ["cloud"] },
+        attestation: {
+          issued_at: "2026-04-16T00:00:00Z",
+          expires_at: "2027-04-16T00:00:00Z",
+          signed_by: "Owner",
+          signature: "signed_payload_123",
+        },
+      },
+      { owner_attestation: "attest" }
+    );
+
+    const out = preflightProjectForAgent("preflight-agent");
+
+    expect(out.accountability.has_manifest).toBe(true);
+    expect(out.accountability.manifest_id).toBe("mfst_preflight_acc_123456");
+    expect(out.accountability.owner_display).toBe("Preflight Owner");
+    expect(out.accountability.status).toBe("active");
   });
 
   it("returns missing status for unknown project", () => {

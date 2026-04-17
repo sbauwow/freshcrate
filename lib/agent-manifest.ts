@@ -47,15 +47,23 @@ export interface HighRiskGateResult {
   reason?: string;
 }
 
+export const RECEIPT_ACTION_TYPES = ["tool_execution", "deployment", "submission", "review", "policy_check"] as const;
+export const RECEIPT_POLICY_DECISIONS = ["allow", "deny", "review_required"] as const;
+export const RECEIPT_OUTCOMES = ["success", "blocked", "failure"] as const;
+
+export type ReceiptActionType = (typeof RECEIPT_ACTION_TYPES)[number];
+export type ReceiptPolicyDecision = (typeof RECEIPT_POLICY_DECISIONS)[number];
+export type ReceiptOutcome = (typeof RECEIPT_OUTCOMES)[number];
+
 export interface AppendAgentActionReceiptInput {
   manifest_id: string;
   agent_id: string;
   action_id: string;
-  action_type: string;
+  action_type: ReceiptActionType;
   risk_tier: "low" | "medium" | "high";
   target?: string;
-  policy_decision: string;
-  outcome: string;
+  policy_decision: ReceiptPolicyDecision;
+  outcome: ReceiptOutcome;
   input_hash?: string;
   output_hash?: string;
   signature: string;
@@ -67,12 +75,25 @@ export interface AppendAgentActionReceiptResult {
 }
 
 const HIGH_RISK_CATEGORIES = new Set(["Security", "Infrastructure"]);
+const RISK_TIER_ORDER: Record<"low" | "medium" | "high", number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+};
 
 function asObject(value: unknown): JsonObject {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("Manifest must be an object.");
   }
   return value as JsonObject;
+}
+
+function isAllowedValue<T extends readonly string[]>(value: string, allowed: T): value is T[number] {
+  return (allowed as readonly string[]).includes(value);
+}
+
+function isSha256Hash(value: string): boolean {
+  return /^sha256:[a-f0-9]{6,}$/i.test(value);
 }
 
 function readString(obj: JsonObject, key: string, required = true): string {
@@ -387,8 +408,36 @@ export function appendAgentActionReceipt(
     throw new Error("Missing required receipt fields.");
   }
 
+  if (!/^act_[a-zA-Z0-9_-]{3,}$/.test(input.action_id.trim())) {
+    throw new Error("Invalid action_id format.");
+  }
+
+  if (!isAllowedValue(input.action_type, RECEIPT_ACTION_TYPES)) {
+    throw new Error("Invalid action_type for receipt append.");
+  }
+
+  if (!isAllowedValue(input.policy_decision, RECEIPT_POLICY_DECISIONS)) {
+    throw new Error("Invalid policy_decision for receipt append.");
+  }
+
+  if (!isAllowedValue(input.outcome, RECEIPT_OUTCOMES)) {
+    throw new Error("Invalid outcome for receipt append.");
+  }
+
+  if (input.input_hash && !isSha256Hash(input.input_hash)) {
+    throw new Error("Invalid input hash for receipt append.");
+  }
+
+  if (input.output_hash && !isSha256Hash(input.output_hash)) {
+    throw new Error("Invalid output hash for receipt append.");
+  }
+
   if (!input.signature?.trim()) {
     throw new Error("Missing signature for receipt append.");
+  }
+
+  if (input.signature.trim().length < 8) {
+    throw new Error("Invalid signature for receipt append.");
   }
 
   const verified = verifyAgentManifest(input.manifest_id);
@@ -397,8 +446,8 @@ export function appendAgentActionReceipt(
   }
 
   const manifestRow = db
-    .prepare("SELECT agent_id FROM agent_manifests WHERE manifest_id = ?")
-    .get(input.manifest_id) as { agent_id: string } | undefined;
+    .prepare("SELECT agent_id, risk_tier FROM agent_manifests WHERE manifest_id = ?")
+    .get(input.manifest_id) as { agent_id: string; risk_tier: "low" | "medium" | "high" } | undefined;
 
   if (!manifestRow) {
     throw new Error("Manifest not found for receipt append.");
@@ -406,6 +455,10 @@ export function appendAgentActionReceipt(
 
   if (manifestRow.agent_id !== input.agent_id) {
     throw new Error("Receipt agent_id does not match manifest agent_id.");
+  }
+
+  if (RISK_TIER_ORDER[input.risk_tier] > RISK_TIER_ORDER[manifestRow.risk_tier]) {
+    throw new Error("Receipt risk tier exceeds manifest risk tier.");
   }
 
   const receipt_id = `rcpt_${input.action_id}_${Date.now()}`;

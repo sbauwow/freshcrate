@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractBearerToken, hasApiKeys, validateApiKey } from "@/lib/auth";
-import { appendAgentActionReceipt } from "@/lib/agent-manifest";
+import {
+  appendAgentActionReceipt,
+  RECEIPT_ACTION_TYPES,
+  RECEIPT_OUTCOMES,
+  RECEIPT_POLICY_DECISIONS,
+  ReceiptActionType,
+  ReceiptOutcome,
+  ReceiptPolicyDecision,
+} from "@/lib/agent-manifest";
 import { logRequest } from "@/lib/request-log";
+
+function normalizeRiskTier(value: unknown): "low" | "medium" | "high" {
+  const risk = String(value ?? "").trim().toLowerCase();
+  return risk === "medium" || risk === "high" ? risk : "low";
+}
+
+function normalizeEnum<T extends readonly string[]>(value: unknown, allowed: T): T[number] | string {
+  const text = String(value ?? "").trim().toLowerCase();
+  return (allowed as readonly string[]).includes(text) ? (text as T[number]) : text;
+}
 
 export async function POST(request: NextRequest) {
   const start = Date.now();
@@ -26,17 +44,17 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as Record<string, unknown>;
 
     const out = appendAgentActionReceipt({
-      manifest_id: String(body.manifest_id ?? ""),
-      agent_id: String(body.agent_id ?? ""),
-      action_id: String(body.action_id ?? ""),
-      action_type: String(body.action_type ?? ""),
-      risk_tier: (String(body.risk_tier ?? "low") as "low" | "medium" | "high"),
-      target: typeof body.target === "string" ? body.target : undefined,
-      policy_decision: String(body.policy_decision ?? ""),
-      outcome: String(body.outcome ?? ""),
-      input_hash: typeof body.input_hash === "string" ? body.input_hash : undefined,
-      output_hash: typeof body.output_hash === "string" ? body.output_hash : undefined,
-      signature: String(body.signature ?? ""),
+      manifest_id: String(body.manifest_id ?? "").trim(),
+      agent_id: String(body.agent_id ?? "").trim(),
+      action_id: String(body.action_id ?? "").trim(),
+      action_type: normalizeEnum(body.action_type, RECEIPT_ACTION_TYPES) as ReceiptActionType,
+      risk_tier: normalizeRiskTier(body.risk_tier),
+      target: typeof body.target === "string" ? body.target.trim() : undefined,
+      policy_decision: normalizeEnum(body.policy_decision, RECEIPT_POLICY_DECISIONS) as ReceiptPolicyDecision,
+      outcome: normalizeEnum(body.outcome, RECEIPT_OUTCOMES) as ReceiptOutcome,
+      input_hash: typeof body.input_hash === "string" ? body.input_hash.trim() : undefined,
+      output_hash: typeof body.output_hash === "string" ? body.output_hash.trim() : undefined,
+      signature: String(body.signature ?? "").trim(),
     });
 
     const res = NextResponse.json(out, { status: 201 });

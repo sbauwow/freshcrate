@@ -121,6 +121,119 @@ describe("agent manifest api", () => {
     expect(receiptData.error).toMatch(/agent_id/i);
   });
 
+  it("rejects receipt append when action risk exceeds manifest risk tier", async () => {
+    const mediumManifest = {
+      ...sampleManifest,
+      manifest_id: "mfst_api_manifest_medium_0001",
+      agent: {
+        ...sampleManifest.agent,
+        agent_id: "agt_api_agent_medium_0001",
+        name: "api-agent-medium",
+      },
+      accountability: {
+        ...sampleManifest.accountability,
+        owner_human_id: "hum_api_owner_medium_0001",
+      },
+      policy: {
+        ...sampleManifest.policy,
+        risk_tier: "medium",
+      },
+    };
+
+    await registerManifest(
+      new NextRequest("https://freshcrate.ai/api/agents/register-manifest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ manifest: mediumManifest, proof_bundle: { owner_attestation: "attest-blob" } }),
+      })
+    );
+
+    const receiptReq = new NextRequest("https://freshcrate.ai/api/agents/receipt", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        manifest_id: mediumManifest.manifest_id,
+        agent_id: mediumManifest.agent.agent_id,
+        action_id: "act_too_risky",
+        action_type: "deployment",
+        risk_tier: "high",
+        target: "prod-cluster",
+        policy_decision: "allow",
+        outcome: "success",
+        signature: "sig_too_risky",
+      }),
+    });
+
+    const receiptRes = await appendReceipt(receiptReq);
+    const receiptData = await receiptRes.json();
+    expect(receiptRes.status).toBe(400);
+    expect(receiptData.error).toMatch(/risk tier/i);
+  });
+
+  it("rejects receipt append when enum fields are invalid", async () => {
+    await registerManifest(
+      new NextRequest("https://freshcrate.ai/api/agents/register-manifest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ manifest: sampleManifest, proof_bundle: { owner_attestation: "attest-blob" } }),
+      })
+    );
+
+    const receiptReq = new NextRequest("https://freshcrate.ai/api/agents/receipt", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        manifest_id: sampleManifest.manifest_id,
+        agent_id: sampleManifest.agent.agent_id,
+        action_id: "act_invalid_enum",
+        action_type: "weird_action",
+        risk_tier: "high",
+        target: "github.com/org/repo",
+        policy_decision: "shrug",
+        outcome: "mystery",
+        signature: "sig_invalid_enum",
+      }),
+    });
+
+    const receiptRes = await appendReceipt(receiptReq);
+    const receiptData = await receiptRes.json();
+    expect(receiptRes.status).toBe(400);
+    expect(receiptData.error).toMatch(/action_type|policy_decision|outcome/i);
+  });
+
+  it("rejects receipt append when hashes are malformed", async () => {
+    await registerManifest(
+      new NextRequest("https://freshcrate.ai/api/agents/register-manifest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ manifest: sampleManifest, proof_bundle: { owner_attestation: "attest-blob" } }),
+      })
+    );
+
+    const receiptReq = new NextRequest("https://freshcrate.ai/api/agents/receipt", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        manifest_id: sampleManifest.manifest_id,
+        agent_id: sampleManifest.agent.agent_id,
+        action_id: "act_bad_hash",
+        action_type: "tool_execution",
+        risk_tier: "high",
+        target: "github.com/org/repo",
+        policy_decision: "allow",
+        outcome: "success",
+        input_hash: "abc123",
+        output_hash: "sha256:",
+        signature: "sig_bad_hash",
+      }),
+    });
+
+    const receiptRes = await appendReceipt(receiptReq);
+    const receiptData = await receiptRes.json();
+    expect(receiptRes.status).toBe(400);
+    expect(receiptData.error).toMatch(/hash/i);
+  });
+
   it("enforces x-manifest-id on high-risk package submission", async () => {
     const body = {
       name: "secure-package",
