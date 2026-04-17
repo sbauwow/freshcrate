@@ -27,6 +27,19 @@ function normalizeBoolean(value: unknown): boolean | undefined {
   return undefined;
 }
 
+function normalizeLimit(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.min(Math.max(Math.trunc(value), 1), 50);
+  }
+
+  const text = String(value ?? "").trim();
+  if (!text) return undefined;
+
+  const parsed = Number(text);
+  if (!Number.isFinite(parsed)) return undefined;
+  return Math.min(Math.max(Math.trunc(parsed), 1), 50);
+}
+
 export async function POST(request: NextRequest) {
   const start = Date.now();
 
@@ -48,7 +61,7 @@ export async function POST(request: NextRequest) {
     risk_tolerance: normalizeRisk(body.risk_tolerance),
     verified_only: normalizeBoolean(body.verified_only),
     require_accountability: normalizeBoolean(body.require_accountability),
-    limit: typeof body.limit === "number" ? Math.min(Math.max(body.limit, 1), 50) : undefined,
+    limit: normalizeLimit(body.limit),
     a: typeof body.a === "string" ? body.a.trim() : undefined,
     b: typeof body.b === "string" ? body.b.trim() : undefined,
     name: typeof body.name === "string" ? body.name.trim() : undefined,
