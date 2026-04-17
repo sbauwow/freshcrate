@@ -40,7 +40,9 @@
     "dedupe:merge": "node scripts/merge-duplicates.mjs",
     "dedupe:merge:apply": "node scripts/merge-duplicates.mjs --apply",
     "scan-deps": "node scripts/scan-deps.mjs",
-    "scan-deps:all": "node scripts/scan-deps.mjs --all"
+    "scan-deps:all": "node scripts/scan-deps.mjs --all",
+    "image:build": "bash scripts/build-agent-edition-image.sh",
+    "image:validate": "bash scripts/validate-agent-edition-templates.sh"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

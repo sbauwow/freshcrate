@@ -7,7 +7,7 @@ source "${SCRIPT_DIR}/lib/bootstrap-common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: bash scripts/verify-agent-edition.sh [--bundle BUNDLE] [--mode headless|light-desktop]
+Usage: bash scripts/verify-agent-edition.sh [--bundle BUNDLE] [--mode headless|light-desktop] [--channel stable|beta|nightly]
 
 Runs grounded checks for the freshcrate Agent Edition minimal substrate.
 EOF
@@ -122,6 +122,7 @@ VERIFY_RECEIPT_PATH="${FRESHCRATE_HOME}/receipts/verify-${BUNDLE}.txt"
 cat > "$VERIFY_RECEIPT_PATH" <<EOF
 bundle=${BUNDLE}
 mode=${MODE}
+channel=${CHANNEL}
 pass_count=${PASS_COUNT}
 fail_count=${FAIL_COUNT}
 timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)

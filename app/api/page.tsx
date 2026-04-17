@@ -63,9 +63,69 @@ export default function ApiDocsPage() {
           <div className="bg-white border border-fm-border rounded p-3">
             <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/install/agent-edition</code>
             <div className="text-[10px] text-fm-text-light mt-1 mb-2">Returns a single-file shell installer suitable for <code className="font-mono">curl | bash</code> for freshcrate Agent Edition.</div>
+            <div className="text-[10px] text-fm-text-light mb-2">Default release lane is <code className="font-mono">stable</code>. Installer arguments support deterministic bundle/mode/channel selection.</div>
             <div className="mt-2 bg-fm-bg rounded p-2">
-              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -fsSL https://freshcrate.ai/api/install/agent-edition | bash -s -- --bundle solo-builder-core`}</pre>
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -fsSL https://freshcrate.ai/api/install/agent-edition | bash -s -- --bundle solo-builder-core --mode headless --channel stable`}</pre>
             </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-[12px] font-bold text-fm-green mb-2">Workbench Recommendation</h3>
+          <div className="bg-white border border-fm-border rounded p-3">
+            <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/workbench/recommend</code>
+            <div className="text-[10px] text-fm-text-light mt-1 mb-2">Returns the recommended Agent Edition bundle plus alternatives for a persona/task combination.</div>
+            <div className="text-[10px]">
+              <span className="font-bold">Parameters:</span>
+              <ul className="ml-4 mt-1 space-y-0.5">
+                <li><code className="font-mono">persona</code> (optional) - solo-dev, research, automation, security, local-models</li>
+                <li><code className="font-mono">task</code> (optional) - free-form intent like <code className="font-mono">audit logs and isolate tooling</code></li>
+              </ul>
+            </div>
+            <div className="mt-2 bg-fm-bg rounded p-2">
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl "https://freshcrate.ai/api/workbench/recommend?persona=security&task=audit+logs+and+isolate+tooling"`}</pre>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-[12px] font-bold text-fm-green mb-2">Workbench Manifest</h3>
+          <div className="bg-white border border-fm-border rounded p-3">
+            <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/workbench/manifest</code>
+            <div className="text-[10px] text-fm-text-light mt-1 mb-2">Returns a machine-readable Agent Edition manifest with normalized bundle/mode/channel, versioned release lane, commands, package list, and verification checks.</div>
+            <div className="text-[10px]">
+              <span className="font-bold">Parameters:</span>
+              <ul className="ml-4 mt-1 space-y-0.5">
+                <li><code className="font-mono">bundle</code> (optional) - e.g. <code className="font-mono">security-ops-node</code></li>
+                <li><code className="font-mono">mode</code> (optional) - <code className="font-mono">headless</code> or <code className="font-mono">light-desktop</code></li>
+                <li><code className="font-mono">channel</code> (optional) - <code className="font-mono">stable</code>, <code className="font-mono">beta</code>, or <code className="font-mono">nightly</code></li>
+                <li><code className="font-mono">download</code> (optional) - <code className="font-mono">1</code> to force attachment download</li>
+              </ul>
+            </div>
+            <div className="mt-2 bg-fm-bg rounded p-2">
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -OJ "https://freshcrate.ai/api/workbench/manifest?bundle=security-ops-node&mode=headless&channel=stable&download=1"`}</pre>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-[12px] font-bold text-fm-green mb-2">Cloud Images / VM Images</h3>
+          <div className="bg-white border border-fm-border rounded p-3 space-y-3">
+            <div>
+              <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/workbench/image-build</code>
+              <div className="text-[10px] text-fm-text-light mt-1">Returns a versioned image-build manifest for Packer/cloud-image pipelines. Supports <code className="font-mono">bundle</code>, <code className="font-mono">mode</code>, <code className="font-mono">channel</code>, <code className="font-mono">image</code>, and <code className="font-mono">download=1</code>. Concrete starter templates live under <code className="font-mono">images/*.pkr.hcl</code>, and local builds run through <code className="font-mono">scripts/build-agent-edition-image.sh</code> or <code className="font-mono">npm run image:build -- --image ...</code>.</div>
+            </div>
+            <div className="mt-2 bg-fm-bg rounded p-2">
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -OJ "https://freshcrate.ai/api/workbench/image-build?bundle=automation-node&mode=headless&channel=beta&image=aws-ami-builder&download=1"`}</pre>
+            </div>
+            <div>
+              <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/workbench/cloud-init</code>
+              <div className="text-[10px] text-fm-text-light mt-1">Returns a cloud-init seed YAML using the same Agent Edition bundle/mode/channel contract. Supports <code className="font-mono">download=1</code> for attachment delivery.</div>
+            </div>
+            <div className="mt-2 bg-fm-bg rounded p-2">
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -OJ "https://freshcrate.ai/api/workbench/cloud-init?bundle=research-node&mode=light-desktop&channel=stable&download=1"`}</pre>
+            </div>
+            <div className="text-[10px] text-fm-text-light">Roadmap cards still live on <code className="font-mono">/workbench#cloud-images</code> and <code className="font-mono">/install/agent-edition#cloud-images</code>.</div>
           </div>
         </section>
 

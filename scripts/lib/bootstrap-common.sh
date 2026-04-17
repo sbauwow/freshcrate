@@ -69,6 +69,7 @@ bundle_dirs() {
 parse_common_args() {
   BUNDLE="solo-builder-core"
   MODE="headless"
+  CHANNEL="stable"
   FRESHCRATE_HOME="${FRESHCRATE_HOME_DEFAULT}"
   WORKSPACE_DIR="${WORKSPACE_DEFAULT}"
 
@@ -80,6 +81,10 @@ parse_common_args() {
         ;;
       --mode)
         MODE="${2:-}"
+        shift 2
+        ;;
+      --channel)
+        CHANNEL="${2:-}"
         shift 2
         ;;
       --freshcrate-home)
@@ -101,4 +106,5 @@ parse_common_args() {
 
   supports_bundle "$BUNDLE" || die "unsupported bundle: $BUNDLE"
   [[ "$MODE" == "headless" || "$MODE" == "light-desktop" ]] || die "unsupported mode: $MODE"
+  [[ "$CHANNEL" == "stable" || "$CHANNEL" == "beta" || "$CHANNEL" == "nightly" ]] || die "unsupported channel: $CHANNEL"
 }

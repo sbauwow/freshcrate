@@ -87,8 +87,8 @@ const BUNDLES: WorkbenchBundle[] = [
       "~/.freshcrate/logs and ~/.freshcrate/receipts created",
     ],
     antiGoals: ["Heavy desktop meta-packages", "Office/media bundles", "Duplicate editors by default"],
-    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle solo-builder-core",
-    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle solo-builder-core",
+    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle solo-builder-core --channel stable",
+    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle solo-builder-core --channel stable",
   },
   {
     id: "research-node",
@@ -107,8 +107,8 @@ const BUNDLES: WorkbenchBundle[] = [
       "network + DNS checks pass",
     ],
     antiGoals: ["Random desktop utilities", "GUI notebooks as a hard dependency", "Always-on background daemons"],
-    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle research-node",
-    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle research-node",
+    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle research-node --channel stable",
+    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle research-node --channel stable",
   },
   {
     id: "automation-node",
@@ -127,8 +127,8 @@ const BUNDLES: WorkbenchBundle[] = [
       "deploy scripts require explicit review gate",
     ],
     antiGoals: ["Heavy desktop login managers", "Ad-hoc manual deploys", "Hidden credentials in shell history"],
-    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle automation-node",
-    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle automation-node",
+    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle automation-node --channel stable",
+    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle automation-node --channel stable",
   },
   {
     id: "security-ops-node",
@@ -147,8 +147,8 @@ const BUNDLES: WorkbenchBundle[] = [
       "audit toolchain binaries present",
     ],
     antiGoals: ["Heavy desktop environment", "Ambient root access", "Unreviewed package sprawl"],
-    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle security-ops-node",
-    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle security-ops-node",
+    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle security-ops-node --channel stable",
+    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle security-ops-node --channel stable",
   },
   {
     id: "local-model-box",
@@ -167,8 +167,8 @@ const BUNDLES: WorkbenchBundle[] = [
       "workspace/model receipts writable",
     ],
     antiGoals: ["Desktop bloat for eye candy", "Huge default model downloads", "Forcing GPU-only support"],
-    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle local-model-box",
-    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle local-model-box",
+    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle local-model-box --channel stable",
+    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle local-model-box --channel stable",
   },
 ];
 

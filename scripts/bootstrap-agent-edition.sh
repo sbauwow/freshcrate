@@ -7,7 +7,7 @@ source "${SCRIPT_DIR}/lib/bootstrap-common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: bash scripts/bootstrap-agent-edition.sh [--bundle BUNDLE] [--mode headless|light-desktop]
+Usage: bash scripts/bootstrap-agent-edition.sh [--bundle BUNDLE] [--mode headless|light-desktop] [--channel stable|beta|nightly]
 
 Bundles:
   solo-builder-core | research-node | automation-node | security-ops-node | local-model-box
@@ -30,7 +30,7 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   exit 0
 fi
 
-log "bundle=${BUNDLE} mode=${MODE}"
+log "bundle=${BUNDLE} mode=${MODE} channel=${CHANNEL}"
 
 require_cmd uname
 ARCH="$(uname -m)"
@@ -79,6 +79,7 @@ RECEIPT_PATH="${FRESHCRATE_HOME}/receipts/bootstrap-${BUNDLE}.txt"
 cat > "$RECEIPT_PATH" <<EOF
 bundle=${BUNDLE}
 mode=${MODE}
+channel=${CHANNEL}
 os=${ID:-unknown}
 version=${VERSION_ID:-unknown}
 arch=${ARCH}
@@ -88,4 +89,4 @@ timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 EOF
 log "wrote receipt: ${RECEIPT_PATH}"
 
-log "next: bash scripts/verify-agent-edition.sh --bundle ${BUNDLE} --mode ${MODE} --freshcrate-home ${FRESHCRATE_HOME} --workspace-dir ${WORKSPACE_DIR}"
+log "next: bash scripts/verify-agent-edition.sh --bundle ${BUNDLE} --mode ${MODE} --channel ${CHANNEL} --freshcrate-home ${FRESHCRATE_HOME} --workspace-dir ${WORKSPACE_DIR}"
