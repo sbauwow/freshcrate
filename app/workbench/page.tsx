@@ -90,8 +90,11 @@ export default async function WorkbenchPage({
             <li>Persona packs later: builder, research, automation, security, local-models.</li>
             <li>ISO/cloud image after the bootstrap contract is stable.</li>
           </ul>
+          <p className="text-fm-text-light">
+            Hosted install path: <a href="/install/agent-edition" className="text-fm-link hover:text-fm-link-hover">/install/agent-edition</a>
+          </p>
           <div className="bg-fm-bg border border-fm-border rounded p-2 font-mono text-[10px] space-y-1">
-            <div>bash scripts/bootstrap-agent-edition.sh --bundle solo-builder-core</div>
+            <div>curl -fsSL https://freshcrate.ai/api/install/agent-edition | bash -s -- --bundle solo-builder-core</div>
             <div>bash scripts/verify-agent-edition.sh --bundle solo-builder-core</div>
           </div>
         </div>
