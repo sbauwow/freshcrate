@@ -88,14 +88,20 @@ export default async function Home({
             <span className="text-[10px] text-fm-text-light">{stats.projects} packages indexed</span>
           </div>
 
-          <div className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-2 mb-3 text-[10px]">
-            <div className="font-bold text-fm-green">freshcrate Agent Edition</div>
-            <div className="text-fm-text-light mt-1">
-              New: the Linux/operator surface for freshcrate — minimal agentic substrate, hosted install path, machine-readable manifests.
+          <div className="bg-fm-sidebar-bg border border-fm-border rounded px-3 py-3 mb-3 text-[10px]">
+            <div className="text-[12px] font-bold text-fm-green">freshcrate Agent Edition</div>
+            <div className="text-fm-text mt-1 font-bold">Linux for agent operators.</div>
+            <div className="text-fm-text-light mt-1 leading-relaxed">
+              A minimal agentic substrate for serious builders: Ubuntu 24.04 x86_64, headless first, hosted install, machine-readable manifests, control-plane surfaces.
             </div>
-            <div className="flex flex-wrap gap-3 mt-2">
-              <Link href="/workbench" className="text-fm-link hover:text-fm-link-hover">Open workbench</Link>
-              <Link href="/install/agent-edition" className="text-fm-link hover:text-fm-link-hover">Install Agent Edition</Link>
+            <div className="flex flex-wrap gap-2 mt-2 text-[9px]">
+              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">minimal agentic substrate</span>
+              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">Ubuntu 24.04 x86_64</span>
+              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">headless first</span>
+            </div>
+            <div className="flex flex-wrap gap-3 mt-3">
+              <Link href="/workbench" className="text-fm-link hover:text-fm-link-hover font-bold">Open Agent Edition</Link>
+              <Link href="/install/agent-edition" className="text-fm-link hover:text-fm-link-hover font-bold">Install Agent Edition</Link>
             </div>
           </div>
 
