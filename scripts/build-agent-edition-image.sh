@@ -70,11 +70,16 @@ if ! command -v packer >/dev/null 2>&1; then
   exit 1
 fi
 
-exec packer build \
-  -var "bundle=${BUNDLE}" \
-  -var "mode=${MODE}" \
-  -var "channel=${CHANNEL}" \
-  -var "version=${VERSION}" \
-  -var "target=ubuntu-24.04-x86_64" \
-  -var "region=${REGION}" \
-  "$TEMPLATE"
+PACKER_ARGS=(
+  -var "bundle=${BUNDLE}"
+  -var "mode=${MODE}"
+  -var "channel=${CHANNEL}"
+  -var "version=${VERSION}"
+  -var "target=ubuntu-24.04-x86_64"
+)
+
+if [[ "$IMAGE" == "aws-ami-builder" ]]; then
+  PACKER_ARGS+=( -var "region=${REGION}" )
+fi
+
+exec packer build "${PACKER_ARGS[@]}" "$TEMPLATE"

@@ -83,6 +83,9 @@ export interface AgentEditionPublishedImageArtifact {
   sha256: string | null;
   file_size_bytes: number | null;
   updated_at: string | null;
+  github_release_tag: string | null;
+  github_release_page_url: string | null;
+  github_download_urls: Record<AgentEditionArtifactDownloadKind, string> | null;
   download_urls: Record<AgentEditionArtifactDownloadKind, string>;
 }
 
@@ -365,6 +368,15 @@ export function getAgentEditionPublishedImageArtifact(input: { bundle?: string; 
   const checksumExists = fs.existsSync(checksumPath);
   const stat = artifactExists ? fs.statSync(artifactPath) : null;
   const checksum = checksumExists ? fs.readFileSync(checksumPath, "utf8").trim().split(/\s+/)[0] ?? null : null;
+  const githubReleaseTag = manifest.image.id === "vm-qcow2-headless" && manifest.channel.id === "stable" ? "agent-edition-vm-qcow2-latest" : null;
+  const githubReleasePageUrl = githubReleaseTag ? `https://github.com/sbauwow/freshcrate.ai/releases/tag/${githubReleaseTag}` : null;
+  const githubDownloadUrls = githubReleaseTag
+    ? {
+        artifact: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${path.basename(manifest.packer.expected_artifact)}`,
+        checksum: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${path.basename(manifest.packer.checksum_file)}`,
+        metadata: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${path.basename(`${manifest.packer.expected_artifact}.json`)}`,
+      }
+    : null;
 
   return {
     image: manifest.image.id,
@@ -380,6 +392,9 @@ export function getAgentEditionPublishedImageArtifact(input: { bundle?: string; 
     sha256: checksum,
     file_size_bytes: stat?.size ?? null,
     updated_at: stat?.mtime.toISOString() ?? null,
+    github_release_tag: githubReleaseTag,
+    github_release_page_url: githubReleasePageUrl,
+    github_download_urls: githubDownloadUrls,
     download_urls: {
       artifact: `/api/workbench/image-artifact?bundle=${manifest.bundle.id}&mode=${manifest.commands.mode}&channel=${manifest.channel.id}&image=${manifest.image.id}&kind=artifact`,
       checksum: `/api/workbench/image-artifact?bundle=${manifest.bundle.id}&mode=${manifest.commands.mode}&channel=${manifest.channel.id}&image=${manifest.image.id}&kind=checksum`,

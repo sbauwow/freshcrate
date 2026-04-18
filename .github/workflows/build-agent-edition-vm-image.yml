@@ -16,8 +16,13 @@ on:
       - lib/workbench-install.ts
       - app/workbench/page.tsx
       - app/install/agent-edition/page.tsx
+      - app/api/page.tsx
       - tests/workbench-install.test.ts
       - tests/vm-image-lane.test.ts
+      - tests/workbench-image-artifact-api.test.ts
+
+permissions:
+  contents: write
 
 jobs:
   build-vm-qcow2:
@@ -35,7 +40,7 @@ jobs:
         run: npm ci
 
       - name: Run targeted tests
-        run: npm test --silent -- tests/workbench-install.test.ts tests/vm-image-lane.test.ts
+        run: npm test --silent -- tests/workbench-install.test.ts tests/workbench-image-artifacts-api.test.ts tests/workbench-image-artifact-api.test.ts tests/vm-image-lane.test.ts
 
       - name: Setup Packer
         uses: hashicorp/setup-packer@main
@@ -57,3 +62,18 @@ jobs:
             output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2
             output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.sha256
             output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.json
+
+      - name: Publish rolling GitHub release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: agent-edition-vm-qcow2-latest
+        run: |
+          gh release delete "$RELEASE_TAG" --yes --cleanup-tag || true
+          gh release create "$RELEASE_TAG" \
+            output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2 \
+            output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.sha256 \
+            output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.json \
+            --title "freshcrate Agent Edition VM QCOW2 (latest)" \
+            --notes "Rolling latest QCOW2 artifact for freshcrate Agent Edition stable vm-qcow2-headless." \
+            --latest

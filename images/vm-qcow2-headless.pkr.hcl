@@ -12,9 +12,15 @@ variable "mode" { type = string }
 variable "channel" { type = string }
 variable "version" { type = string }
 variable "target" { type = string }
+variable "accelerator" {
+  type    = string
+  default = "none"
+}
 
 source "qemu" "agent_edition" {
-  accelerator      = "kvm"
+  accelerator      = var.accelerator
+  disk_image       = true
+  headless         = true
   disk_interface   = "virtio"
   format           = "qcow2"
   iso_url          = "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img"

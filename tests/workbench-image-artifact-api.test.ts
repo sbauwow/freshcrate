@@ -34,6 +34,8 @@ describe("workbench image artifact api", () => {
     expect(data.available).toBe(false);
     expect(data.publish_ready).toBe(true);
     expect(data.artifact_path).toBe("output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2");
+    expect(data.github_release_tag).toBe("agent-edition-vm-qcow2-latest");
+    expect(data.github_download_urls.artifact).toContain("releases/download/agent-edition-vm-qcow2-latest/");
   });
 
   it("downloads built metadata sidecar when present", async () => {
