@@ -23,13 +23,13 @@ describe("agent edition ui surfacing", () => {
     expect(layout).toContain(">agent edition<");
   });
 
-  it("updates the logo asset to minimal crate Agent Edition branding", () => {
+  it("keeps the original freshcrate logo in the hero position", () => {
     const logoSvg = fs.readFileSync(path.join(process.cwd(), "public", "logo.svg"), "utf-8");
     const logoPng = path.join(process.cwd(), "public", "logo.png");
 
     expect(logoSvg).toContain("freshcrate");
-    expect(logoSvg).toContain("agent edition");
-    expect(logoSvg).toContain("minimal crate");
+    expect(logoSvg).toContain("open source packages for agents");
+    expect(logoSvg).not.toContain("agent edition");
     expect(fs.existsSync(logoPng)).toBe(true);
   });
 });

@@ -1,28 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 180" width="720" height="180" role="img" aria-labelledby="title desc">
-  <title id="title">freshcrate agent edition</title>
-  <desc id="desc">freshcrate agent edition minimal crate logo</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 72" width="240" height="72">
+  <!-- Circle badge (matching favicon) -->
+  <circle cx="36" cy="36" r="30" fill="#FFD700"/>
+  <circle cx="36" cy="36" r="30" fill="none" stroke="#222" stroke-width="2.5"/>
 
-  <rect width="720" height="180" fill="#ffffff"/>
+  <!-- Isometric crate icon -->
+  <path d="M20 29l16-9 16 9v18l-16 9-16-9z" fill="#FFC107" stroke="#222" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Crate inner lines -->
+  <line x1="36" y1="20" x2="36" y2="47" stroke="#222" stroke-width="1.8"/>
+  <line x1="20" y1="29" x2="36" y2="38" stroke="#222" stroke-width="1.8"/>
+  <line x1="52" y1="29" x2="36" y2="38" stroke="#222" stroke-width="1.8"/>
+  <!-- Top face highlight -->
+  <path d="M20 29l16 9 16-9" fill="none" stroke="#FFE082" stroke-width="1" opacity="0.6"/>
 
-  <!-- minimal crate mark -->
-  <g transform="translate(28 26)">
-    <rect x="0" y="0" width="128" height="128" rx="28" fill="#f5f7f6" stroke="#d9dfdc" stroke-width="2"/>
-    <path d="M30 54l34-18 34 18v38l-34 18-34-18z" fill="#ffffff" stroke="#1f2937" stroke-width="5" stroke-linejoin="round"/>
-    <path d="M30 54l34 18 34-18" fill="none" stroke="#1f2937" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M64 36v36" fill="none" stroke="#1f2937" stroke-width="5" stroke-linecap="round"/>
-    <path d="M44 99l20-10 20 10" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
+  <!-- "freshcrate" text -->
+  <text x="76" y="44" font-family="Georgia, 'Times New Roman', serif" font-size="32" font-weight="bold" fill="#222" letter-spacing="-0.5">
+    freshcrate
+  </text>
 
-  <!-- wordmark -->
-  <g transform="translate(186 0)">
-    <text x="0" y="88" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif" font-size="60" font-weight="800" fill="#111827" letter-spacing="-1.6">
-      freshcrate
-    </text>
-    <text x="2" y="118" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#059669" letter-spacing="2.8">
-      AGENT EDITION
-    </text>
-    <text x="2" y="144" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif" font-size="18" fill="#4b5563">
-      Linux for agent operators · minimal agentic substrate
-    </text>
-  </g>
+  <!-- Tagline -->
+  <text x="77" y="57" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" fill="#666" letter-spacing="0.5">
+    open source packages for agents
+  </text>
 </svg>
