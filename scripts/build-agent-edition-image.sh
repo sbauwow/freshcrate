@@ -84,4 +84,8 @@ if [[ "$IMAGE" == "aws-ami-builder" ]]; then
   PACKER_ARGS+=( -var "region=${REGION}" )
 fi
 
+if [[ "$IMAGE" == "vm-qcow2-headless" ]]; then
+  rm -rf "output/${IMAGE}"
+fi
+
 exec packer build "${PACKER_ARGS[@]}" "$TEMPLATE"
