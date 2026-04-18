@@ -64,6 +64,14 @@ if command -v apt-get >/dev/null 2>&1; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
   fi
 
+  if [[ -x /root/.local/bin/uv && ! -x /usr/local/bin/uv ]]; then
+    sudo ln -sf /root/.local/bin/uv /usr/local/bin/uv
+  fi
+
+  if [[ -x /root/.local/bin/uvx && ! -x /usr/local/bin/uvx ]]; then
+    sudo ln -sf /root/.local/bin/uvx /usr/local/bin/uvx
+  fi
+
   if ! command -v docker >/dev/null 2>&1; then
     log "docker not found; install manually or extend this script with repo setup"
   fi

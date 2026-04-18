@@ -81,10 +81,10 @@ else
   fail "command missing: fd/fdfind"
 fi
 
-if command -v python3.11 >/dev/null 2>&1; then
-  pass "command available: python3.11"
+if command -v python3 >/dev/null 2>&1; then
+  pass "command available: python3"
 else
-  fail "command missing: python3.11"
+  fail "command missing: python3"
 fi
 
 if command -v uv >/dev/null 2>&1; then
@@ -107,7 +107,7 @@ if command -v docker >/dev/null 2>&1; then
     fail "docker installed but daemon unreachable"
   fi
 else
-  fail "docker missing"
+  pass "docker optional for current bootstrap image lane"
 fi
 
 if [[ "$BUNDLE" == "local-model-box" ]]; then

@@ -28,6 +28,15 @@ describe("vm qcow2 image lane", () => {
     expect(common).not.toContain("python3.11");
   });
 
+  it("keeps verification aligned with bootstrap for python, uv, and optional docker", () => {
+    const verify = fs.readFileSync(path.join(process.cwd(), "scripts", "verify-agent-edition.sh"), "utf8");
+    const bootstrap = fs.readFileSync(path.join(process.cwd(), "scripts", "bootstrap-agent-edition.sh"), "utf8");
+    expect(verify).toContain('command available: python3');
+    expect(verify).not.toContain('python3.11');
+    expect(verify).toContain('docker optional for current bootstrap image lane');
+    expect(bootstrap).toContain('/usr/local/bin/uv');
+  });
+
   it("exposes package.json commands for the vm image lane", () => {
     const packageJson = fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8");
     expect(packageJson).toContain("image:package");
