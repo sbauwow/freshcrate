@@ -1,0 +1,10 @@
+#cloud-config
+users:
+  - default
+chpasswd:
+  list: |
+    ubuntu:freshcrate
+  expire: false
+ssh_pwauth: true
+package_update: false
+package_upgrade: false

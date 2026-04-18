@@ -19,6 +19,8 @@ variable "accelerator" {
 
 source "qemu" "agent_edition" {
   accelerator      = var.accelerator
+  cd_files         = ["images/cloud-init/vm-qcow2-headless/meta-data", "images/cloud-init/vm-qcow2-headless/user-data"]
+  cd_label         = "cidata"
   disk_image       = true
   headless         = true
   disk_interface   = "virtio"
@@ -27,6 +29,8 @@ source "qemu" "agent_edition" {
   iso_checksum     = "none"
   output_directory = "output/vm-qcow2-headless"
   ssh_username     = "ubuntu"
+  ssh_password     = "freshcrate"
+  ssh_timeout      = "20m"
   vm_name          = "freshcrate-${var.bundle}-${var.channel}"
 }
 

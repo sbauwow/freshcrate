@@ -7,6 +7,8 @@ on:
       - main
     paths:
       - images/vm-qcow2-headless.pkr.hcl
+      - images/cloud-init/vm-qcow2-headless/meta-data
+      - images/cloud-init/vm-qcow2-headless/user-data
       - scripts/build-agent-edition-image.sh
       - scripts/package-agent-edition-image.sh
       - scripts/provision-agent-edition-image.sh
