@@ -46,6 +46,12 @@ export default async function AgentEditionInstallPage({
     channel: "stable",
     image: "vm-qcow2-headless",
   });
+  const publishedIsoArtifact = getAgentEditionPublishedImageArtifact({
+    bundle: "solo-builder-core",
+    mode: "headless",
+    channel: "stable",
+    image: "iso-autoinstall-headless",
+  });
 
   return (
     <div className="max-w-[800px] flex flex-col gap-4">
@@ -204,8 +210,8 @@ export default async function AgentEditionInstallPage({
               <p className="text-fm-text-light">{image.summary}</p>
               <p className="text-[10px] text-fm-text-light">Target bundle: {image.target} • Audience: {image.audience}</p>
               <p className="text-[10px] text-fm-text-light">Next step: {image.nextStep}</p>
-              <p className="text-[10px] text-fm-text-light">Template: <code className="font-mono">images/{image.id}.pkr.hcl</code></p>
-              <p className="text-[10px] text-fm-text-light">Build: <code className="font-mono">bash scripts/build-agent-edition-image.sh --image {image.id} --bundle {image.target} --mode {image.target === "research-node" ? "light-desktop" : "headless"} --channel {commands.channel}</code></p>
+              <p className="text-[10px] text-fm-text-light">Recipe: <code className="font-mono">{image.id === "iso-autoinstall-headless" ? "scripts/build-agent-edition-iso.sh" : `images/${image.id}.pkr.hcl`}</code></p>
+              <p className="text-[10px] text-fm-text-light">Build: <code className="font-mono">{image.id === "iso-autoinstall-headless" ? `bash scripts/build-agent-edition-iso.sh --image ${image.id} --bundle ${image.target} --mode ${image.target === "research-node" ? "light-desktop" : "headless"} --channel ${commands.channel}` : `bash scripts/build-agent-edition-image.sh --image ${image.id} --bundle ${image.target} --mode ${image.target === "research-node" ? "light-desktop" : "headless"} --channel ${commands.channel}`}</code></p>
               <p className="text-[10px] text-fm-text-light">Validate: <code className="font-mono">bash scripts/validate-agent-edition-templates.sh</code> or <code className="font-mono">npm run image:validate</code></p>
               {image.id === "vm-qcow2-headless" ? (
                 <>
@@ -215,6 +221,15 @@ export default async function AgentEditionInstallPage({
                   <p className="text-[10px] text-fm-text-light">Artifact API: <a href={publishedVmArtifact.download_urls.metadata} className="text-fm-link hover:text-fm-link-hover">metadata</a> • <a href={publishedVmArtifact.download_urls.checksum} className="text-fm-link hover:text-fm-link-hover">checksum</a> • <a href={`${publishedVmArtifact.download_urls.artifact}&download=1`} className="text-fm-link hover:text-fm-link-hover">artifact download</a></p>
                   {publishedVmArtifact.github_download_urls ? <p className="text-[10px] text-fm-text-light">GitHub release: <a href={publishedVmArtifact.github_release_page_url ?? "#"} className="text-fm-link hover:text-fm-link-hover">release page</a> • <a href={publishedVmArtifact.github_download_urls.artifact} className="text-fm-link hover:text-fm-link-hover">public qcow2 zip</a> • <a href={publishedVmArtifact.github_download_urls.checksum} className="text-fm-link hover:text-fm-link-hover">sha256</a></p> : null}
                   <p className="text-[10px] text-fm-text-light">This is the first publish-ready Linux image lane.</p>
+                </>
+              ) : image.id === "iso-autoinstall-headless" ? (
+                <>
+                  <p className="text-[10px] text-fm-text-light">Artifact path: <code className="font-mono">output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso</code></p>
+                  <p className="text-[10px] text-fm-text-light">Package: <code className="font-mono">bash scripts/package-agent-edition-image.sh --image iso-autoinstall-headless --bundle solo-builder-core --mode headless --channel stable</code></p>
+                  <p className="text-[10px] text-fm-text-light">Live status: {publishedIsoArtifact.available ? "artifact built" : "not built yet"}</p>
+                  <p className="text-[10px] text-fm-text-light">Artifact API: <a href={publishedIsoArtifact.download_urls.metadata} className="text-fm-link hover:text-fm-link-hover">metadata</a> • <a href={publishedIsoArtifact.download_urls.checksum} className="text-fm-link hover:text-fm-link-hover">checksum</a> • <a href={`${publishedIsoArtifact.download_urls.artifact}&download=1`} className="text-fm-link hover:text-fm-link-hover">artifact download</a></p>
+                  {publishedIsoArtifact.github_download_urls ? <p className="text-[10px] text-fm-text-light">GitHub release: <a href={publishedIsoArtifact.github_release_page_url ?? "#"} className="text-fm-link hover:text-fm-link-hover">release page</a> • <a href={publishedIsoArtifact.github_download_urls.artifact} className="text-fm-link hover:text-fm-link-hover">public ISO zip</a> • <a href={publishedIsoArtifact.github_download_urls.checksum} className="text-fm-link hover:text-fm-link-hover">sha256</a></p> : null}
+                  <p className="text-[10px] text-fm-text-light">Installer-media lane for people who want a bootable freshcrate autoinstall path.</p>
                 </>
               ) : null}
               <div className="text-[10px] text-fm-text-light">
@@ -300,7 +315,7 @@ export default async function AgentEditionInstallPage({
             <li>Headless first. Light desktop is optional, never default.</li>
             <li>Bootstrap creates workspace, logs, receipts, and model-cache paths.</li>
             <li>Verification exits non-zero if the machine does not match the contract.</li>
-            <li>ISO/cloud image comes later after the bootstrap contract stabilizes.</li>
+            <li>Hosted bootstrap, qcow2 VM, and autoinstall ISO are the current first-class install paths.</li>
           </ul>
           <div>
             <div className="font-bold text-fm-green mb-1">Mode notes</div>

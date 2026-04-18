@@ -117,9 +117,10 @@ describe("workbench hosted install script", () => {
 
   it("exports cloud image roadmap cards", () => {
     const images = getAgentEditionCloudImages();
-    expect(images.length).toBeGreaterThanOrEqual(3);
+    expect(images.length).toBeGreaterThanOrEqual(4);
     expect(images.some((image) => image.id === "railway-dev-box")).toBe(true);
     expect(images.some((image) => image.id === "vm-qcow2-headless")).toBe(true);
+    expect(images.some((image) => image.id === "iso-autoinstall-headless")).toBe(true);
     expect(images.every((image) => image.status.length > 0)).toBe(true);
   });
 
@@ -182,6 +183,30 @@ describe("workbench hosted install script", () => {
 
     const resolved = resolveAgentEditionImageArtifactPath({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "vm-qcow2-headless" }, "artifact");
     expect(resolved.fileName).toBe("freshcrate-solo-builder-core-stable.qcow2");
+    expect(resolved.contentType).toBe("application/octet-stream");
+  });
+
+  it("treats iso-autoinstall-headless as a publish-ready installer image lane", () => {
+    const manifest = getAgentEditionImageBuildManifest({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "iso-autoinstall-headless" });
+    expect(manifest.image.id).toBe("iso-autoinstall-headless");
+    expect(manifest.packer.output_directory).toBe("output/iso-autoinstall-headless");
+    expect(manifest.packer.expected_artifact).toBe("output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso");
+    expect(manifest.packer.checksum_file).toBe("output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso.sha256");
+    expect(manifest.packer.package_script).toBe("scripts/package-agent-edition-image.sh");
+    expect(manifest.packer.publish_ready).toBe(true);
+
+    const command = getAgentEditionImageBuildCommand({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "iso-autoinstall-headless" });
+    expect(command.command).toContain("scripts/build-agent-edition-iso.sh");
+    expect(command.package_command).toContain("iso-autoinstall-headless");
+
+    const published = getAgentEditionPublishedImageArtifact({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "iso-autoinstall-headless" });
+    expect(published.artifact_path).toBe("output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso");
+    expect(published.github_release_tag).toBe("agent-edition-iso-latest");
+    expect(published.github_download_urls?.artifact).toContain("releases/download/agent-edition-iso-latest/");
+    expect(published.github_download_urls?.artifact).toContain(".iso");
+
+    const resolved = resolveAgentEditionImageArtifactPath({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "iso-autoinstall-headless" }, "artifact");
+    expect(resolved.fileName).toBe("freshcrate-solo-builder-core-stable.iso");
     expect(resolved.contentType).toBe("application/octet-stream");
   });
 

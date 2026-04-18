@@ -1,0 +1,92 @@
+name: build-agent-edition-iso-image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - images/cloud-init/iso-autoinstall-headless/meta-data
+      - images/cloud-init/iso-autoinstall-headless/user-data
+      - scripts/build-agent-edition-iso.sh
+      - scripts/package-agent-edition-image.sh
+      - scripts/provision-agent-edition-image.sh
+      - scripts/bootstrap-agent-edition.sh
+      - scripts/verify-agent-edition.sh
+      - scripts/lib/bootstrap-common.sh
+      - lib/workbench-install.ts
+      - app/workbench/page.tsx
+      - app/install/agent-edition/page.tsx
+      - app/api/page.tsx
+      - tests/workbench-install.test.ts
+      - tests/iso-image-lane.test.ts
+      - tests/workbench-image-artifact-api.test.ts
+
+permissions:
+  contents: write
+
+jobs:
+  build-iso-autoinstall:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Run targeted tests
+        run: npm test --silent -- tests/workbench-install.test.ts tests/workbench-image-artifact-api.test.ts tests/iso-image-lane.test.ts
+
+      - name: Install ISO tooling
+        run: sudo apt-get update && sudo apt-get install -y xorriso p7zip-full curl
+
+      - name: Build iso-autoinstall-headless
+        run: bash scripts/build-agent-edition-iso.sh --image iso-autoinstall-headless --bundle solo-builder-core --mode headless --channel stable
+
+      - name: Inspect iso-autoinstall-headless output
+        run: find output/iso-autoinstall-headless -maxdepth 3 -type f | sort
+
+      - name: Package iso-autoinstall-headless
+        run: bash scripts/package-agent-edition-image.sh --image iso-autoinstall-headless --bundle solo-builder-core --mode headless --channel stable
+
+      - name: Archive iso-autoinstall-headless for release delivery
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          from pathlib import Path
+          artifact = Path('output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso')
+          archive = artifact.with_suffix(artifact.suffix + '.zip')
+          with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+              zf.write(artifact, arcname=artifact.name)
+          PY
+
+      - name: Upload iso-autoinstall artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iso-autoinstall-headless
+          path: |
+            output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso
+            output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso.zip
+            output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso.sha256
+            output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso.json
+
+      - name: Publish rolling GitHub release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: agent-edition-iso-latest
+        run: |
+          gh release delete "$RELEASE_TAG" --yes --cleanup-tag || true
+          gh release create "$RELEASE_TAG" \
+            output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso.zip \
+            output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso.sha256 \
+            output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso.json \
+            --title "freshcrate Agent Edition ISO (latest)" \
+            --notes "Rolling latest autoinstall ISO for freshcrate Agent Edition stable iso-autoinstall-headless. Release ships the zipped ISO plus checksum and metadata." \
+            --latest

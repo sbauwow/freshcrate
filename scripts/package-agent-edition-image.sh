@@ -6,6 +6,7 @@ BUNDLE="solo-builder-core"
 MODE="headless"
 CHANNEL="stable"
 OUTPUT_DIR=""
+FINAL_EXTENSION=""
 
 usage() {
   cat <<'EOF'
@@ -28,8 +29,13 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$IMAGE" in
-  vm-qcow2-headless) ;;
-  *) echo "packaging currently supports vm-qcow2-headless only" >&2; exit 1 ;;
+  vm-qcow2-headless)
+    FINAL_EXTENSION=".qcow2"
+    ;;
+  iso-autoinstall-headless)
+    FINAL_EXTENSION=".iso"
+    ;;
+  *) echo "packaging currently supports vm-qcow2-headless and iso-autoinstall-headless only" >&2; exit 1 ;;
 esac
 
 if [[ -z "$OUTPUT_DIR" ]]; then
@@ -42,7 +48,18 @@ SOURCE_ARTIFACT=""
 while IFS= read -r -d '' candidate; do
   base="$(basename "$candidate")"
   case "$base" in
-    *.sha256|*.json|*.iso|*.txt) continue ;;
+    *.sha256|*.json|*.txt) continue ;;
+  esac
+
+  if [[ "$IMAGE" == "iso-autoinstall-headless" ]]; then
+    case "$candidate" in
+      *.iso) SOURCE_ARTIFACT="$candidate"; break ;;
+    esac
+    continue
+  fi
+
+  case "$base" in
+    *.iso) continue ;;
   esac
 
   if command -v qemu-img >/dev/null 2>&1; then
@@ -66,7 +83,7 @@ done < <(find "$OUTPUT_DIR" -type f -print0 | sort -z)
   exit 1
 }
 
-FINAL_ARTIFACT="${OUTPUT_DIR}/freshcrate-${BUNDLE}-${CHANNEL}.qcow2"
+FINAL_ARTIFACT="${OUTPUT_DIR}/freshcrate-${BUNDLE}-${CHANNEL}${FINAL_EXTENSION}"
 if [[ "$SOURCE_ARTIFACT" != "$FINAL_ARTIFACT" ]]; then
   cp "$SOURCE_ARTIFACT" "$FINAL_ARTIFACT"
 fi

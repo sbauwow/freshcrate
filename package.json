@@ -43,6 +43,7 @@
     "scan-deps:all": "node scripts/scan-deps.mjs --all",
     "image:build": "bash scripts/build-agent-edition-image.sh",
     "image:build:vm": "bash scripts/build-agent-edition-image.sh --image vm-qcow2-headless --bundle solo-builder-core --mode headless --channel stable",
+    "image:build:iso": "bash scripts/build-agent-edition-iso.sh --image iso-autoinstall-headless --bundle solo-builder-core --mode headless --channel stable",
     "image:package": "bash scripts/package-agent-edition-image.sh",
     "image:validate": "bash scripts/validate-agent-edition-templates.sh"
   },

@@ -1,0 +1,24 @@
+#cloud-config
+autoinstall:
+  version: 1
+  identity:
+    hostname: freshcrate-agent-edition
+    realname: freshcrate operator
+    username: freshcrate
+    password: "$6$KN9SL8QwVKq9JtrU$ZcrYou5obtaLZMnDsFA9Pyd9uxhgSQEWqWfMh0H027D1zECAVE3H79LWibJuaXJebWUkqWJ2uOuHDVE8o4p8F."
+  ssh:
+    install-server: true
+    allow-pw: true
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  storage:
+    layout:
+      name: direct
+  packages:
+    - curl
+    - ca-certificates
+  late-commands:
+    - cp -a /cdrom/freshcrate /target/opt/
+    - curtin in-target --target=/target chmod +x /opt/freshcrate/scripts/provision-agent-edition-image.sh /opt/freshcrate/scripts/bootstrap-agent-edition.sh /opt/freshcrate/scripts/verify-agent-edition.sh
+    - curtin in-target --target=/target env FRESHCRATE_HOME=/opt/freshcrate/home WORKSPACE_DIR=/opt/freshcrate/workspace /opt/freshcrate/scripts/provision-agent-edition-image.sh __BUNDLE__ __MODE__ __CHANNEL__ iso-autoinstall-headless

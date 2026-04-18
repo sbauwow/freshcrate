@@ -140,11 +140,22 @@ const CLOUD_IMAGES: AgentEditionCloudImage[] = [
     name: "Headless QCOW2 VM",
     provider: "Generic KVM / Proxmox",
     format: "qcow2",
-    status: "roadmap",
+    status: "stable",
     summary: "Importable VM image for local labs and homelab clusters that want a minimal substrate without ISO install friction.",
     target: "solo-builder-core",
     audience: "homelab and virtualization users",
-    nextStep: "Bake a reproducible qcow2 from the stable manifest and verify boot-time receipts.",
+    nextStep: "Import the stable qcow2, boot once, and verify receipts under /opt/freshcrate.",
+  },
+  {
+    id: "iso-autoinstall-headless",
+    name: "Headless Autoinstall ISO",
+    provider: "Generic bare metal / VM installer",
+    format: "iso",
+    status: "preview",
+    summary: "Custom Ubuntu 24.04 live-server ISO with nocloud autoinstall seed and freshcrate bootstrap scripts baked in.",
+    target: "solo-builder-core",
+    audience: "operators who want install media instead of importing a prebuilt disk",
+    nextStep: "Boot the ISO, let autoinstall finish, and verify the installed system emits freshcrate receipts.",
   },
   {
     id: "aws-ami-builder",
@@ -249,7 +260,7 @@ export function getAgentEditionImageBuildCommand(input: { bundle?: string; mode?
   const commands = buildAgentEditionCommands(input);
   const image = normalizeImage(input.image);
   const template = `images/${image.id}.pkr.hcl`;
-  const scriptPath = "scripts/build-agent-edition-image.sh";
+  const scriptPath = image.id === "iso-autoinstall-headless" ? "scripts/build-agent-edition-iso.sh" : "scripts/build-agent-edition-image.sh";
   const validateScriptPath = "scripts/validate-agent-edition-templates.sh";
   const packageScriptPath = "scripts/package-agent-edition-image.sh";
 
@@ -321,9 +332,9 @@ export function getAgentEditionImageBuildManifest(input: { bundle?: string; mode
 
   const template = `images/${image.id}.pkr.hcl`;
   const cloudInitUrl = `/api/workbench/cloud-init?artifact=cloud-init&bundle=${bundle.id}&mode=${commands.mode}&channel=${channel.id}`;
-  const outputDirectory = image.id === "vm-qcow2-headless" ? "output/vm-qcow2-headless" : `output/${image.id}`;
+  const outputDirectory = image.id === "vm-qcow2-headless" ? "output/vm-qcow2-headless" : image.id === "iso-autoinstall-headless" ? "output/iso-autoinstall-headless" : `output/${image.id}`;
   const artifactBaseName = `freshcrate-${bundle.id}-${channel.id}`;
-  const extension = image.id === "vm-qcow2-headless" ? ".qcow2" : image.id === "aws-ami-builder" ? ".ami.txt" : ".docker-image.txt";
+  const extension = image.id === "vm-qcow2-headless" ? ".qcow2" : image.id === "iso-autoinstall-headless" ? ".iso" : image.id === "aws-ami-builder" ? ".ami.txt" : ".docker-image.txt";
   const expectedArtifact = `${outputDirectory}/${artifactBaseName}${extension}`;
   const checksumFile = `${expectedArtifact}.sha256`;
 
@@ -345,7 +356,7 @@ export function getAgentEditionImageBuildManifest(input: { bundle?: string; mode
       expected_artifact: expectedArtifact,
       checksum_file: checksumFile,
       package_script: "scripts/package-agent-edition-image.sh",
-      publish_ready: image.id === "vm-qcow2-headless",
+      publish_ready: image.id === "vm-qcow2-headless" || image.id === "iso-autoinstall-headless",
       base_image: bundle.target,
       output_format: image.format,
       variables: {
@@ -368,7 +379,11 @@ export function getAgentEditionPublishedImageArtifact(input: { bundle?: string; 
   const checksumExists = fs.existsSync(checksumPath);
   const stat = artifactExists ? fs.statSync(artifactPath) : null;
   const checksum = checksumExists ? fs.readFileSync(checksumPath, "utf8").trim().split(/\s+/)[0] ?? null : null;
-  const githubReleaseTag = manifest.image.id === "vm-qcow2-headless" && manifest.channel.id === "stable" ? "agent-edition-vm-qcow2-latest" : null;
+  const githubReleaseTag = manifest.image.id === "vm-qcow2-headless" && manifest.channel.id === "stable"
+    ? "agent-edition-vm-qcow2-latest"
+    : manifest.image.id === "iso-autoinstall-headless" && manifest.channel.id === "stable"
+      ? "agent-edition-iso-latest"
+      : null;
   const githubReleasePageUrl = githubReleaseTag ? `https://github.com/sbauwow/freshcrate.ai/releases/tag/${githubReleaseTag}` : null;
   const githubDownloadUrls = githubReleaseTag
     ? {
@@ -431,7 +446,7 @@ export function resolveAgentEditionImageArtifactPath(
   return {
     path: absoluteArtifactPath,
     fileName: path.basename(published.artifact_path),
-    contentType: published.image === "vm-qcow2-headless" ? "application/octet-stream" : "text/plain; charset=utf-8",
+    contentType: published.image === "vm-qcow2-headless" || published.image === "iso-autoinstall-headless" ? "application/octet-stream" : "text/plain; charset=utf-8",
   };
 }
 
