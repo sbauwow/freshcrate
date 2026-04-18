@@ -120,7 +120,7 @@ export default function ApiDocsPage() {
             </div>
             <div>
               <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/workbench/image-artifact</code>
-              <div className="text-[10px] text-fm-text-light mt-1">Returns live artifact status for a built image lane, including whether the qcow2 exists locally, file size, sha256, local download URLs, and rolling GitHub release URLs. Add <code className="font-mono">download=1</code> plus <code className="font-mono">kind=artifact|checksum|metadata</code> to fetch the built file when present.</div>
+              <div className="text-[10px] text-fm-text-light mt-1">Returns live artifact status for a built image lane, including whether the qcow2 exists locally, file size, sha256, local download URLs, and rolling GitHub release URLs. For the stable vm lane, the public release artifact is the zipped qcow2. Add <code className="font-mono">download=1</code> plus <code className="font-mono">kind=artifact|checksum|metadata</code> to fetch the built file when present.</div>
             </div>
             <div className="mt-2 bg-fm-bg rounded p-2">
               <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl "https://freshcrate.ai/api/workbench/image-artifact?bundle=solo-builder-core&mode=headless&channel=stable&image=vm-qcow2-headless"`}</pre>
