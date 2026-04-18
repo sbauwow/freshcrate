@@ -12,6 +12,7 @@ describe("vm qcow2 image lane", () => {
     expect(workflow).toContain("upload-artifact");
     expect(workflow).toContain("gh release create");
     expect(workflow).toContain("agent-edition-vm-qcow2-latest");
+    expect(workflow).toContain("freshcrate-solo-builder-core-stable.qcow2.zip");
   });
 
   it("ships cloud-init seed files for the vm qcow2 lane", () => {

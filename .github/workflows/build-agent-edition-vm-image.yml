@@ -59,12 +59,24 @@ jobs:
       - name: Package vm-qcow2-headless
         run: bash scripts/package-agent-edition-image.sh --image vm-qcow2-headless --bundle solo-builder-core --mode headless --channel stable
 
+      - name: Archive vm-qcow2-headless for release delivery
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          from pathlib import Path
+          artifact = Path('output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2')
+          archive = artifact.with_suffix(artifact.suffix + '.zip')
+          with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+              zf.write(artifact, arcname=artifact.name)
+          PY
+
       - name: Upload vm-qcow2 artifact
         uses: actions/upload-artifact@v4
         with:
           name: vm-qcow2-headless
           path: |
             output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2
+            output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.zip
             output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.sha256
             output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.json
 
@@ -76,9 +88,9 @@ jobs:
         run: |
           gh release delete "$RELEASE_TAG" --yes --cleanup-tag || true
           gh release create "$RELEASE_TAG" \
-            output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2 \
+            output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.zip \
             output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.sha256 \
             output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.json \
             --title "freshcrate Agent Edition VM QCOW2 (latest)" \
-            --notes "Rolling latest QCOW2 artifact for freshcrate Agent Edition stable vm-qcow2-headless." \
+            --notes "Rolling latest QCOW2 artifact for freshcrate Agent Edition stable vm-qcow2-headless. Release ships the zipped qcow2 plus checksum and metadata." \
             --latest

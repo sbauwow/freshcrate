@@ -372,7 +372,7 @@ export function getAgentEditionPublishedImageArtifact(input: { bundle?: string; 
   const githubReleasePageUrl = githubReleaseTag ? `https://github.com/sbauwow/freshcrate.ai/releases/tag/${githubReleaseTag}` : null;
   const githubDownloadUrls = githubReleaseTag
     ? {
-        artifact: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${path.basename(manifest.packer.expected_artifact)}`,
+        artifact: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${path.basename(manifest.packer.expected_artifact)}.zip`,
         checksum: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${path.basename(manifest.packer.checksum_file)}`,
         metadata: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${path.basename(`${manifest.packer.expected_artifact}.json`)}`,
       }

@@ -178,6 +178,7 @@ describe("workbench hosted install script", () => {
     expect(published.download_urls.metadata).toContain("kind=metadata");
     expect(published.github_release_tag).toBe("agent-edition-vm-qcow2-latest");
     expect(published.github_download_urls?.artifact).toContain("releases/download/agent-edition-vm-qcow2-latest/");
+    expect(published.github_download_urls?.artifact).toContain(".qcow2.zip");
 
     const resolved = resolveAgentEditionImageArtifactPath({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "vm-qcow2-headless" }, "artifact");
     expect(resolved.fileName).toBe("freshcrate-solo-builder-core-stable.qcow2");
