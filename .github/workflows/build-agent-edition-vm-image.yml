@@ -53,6 +53,9 @@ jobs:
       - name: Build vm-qcow2-headless
         run: bash scripts/build-agent-edition-image.sh --image vm-qcow2-headless --bundle solo-builder-core --mode headless --channel stable
 
+      - name: Inspect vm-qcow2-headless output
+        run: find output/vm-qcow2-headless -maxdepth 3 -type f | sort
+
       - name: Package vm-qcow2-headless
         run: bash scripts/package-agent-edition-image.sh --image vm-qcow2-headless --bundle solo-builder-core --mode headless --channel stable
 

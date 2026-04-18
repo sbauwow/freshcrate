@@ -37,6 +37,12 @@ describe("vm qcow2 image lane", () => {
     expect(bootstrap).toContain('/usr/local/bin/uv');
   });
 
+  it("packages vm artifacts by probing actual disk images, not just filename extensions", () => {
+    const packaging = fs.readFileSync(path.join(process.cwd(), "scripts", "package-agent-edition-image.sh"), "utf8");
+    expect(packaging).toContain('qemu-img info');
+    expect(packaging).toContain('find "$OUTPUT_DIR" -type f -print0');
+  });
+
   it("exposes package.json commands for the vm image lane", () => {
     const packageJson = fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8");
     expect(packageJson).toContain("image:package");

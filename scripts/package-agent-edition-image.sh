@@ -37,8 +37,34 @@ if [[ -z "$OUTPUT_DIR" ]]; then
 fi
 
 mkdir -p "$OUTPUT_DIR"
-SOURCE_ARTIFACT="$(find "$OUTPUT_DIR" -maxdepth 1 -type f \( -name '*.qcow2' -o -name '*.img' \) | head -1)"
-[[ -n "$SOURCE_ARTIFACT" ]] || { echo "no qcow2/image artifact found under $OUTPUT_DIR" >&2; exit 1; }
+SOURCE_ARTIFACT=""
+
+while IFS= read -r -d '' candidate; do
+  base="$(basename "$candidate")"
+  case "$base" in
+    *.sha256|*.json|*.iso|*.txt) continue ;;
+  esac
+
+  if command -v qemu-img >/dev/null 2>&1; then
+    if qemu-img info "$candidate" >/tmp/freshcrate-qemu-img-info.txt 2>/dev/null; then
+      format="$(grep '^file format:' /tmp/freshcrate-qemu-img-info.txt | awk '{print $3}')"
+      if [[ "$format" == "qcow2" || "$format" == "raw" ]]; then
+        SOURCE_ARTIFACT="$candidate"
+        break
+      fi
+    fi
+  fi
+
+  case "$candidate" in
+    *.qcow2|*.img) SOURCE_ARTIFACT="$candidate"; break ;;
+  esac
+done < <(find "$OUTPUT_DIR" -type f -print0 | sort -z)
+
+[[ -n "$SOURCE_ARTIFACT" ]] || {
+  echo "no qcow2/image artifact found under $OUTPUT_DIR" >&2
+  find "$OUTPUT_DIR" -maxdepth 3 -type f | sort >&2 || true
+  exit 1
+}
 
 FINAL_ARTIFACT="${OUTPUT_DIR}/freshcrate-${BUNDLE}-${CHANNEL}.qcow2"
 if [[ "$SOURCE_ARTIFACT" != "$FINAL_ARTIFACT" ]]; then
