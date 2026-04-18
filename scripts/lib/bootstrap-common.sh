@@ -27,19 +27,19 @@ supports_bundle() {
 bundle_packages() {
   case "$1" in
     solo-builder-core)
-      printf '%s\n' git zsh tmux curl jq ripgrep fd-find sqlite3 python3.11 python3-pip nodejs npm gh
+      printf '%s\n' git zsh tmux curl jq ripgrep fd-find sqlite3 python3 python3-venv python3-pip nodejs npm gh
       ;;
     research-node)
-      printf '%s\n' git tmux curl jq ripgrep sqlite3 python3.11 python3-pip nodejs npm gh
+      printf '%s\n' git tmux curl jq ripgrep sqlite3 python3 python3-venv python3-pip nodejs npm gh
       ;;
     automation-node)
-      printf '%s\n' git zsh tmux curl jq sqlite3 python3.11 python3-pip nodejs npm gh
+      printf '%s\n' git zsh tmux curl jq sqlite3 python3 python3-venv python3-pip nodejs npm gh
       ;;
     security-ops-node)
-      printf '%s\n' git zsh tmux curl jq ripgrep fd-find sqlite3 python3.11 python3-pip nodejs npm gh
+      printf '%s\n' git zsh tmux curl jq ripgrep fd-find sqlite3 python3 python3-venv python3-pip nodejs npm gh
       ;;
     local-model-box)
-      printf '%s\n' git tmux curl jq sqlite3 python3.11 python3-pip nodejs npm gh
+      printf '%s\n' git tmux curl jq sqlite3 python3 python3-venv python3-pip nodejs npm gh
       ;;
   esac
 }

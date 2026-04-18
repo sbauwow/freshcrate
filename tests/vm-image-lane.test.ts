@@ -22,6 +22,12 @@ describe("vm qcow2 image lane", () => {
     expect(fs.existsSync(path.join(process.cwd(), "images", "cloud-init", "vm-qcow2-headless", "user-data"))).toBe(true);
   });
 
+  it("uses Ubuntu 24.04-safe Python package names for bootstrap bundles", () => {
+    const common = fs.readFileSync(path.join(process.cwd(), "scripts", "lib", "bootstrap-common.sh"), "utf8");
+    expect(common).toContain("python3 python3-venv python3-pip");
+    expect(common).not.toContain("python3.11");
+  });
+
   it("exposes package.json commands for the vm image lane", () => {
     const packageJson = fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8");
     expect(packageJson).toContain("image:package");
