@@ -113,10 +113,17 @@ export default function ApiDocsPage() {
           <div className="bg-white border border-fm-border rounded p-3 space-y-3">
             <div>
               <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/workbench/image-build</code>
-              <div className="text-[10px] text-fm-text-light mt-1">Returns a versioned image-build manifest for Packer/cloud-image pipelines. Supports <code className="font-mono">bundle</code>, <code className="font-mono">mode</code>, <code className="font-mono">channel</code>, <code className="font-mono">image</code>, and <code className="font-mono">download=1</code>. Concrete starter templates live under <code className="font-mono">images/*.pkr.hcl</code>, and local builds run through <code className="font-mono">scripts/build-agent-edition-image.sh</code> or <code className="font-mono">npm run image:build -- --image ...</code>.</div>
+              <div className="text-[10px] text-fm-text-light mt-1">Returns a versioned image-build manifest for Packer/cloud-image pipelines. Supports <code className="font-mono">bundle</code>, <code className="font-mono">mode</code>, <code className="font-mono">channel</code>, <code className="font-mono">image</code>, and <code className="font-mono">download=1</code>. Concrete starter templates live under <code className="font-mono">images/*.pkr.hcl</code>, local builds run through <code className="font-mono">scripts/build-agent-edition-image.sh</code>, and the first publish-ready Linux image lane is <code className="font-mono">vm-qcow2-headless</code> with packaging via <code className="font-mono">scripts/package-agent-edition-image.sh</code>.</div>
             </div>
             <div className="mt-2 bg-fm-bg rounded p-2">
               <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -OJ "https://freshcrate.ai/api/workbench/image-build?bundle=automation-node&mode=headless&channel=beta&image=aws-ami-builder&download=1"`}</pre>
+            </div>
+            <div>
+              <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/workbench/image-artifact</code>
+              <div className="text-[10px] text-fm-text-light mt-1">Returns live artifact status for a built image lane, including whether the qcow2 exists locally, file size, sha256, and download URLs. Add <code className="font-mono">download=1</code> plus <code className="font-mono">kind=artifact|checksum|metadata</code> to fetch the built file when present.</div>
+            </div>
+            <div className="mt-2 bg-fm-bg rounded p-2">
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl "https://freshcrate.ai/api/workbench/image-artifact?bundle=solo-builder-core&mode=headless&channel=stable&image=vm-qcow2-headless"`}</pre>
             </div>
             <div>
               <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/workbench/cloud-init</code>

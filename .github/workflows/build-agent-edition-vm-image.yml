@@ -1,0 +1,59 @@
+name: build-agent-edition-vm-image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - images/vm-qcow2-headless.pkr.hcl
+      - scripts/build-agent-edition-image.sh
+      - scripts/package-agent-edition-image.sh
+      - scripts/provision-agent-edition-image.sh
+      - scripts/bootstrap-agent-edition.sh
+      - scripts/verify-agent-edition.sh
+      - scripts/lib/bootstrap-common.sh
+      - lib/workbench-install.ts
+      - app/workbench/page.tsx
+      - app/install/agent-edition/page.tsx
+      - tests/workbench-install.test.ts
+      - tests/vm-image-lane.test.ts
+
+jobs:
+  build-vm-qcow2:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Run targeted tests
+        run: npm test --silent -- tests/workbench-install.test.ts tests/vm-image-lane.test.ts
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+
+      - name: Install qemu tooling
+        run: sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils ovmf
+
+      - name: Build vm-qcow2-headless
+        run: bash scripts/build-agent-edition-image.sh --image vm-qcow2-headless --bundle solo-builder-core --mode headless --channel stable
+
+      - name: Package vm-qcow2-headless
+        run: bash scripts/package-agent-edition-image.sh --image vm-qcow2-headless --bundle solo-builder-core --mode headless --channel stable
+
+      - name: Upload vm-qcow2 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vm-qcow2-headless
+          path: |
+            output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2
+            output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.sha256
+            output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.json

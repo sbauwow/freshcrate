@@ -14,6 +14,7 @@ import {
   getAgentEditionComparisonMatrix,
   getAgentEditionImageArtifactDownload,
   getAgentEditionManifestDownload,
+  getAgentEditionPublishedImageArtifact,
   getAgentEditionRecommendations,
   getAgentEditionReleaseChannels,
 } from "@/lib/workbench-install";
@@ -62,6 +63,12 @@ export default async function WorkbenchPage({
     bundle: recommendations.primary.bundle.id,
     mode: mode ?? "headless",
     channel: "stable",
+  });
+  const publishedVmArtifact = getAgentEditionPublishedImageArtifact({
+    bundle: "solo-builder-core",
+    mode: "headless",
+    channel: "stable",
+    image: "vm-qcow2-headless",
   });
 
   return (
@@ -304,11 +311,21 @@ export default async function WorkbenchPage({
               <p className="text-[10px] text-fm-text-light">Template: <code className="font-mono">images/{image.id}.pkr.hcl</code></p>
               <p className="text-[10px] text-fm-text-light">Build: <code className="font-mono">bash scripts/build-agent-edition-image.sh --image {image.id} --bundle {image.target} --mode {image.target === "research-node" ? "light-desktop" : "headless"} --channel stable</code></p>
               <p className="text-[10px] text-fm-text-light">Validate: <code className="font-mono">bash scripts/validate-agent-edition-templates.sh</code> or <code className="font-mono">npm run image:validate</code></p>
+              {image.id === "vm-qcow2-headless" ? (
+                <>
+                  <p className="text-[10px] text-fm-text-light">Artifact path: <code className="font-mono">output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2</code></p>
+                  <p className="text-[10px] text-fm-text-light">Package: <code className="font-mono">bash scripts/package-agent-edition-image.sh --image vm-qcow2-headless --bundle solo-builder-core --mode headless --channel stable</code></p>
+                  <p className="text-[10px] text-fm-text-light">Live status: {publishedVmArtifact.available ? "artifact built" : "not built yet"}</p>
+                  <p className="text-[10px] text-fm-text-light">Artifact API: <a href={publishedVmArtifact.download_urls.metadata} className="text-fm-link hover:text-fm-link-hover">metadata</a> • <a href={publishedVmArtifact.download_urls.checksum} className="text-fm-link hover:text-fm-link-hover">checksum</a> • <a href={`${publishedVmArtifact.download_urls.artifact}&download=1`} className="text-fm-link hover:text-fm-link-hover">artifact download</a></p>
+                  <p className="text-[10px] text-fm-text-light">This is the first publish-ready Linux image lane.</p>
+                </>
+              ) : null}
               <div className="text-[10px] text-fm-text-light">
                 Artifacts: <a href={imageBuildDownload.href} className="text-fm-link hover:text-fm-link-hover">image-build manifest</a> • <a href={cloudInitDownload.href} className="text-fm-link hover:text-fm-link-hover">cloud-init seed</a>
               </div>
             </div>
-          );})}
+          );
+          })}
         </div>
       </section>
 

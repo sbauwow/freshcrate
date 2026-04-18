@@ -4,6 +4,7 @@ import { getWorkbenchBundles, getWorkbenchFilterOptions, type WorkbenchMode } fr
 
 export type AgentEditionChannel = "stable" | "beta" | "nightly";
 export type AgentEditionArtifactKind = "manifest" | "image-build" | "cloud-init";
+export type AgentEditionArtifactDownloadKind = "artifact" | "checksum" | "metadata";
 
 export interface AgentEditionReleaseChannel {
   id: AgentEditionChannel;
@@ -44,6 +45,14 @@ export interface AgentEditionImageBuildManifest {
     template: string;
     template_exists: boolean;
     cloud_init_url: string;
+    provisioner_script: string;
+    bootstrap_script: string;
+    verify_script: string;
+    output_directory: string;
+    expected_artifact: string;
+    checksum_file: string;
+    package_script: string;
+    publish_ready: boolean;
     base_image: string;
     output_format: string;
     variables: Record<string, string>;
@@ -53,9 +62,28 @@ export interface AgentEditionImageBuildManifest {
 export interface AgentEditionImageBuildCommand {
   script_path: string;
   validate_script_path: string;
+  package_script_path: string;
   template: string;
   command: string;
   validate_command: string;
+  package_command: string;
+}
+
+export interface AgentEditionPublishedImageArtifact {
+  image: string;
+  bundle: string;
+  mode: string;
+  channel: string;
+  publish_ready: boolean;
+  available: boolean;
+  output_directory: string;
+  artifact_path: string;
+  checksum_path: string;
+  metadata_path: string;
+  sha256: string | null;
+  file_size_bytes: number | null;
+  updated_at: string | null;
+  download_urls: Record<AgentEditionArtifactDownloadKind, string>;
 }
 
 const scriptsRoot = path.join(process.cwd(), "scripts");
@@ -220,13 +248,16 @@ export function getAgentEditionImageBuildCommand(input: { bundle?: string; mode?
   const template = `images/${image.id}.pkr.hcl`;
   const scriptPath = "scripts/build-agent-edition-image.sh";
   const validateScriptPath = "scripts/validate-agent-edition-templates.sh";
+  const packageScriptPath = "scripts/package-agent-edition-image.sh";
 
   return {
     script_path: scriptPath,
     validate_script_path: validateScriptPath,
+    package_script_path: packageScriptPath,
     template,
     command: `bash ${scriptPath} --image ${image.id} --bundle ${commands.bundle} --mode ${commands.mode} --channel ${commands.channel}`,
     validate_command: `bash ${validateScriptPath}`,
+    package_command: `bash ${packageScriptPath} --image ${image.id} --bundle ${commands.bundle} --mode ${commands.mode} --channel ${commands.channel}`,
   };
 }
 
@@ -287,10 +318,15 @@ export function getAgentEditionImageBuildManifest(input: { bundle?: string; mode
 
   const template = `images/${image.id}.pkr.hcl`;
   const cloudInitUrl = `/api/workbench/cloud-init?artifact=cloud-init&bundle=${bundle.id}&mode=${commands.mode}&channel=${channel.id}`;
+  const outputDirectory = image.id === "vm-qcow2-headless" ? "output/vm-qcow2-headless" : `output/${image.id}`;
+  const artifactBaseName = `freshcrate-${bundle.id}-${channel.id}`;
+  const extension = image.id === "vm-qcow2-headless" ? ".qcow2" : image.id === "aws-ami-builder" ? ".ami.txt" : ".docker-image.txt";
+  const expectedArtifact = `${outputDirectory}/${artifactBaseName}${extension}`;
+  const checksumFile = `${expectedArtifact}.sha256`;
 
   return {
     artifact: "image-build-manifest",
-    schema_version: "1.0.0",
+    schema_version: "1.1.0",
     image,
     bundle,
     channel,
@@ -299,6 +335,14 @@ export function getAgentEditionImageBuildManifest(input: { bundle?: string; mode
       template,
       template_exists: fs.existsSync(path.join(process.cwd(), template)),
       cloud_init_url: cloudInitUrl,
+      provisioner_script: "scripts/provision-agent-edition-image.sh",
+      bootstrap_script: "scripts/bootstrap-agent-edition.sh",
+      verify_script: "scripts/verify-agent-edition.sh",
+      output_directory: outputDirectory,
+      expected_artifact: expectedArtifact,
+      checksum_file: checksumFile,
+      package_script: "scripts/package-agent-edition-image.sh",
+      publish_ready: image.id === "vm-qcow2-headless",
       base_image: bundle.target,
       output_format: image.format,
       variables: {
@@ -309,6 +353,70 @@ export function getAgentEditionImageBuildManifest(input: { bundle?: string; mode
         target: bundle.target,
       },
     },
+  };
+}
+
+export function getAgentEditionPublishedImageArtifact(input: { bundle?: string; mode?: string; channel?: string; image?: string } = {}): AgentEditionPublishedImageArtifact {
+  const manifest = getAgentEditionImageBuildManifest(input);
+  const artifactPath = path.join(process.cwd(), manifest.packer.expected_artifact);
+  const checksumPath = path.join(process.cwd(), manifest.packer.checksum_file);
+  const metadataPath = `${artifactPath}.json`;
+  const artifactExists = fs.existsSync(artifactPath);
+  const checksumExists = fs.existsSync(checksumPath);
+  const stat = artifactExists ? fs.statSync(artifactPath) : null;
+  const checksum = checksumExists ? fs.readFileSync(checksumPath, "utf8").trim().split(/\s+/)[0] ?? null : null;
+
+  return {
+    image: manifest.image.id,
+    bundle: manifest.bundle.id,
+    mode: manifest.commands.mode,
+    channel: manifest.channel.id,
+    publish_ready: manifest.packer.publish_ready,
+    available: artifactExists,
+    output_directory: manifest.packer.output_directory,
+    artifact_path: manifest.packer.expected_artifact,
+    checksum_path: manifest.packer.checksum_file,
+    metadata_path: `${manifest.packer.expected_artifact}.json`,
+    sha256: checksum,
+    file_size_bytes: stat?.size ?? null,
+    updated_at: stat?.mtime.toISOString() ?? null,
+    download_urls: {
+      artifact: `/api/workbench/image-artifact?bundle=${manifest.bundle.id}&mode=${manifest.commands.mode}&channel=${manifest.channel.id}&image=${manifest.image.id}&kind=artifact`,
+      checksum: `/api/workbench/image-artifact?bundle=${manifest.bundle.id}&mode=${manifest.commands.mode}&channel=${manifest.channel.id}&image=${manifest.image.id}&kind=checksum`,
+      metadata: `/api/workbench/image-artifact?bundle=${manifest.bundle.id}&mode=${manifest.commands.mode}&channel=${manifest.channel.id}&image=${manifest.image.id}&kind=metadata`,
+    },
+  };
+}
+
+export function resolveAgentEditionImageArtifactPath(
+  input: { bundle?: string; mode?: string; channel?: string; image?: string },
+  kind: AgentEditionArtifactDownloadKind = "artifact",
+): { path: string; fileName: string; contentType: string } {
+  const published = getAgentEditionPublishedImageArtifact(input);
+  const absoluteArtifactPath = path.join(process.cwd(), published.artifact_path);
+  const absoluteChecksumPath = path.join(process.cwd(), published.checksum_path);
+  const absoluteMetadataPath = path.join(process.cwd(), published.metadata_path);
+
+  if (kind === "checksum") {
+    return {
+      path: absoluteChecksumPath,
+      fileName: path.basename(published.checksum_path),
+      contentType: "text/plain; charset=utf-8",
+    };
+  }
+
+  if (kind === "metadata") {
+    return {
+      path: absoluteMetadataPath,
+      fileName: path.basename(published.metadata_path),
+      contentType: "application/json; charset=utf-8",
+    };
+  }
+
+  return {
+    path: absoluteArtifactPath,
+    fileName: path.basename(published.artifact_path),
+    contentType: published.image === "vm-qcow2-headless" ? "application/octet-stream" : "text/plain; charset=utf-8",
   };
 }
 

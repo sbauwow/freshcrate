@@ -10,6 +10,8 @@ import {
   getAgentEditionCloudInitSeed,
   getAgentEditionImageArtifactDownload,
   getAgentEditionImageBuildCommand,
+  getAgentEditionPublishedImageArtifact,
+  resolveAgentEditionImageArtifactPath,
 } from "@/lib/workbench-install";
 
 describe("workbench hosted install script", () => {
@@ -130,6 +132,9 @@ describe("workbench hosted install script", () => {
     expect(manifest.packer.template).toBe("images/aws-ami-builder.pkr.hcl");
     expect(manifest.packer.template_exists).toBe(true);
     expect(manifest.packer.cloud_init_url).toContain("/api/workbench/cloud-init");
+    expect(manifest.packer.provisioner_script).toBe("scripts/provision-agent-edition-image.sh");
+    expect(manifest.packer.bootstrap_script).toBe("scripts/bootstrap-agent-edition.sh");
+    expect(manifest.packer.verify_script).toBe("scripts/verify-agent-edition.sh");
 
     const download = getAgentEditionImageArtifactDownload({ artifact: "image-build", bundle: "automation-node", mode: "headless", channel: "beta", image: "aws-ami-builder" });
     expect(download.fileName).toBe("freshcrate-image-build-automation-node-headless-beta-aws-ami-builder.json");
@@ -144,6 +149,37 @@ describe("workbench hosted install script", () => {
     expect(command.command).toContain("--channel beta");
     expect(command.template).toBe("images/aws-ami-builder.pkr.hcl");
     expect(command.validate_command).toContain("scripts/validate-agent-edition-templates.sh");
+
+    const template = require("fs").readFileSync("images/aws-ami-builder.pkr.hcl", "utf8");
+    expect(template).toContain("provision-agent-edition-image.sh");
+    expect(template).toContain("bootstrap-agent-edition.sh");
+    expect(template).toContain("verify-agent-edition.sh");
+  });
+
+  it("treats vm-qcow2-headless as the first shippable image lane with packaging metadata", () => {
+    const manifest = getAgentEditionImageBuildManifest({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "vm-qcow2-headless" });
+    expect(manifest.image.id).toBe("vm-qcow2-headless");
+    expect(manifest.packer.output_directory).toBe("output/vm-qcow2-headless");
+    expect(manifest.packer.expected_artifact).toBe("output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2");
+    expect(manifest.packer.checksum_file).toBe("output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.sha256");
+    expect(manifest.packer.package_script).toBe("scripts/package-agent-edition-image.sh");
+    expect(manifest.packer.publish_ready).toBe(true);
+
+    const command = getAgentEditionImageBuildCommand({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "vm-qcow2-headless" });
+    expect(command.package_script_path).toBe("scripts/package-agent-edition-image.sh");
+    expect(command.package_command).toContain("vm-qcow2-headless");
+    expect(command.package_command).toContain("--bundle solo-builder-core");
+    expect(command.package_command).toContain("--channel stable");
+
+    const published = getAgentEditionPublishedImageArtifact({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "vm-qcow2-headless" });
+    expect(published.artifact_path).toBe("output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2");
+    expect(published.checksum_path).toBe("output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.sha256");
+    expect(published.metadata_path).toBe("output/vm-qcow2-headless/freshcrate-solo-builder-core-stable.qcow2.json");
+    expect(published.download_urls.metadata).toContain("kind=metadata");
+
+    const resolved = resolveAgentEditionImageArtifactPath({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "vm-qcow2-headless" }, "artifact");
+    expect(resolved.fileName).toBe("freshcrate-solo-builder-core-stable.qcow2");
+    expect(resolved.contentType).toBe("application/octet-stream");
   });
 
   it("builds cloud-init seed yaml and download metadata", () => {
