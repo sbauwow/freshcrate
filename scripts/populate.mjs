@@ -20,6 +20,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 import { exec } from "child_process";
+import { buildCanonicalKey } from "./lib/canonical-id.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -272,8 +273,8 @@ async function main() {
 
   // Prepared statements — include ALL columns
   const insertProject = db.prepare(
-    `INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author, stars, forks, language)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author, stars, forks, language, source_type, source_package_id, source_url, canonical_key, provenance_json, imported_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const insertRelease = db.prepare(
     "INSERT INTO releases (project_id, version, changes, urgency, created_at) VALUES (?, ?, ?, ?, ?)"
@@ -286,6 +287,9 @@ async function main() {
   );
 
   const existingNames = new Set(db.prepare("SELECT name FROM projects").all().map(r => r.name));
+  const existingCanonical = new Set(
+    db.prepare("SELECT canonical_key FROM projects WHERE canonical_key IS NOT NULL AND canonical_key != ''").all().map(r => r.canonical_key)
+  );
 
   let added = 0;
   let skipped = 0;
@@ -301,9 +305,16 @@ async function main() {
 
     for (const repo of repos) {
       const key = repo.full_name;
-      if (seen.has(repo.name) || seen.has(key)) { skipped++; continue; }
+      const canonicalKey = buildCanonicalKey({
+        sourceType: "github",
+        name: repo.name,
+        repoUrl: repo.html_url,
+        homepageUrl: repo.homepage || "",
+      });
+      if (seen.has(repo.name) || seen.has(key) || existingCanonical.has(canonicalKey)) { skipped++; continue; }
       seen.add(repo.name);
       seen.add(key);
+      if (canonicalKey) existingCanonical.add(canonicalKey);
 
       const [owner, repoName] = repo.full_name.split("/");
 
@@ -341,7 +352,21 @@ async function main() {
         owner,
         repo.stargazers_count || 0,
         repo.forks_count || 0,
-        repo.language || ""
+        repo.language || "",
+        "github",
+        repo.full_name,
+        repo.html_url,
+        canonicalKey,
+        JSON.stringify({
+          source_type: "github",
+          source_package_id: repo.full_name,
+          source_url: repo.html_url,
+          canonical_key: canonicalKey,
+          confidence: 1,
+          matched_by: "github_search",
+          imported_at: new Date().toISOString(),
+        }),
+        new Date().toISOString()
       );
       const projectId = result.lastInsertRowid;
 

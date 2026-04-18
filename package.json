@@ -33,13 +33,21 @@
     "topics:list": "node scripts/topic-watch.mjs --list",
     "backfill": "node scripts/backfill.mjs",
     "backfill:dry": "node scripts/backfill.mjs --dry-run",
+    "import:npm": "node scripts/import-npm.mjs",
+    "import:npm:dry": "node scripts/import-npm.mjs --dry-run",
+    "import:pypi": "node scripts/import-pypi.mjs",
+    "import:pypi:dry": "node scripts/import-pypi.mjs --dry-run",
+    "dedupe:merge": "node scripts/merge-duplicates.mjs",
+    "dedupe:merge:apply": "node scripts/merge-duplicates.mjs --apply",
     "scan-deps": "node scripts/scan-deps.mjs",
-    "scan-deps:all": "node scripts/scan-deps.mjs --all"
+    "scan-deps:all": "node scripts/scan-deps.mjs --all",
+    "image:build": "bash scripts/build-agent-edition-image.sh",
+    "image:validate": "bash scripts/validate-agent-edition-templates.sh"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "better-sqlite3": "^12.8.0",
-    "next": "16.2.2",
+    "next": "^16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zod": "^4.3.6"
@@ -52,9 +60,14 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9",
-    "eslint-config-next": "16.2.2",
+    "eslint-config-next": "^16.2.4",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.2"
+    "vite": "^8.0.8",
+    "vitest": "^4.1.4"
+  },
+  "overrides": {
+    "hono": "4.12.14",
+    "@hono/node-server": "1.19.13"
   }
 }

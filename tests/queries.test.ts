@@ -168,6 +168,58 @@ describe("getProjectsByCategory", () => {
     expect(security.every((p) => p.category === "Security")).toBe(true);
   });
 
+  it("ranks stronger trusted packages ahead of stale alphabetic results when ranking v2 is enabled", () => {
+    const weakId = insertTestProject(db, {
+      name: "aaa-zombie",
+      category: "Security",
+      short_desc: "agent sandbox guardrail",
+      repo_url: "https://github.com/test/aaa-zombie",
+    });
+    const strongId = insertTestProject(db, {
+      name: "zzz-active",
+      category: "Security",
+      short_desc: "agent sandbox guardrail",
+      repo_url: "https://github.com/test/zzz-active",
+    });
+
+    db.prepare("UPDATE projects SET stars = 5, forks = 1, verified = 0, created_at = datetime('now', '-900 days') WHERE id = ?").run(weakId);
+    db.prepare("UPDATE releases SET created_at = datetime('now', '-500 days') WHERE project_id = ?").run(weakId);
+
+    db.prepare("UPDATE projects SET stars = 120, forks = 30, verified = 1, verification_json = '{\"score\":92}', created_at = datetime('now', '-120 days') WHERE id = ?").run(strongId);
+    db.prepare("UPDATE releases SET created_at = datetime('now', '-3 days') WHERE project_id = ?").run(strongId);
+    db.prepare("INSERT INTO releases (project_id, version, changes, urgency, created_at) VALUES (?, '1.1.0', 'fresh', 'Low', datetime('now', '-2 days'))").run(strongId);
+    db.prepare("INSERT INTO releases (project_id, version, changes, urgency, created_at) VALUES (?, '1.2.0', 'fresher', 'Low', datetime('now', '-1 days'))").run(strongId);
+
+    const security = getProjectsByCategory("Security");
+    expect(security).toHaveLength(2);
+    expect(security[0].name).toBe("zzz-active");
+  });
+
+  it("falls back to legacy alphabetical browse ordering when ranking v2 is disabled", () => {
+    process.env.FRESHCRATE_RANKING_V2 = "0";
+
+    const weakId = insertTestProject(db, {
+      name: "aaa-zombie",
+      category: "Security",
+      short_desc: "agent sandbox guardrail",
+      repo_url: "https://github.com/test/aaa-zombie",
+    });
+    const strongId = insertTestProject(db, {
+      name: "zzz-active",
+      category: "Security",
+      short_desc: "agent sandbox guardrail",
+      repo_url: "https://github.com/test/zzz-active",
+    });
+
+    db.prepare("UPDATE projects SET stars = 5, forks = 1, verified = 0, created_at = datetime('now', '-900 days') WHERE id = ?").run(weakId);
+    db.prepare("UPDATE projects SET stars = 120, forks = 30, verified = 1, verification_json = '{\"score\":92}', created_at = datetime('now', '-120 days') WHERE id = ?").run(strongId);
+
+    const security = getProjectsByCategory("Security");
+    expect(security.map((p) => p.name)).toEqual(["aaa-zombie", "zzz-active"]);
+
+    delete process.env.FRESHCRATE_RANKING_V2;
+  });
+
   it("returns empty array for empty category", () => {
     const results = getProjectsByCategory("Nonexistent Category");
     expect(results).toEqual([]);
@@ -259,6 +311,37 @@ describe("searchProjects", () => {
     const results = searchProjects("special");
     expect(results.length).toBeGreaterThanOrEqual(1);
     expect(results.some((p) => p.name === "special-agent-tool")).toBe(true);
+  });
+
+  it("ranks stronger trusted matches ahead of stale low-trust matches", () => {
+    const weakId = insertTestProject(db, {
+      name: "weak-match",
+      short_desc: "agent orchestration platform",
+      description: "agent orchestration platform for teams",
+      category: "AI Agents",
+      repo_url: "https://github.com/test/weak-match",
+      tags: ["agent"],
+    });
+    const strongId = insertTestProject(db, {
+      name: "strong-match",
+      short_desc: "agent orchestration platform",
+      description: "agent orchestration platform for teams",
+      category: "AI Agents",
+      repo_url: "https://github.com/test/strong-match",
+      tags: ["agent"],
+    });
+
+    db.prepare("UPDATE projects SET stars = 3, forks = 0, verified = 0, created_at = datetime('now', '-1000 days') WHERE id = ?").run(weakId);
+    db.prepare("UPDATE releases SET created_at = datetime('now', '-400 days') WHERE project_id = ?").run(weakId);
+
+    db.prepare("UPDATE projects SET stars = 200, forks = 50, verified = 1, verification_json = '{\"score\":97}', created_at = datetime('now', '-150 days') WHERE id = ?").run(strongId);
+    db.prepare("UPDATE releases SET created_at = datetime('now', '-5 days') WHERE project_id = ?").run(strongId);
+    db.prepare("INSERT INTO releases (project_id, version, changes, urgency, created_at) VALUES (?, '1.1.0', 'fresh', 'Low', datetime('now', '-3 days'))").run(strongId);
+    db.prepare("INSERT INTO releases (project_id, version, changes, urgency, created_at) VALUES (?, '1.2.0', 'fresher', 'Low', datetime('now', '-1 days'))").run(strongId);
+
+    const results = searchProjects("agent orchestration");
+    expect(results.length).toBeGreaterThanOrEqual(2);
+    expect(results[0].name).toBe("strong-match");
   });
 
   it("finds projects by description", () => {

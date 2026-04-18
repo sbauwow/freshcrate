@@ -18,9 +18,9 @@ Core product is in production at `www.freshcrate.ai`.
 
 ---
 
-## NOW (active execution window)
+## Recently Shipped
 
-These are active priorities for the next 6–10 weeks:
+Completed in the latest execution window:
 
 1) Distribution pages and crawl surface expansion
 - Author pages (`/author/[name]`)
@@ -33,17 +33,31 @@ These are active priorities for the next 6–10 weeks:
 - Cross-source dedupe and canonical identity
 - Provenance in UI + API
 
-3) Ranking + trust upgrades
+3) Agent-native product upgrades
+- Agent Decision API (`/api/agent/*`)
+- Accountable Agent Manifest APIs (`/api/agents/*`)
+- High-risk manifest gate for package submission
+
+4) Policy/operator differentiation
+- Legislation tracker keyword search
+- Operator playbook / pressure scoring
+
+---
+
+## NOW (active execution window)
+
+These are the active priorities for the next 6–10 weeks:
+
+1) Ranking + trust upgrades
 - Ranking v2 in search/browse
 - Explainable ranking factors
 - Trust/lifecycle badge refresh
 
-4) Learn engagement
+2) Learn engagement
 - End-of-crate quizzes
-- Data-backed glossary
 - Core concept diagrams
 
-5) Operator control plane
+3) Operator control plane
 - Minimal admin dashboard
 - API key + webhook observability
 

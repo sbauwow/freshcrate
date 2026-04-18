@@ -4,6 +4,7 @@ import { getVerificationStatus } from "@/lib/verify";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { notFound } from "next/navigation";
 import DepGraph from "@/app/components/dep-graph";
+import { parseProvenanceJson } from "@/lib/provenance";
 
 export default async function ProjectPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
@@ -14,6 +15,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
   const enriched = getProjectWithReadme(name);
   const similar = getSimilarProjects(project.id, project.category, project.tags, 5);
   const verification = getVerificationStatus(project.id);
+  const provenance = parseProvenanceJson(project.provenance_json);
 
   const urgencyColors: Record<string, string> = {
     Low: "text-fm-urgency-low",
@@ -152,6 +154,22 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
               <Link href={`/browse?category=${encodeURIComponent(project.category)}`} className="font-bold text-fm-link hover:text-fm-link-hover">
                 {project.category}
               </Link>
+            </div>
+            <div>
+              <span className="text-fm-text-light block">Source:</span>
+              <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                <span className="inline-block bg-fm-green/10 text-fm-green border border-fm-green/20 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase">
+                  {project.source_type || "github"}
+                </span>
+                {project.source_package_id && (
+                  <span className="font-mono text-[10px] text-fm-text-light">{project.source_package_id}</span>
+                )}
+              </div>
+              {provenance?.confidence !== undefined && (
+                <div className="text-[10px] text-fm-text-light mt-0.5">
+                  Confidence: {Math.round(Number(provenance.confidence) * 100)}%
+                </div>
+              )}
             </div>
             <div>
               <span className="text-fm-text-light block">Latest:</span>

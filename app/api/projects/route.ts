@@ -2,15 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { getLatestReleases, getProjectByName, submitProject } from "@/lib/queries";
 import { CATEGORIES } from "@/lib/categories";
 import { hasApiKeys, extractBearerToken, validateApiKey } from "@/lib/auth";
+import { requireActiveManifestForHighRiskCategory } from "@/lib/agent-manifest";
 import { fireNewPackageEvent } from "@/lib/webhooks";
 import { logRequest } from "@/lib/request-log";
 import { log } from "@/lib/logger";
+import { parseProvenanceJson } from "@/lib/provenance";
 
 export async function GET(request: NextRequest) {
   const start = Date.now();
   const limit = parseInt(request.nextUrl.searchParams.get("limit") || "20");
   const offset = parseInt(request.nextUrl.searchParams.get("offset") || "0");
-  const projects = getLatestReleases(Math.min(limit, 100), Math.max(offset, 0));
+  const projects = getLatestReleases(Math.min(limit, 100), Math.max(offset, 0)).map((project) => ({
+    ...project,
+    provenance: parseProvenanceJson(project.provenance_json),
+  }));
   const res = NextResponse.json({ projects, count: projects.length });
   logRequest(request, 200, start);
   return res;
@@ -83,6 +88,17 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
       logRequest(request, 400, start, keyPrefix);
+      return res;
+    }
+
+    // Basic accountability gate for high-risk categories
+    const gate = requireActiveManifestForHighRiskCategory(
+      data.category,
+      request.headers.get("x-manifest-id") || undefined
+    );
+    if (!gate.allowed) {
+      const res = NextResponse.json({ error: gate.reason || "Manifest requirement failed." }, { status: 403 });
+      logRequest(request, 403, start, keyPrefix);
       return res;
     }
 

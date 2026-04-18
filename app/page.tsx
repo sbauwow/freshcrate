@@ -83,13 +83,30 @@ export default async function Home({
     <div className="flex flex-col md:flex-row gap-5">
       {/* Main content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-3 border-b-2 border-fm-green pb-1">
-          <h2 className="text-[14px] font-bold text-fm-green">Latest Releases</h2>
-          <span className="text-[10px] text-fm-text-light">{stats.projects} packages indexed</span>
-        </div>
+          <div className="flex items-center justify-between mb-3 border-b-2 border-fm-green pb-1">
+            <h2 className="text-[14px] font-bold text-fm-green">Latest Releases</h2>
+            <span className="text-[10px] text-fm-text-light">{stats.projects} packages indexed</span>
+          </div>
 
-        <form method="GET" className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-2 mb-3 text-[10px]">
-          <div className="flex flex-wrap items-end gap-2">
+          <div className="bg-fm-sidebar-bg border border-fm-border rounded px-3 py-3 mb-3 text-[10px]">
+            <div className="text-[12px] font-bold text-fm-green">freshcrate Agent Edition</div>
+            <div className="text-fm-text mt-1 font-bold">Linux for agent operators.</div>
+            <div className="text-fm-text-light mt-1 leading-relaxed">
+              A minimal agentic substrate for serious builders: Ubuntu 24.04 x86_64, headless first, hosted install, machine-readable manifests, control-plane surfaces.
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2 text-[9px]">
+              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">minimal agentic substrate</span>
+              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">Ubuntu 24.04 x86_64</span>
+              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">headless first</span>
+            </div>
+            <div className="flex flex-wrap gap-3 mt-3">
+              <Link href="/workbench" className="text-fm-link hover:text-fm-link-hover font-bold">Open Agent Edition</Link>
+              <Link href="/install/agent-edition" className="text-fm-link hover:text-fm-link-hover font-bold">Install Agent Edition</Link>
+            </div>
+          </div>
+
+          <form method="GET" className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-2 mb-3 text-[10px]">
+<div className="flex flex-wrap items-end gap-2">
             <label className="flex flex-col gap-0.5">
               <span className="text-fm-text-light">Sort</span>
               <select name="sort" defaultValue={sort} className="border border-fm-border bg-white px-1 py-0.5 text-[10px]">
@@ -224,6 +241,23 @@ export default async function Home({
 
       {/* Sidebar */}
       <aside className="w-full md:w-[220px] md:shrink-0">
+        <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
+          <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
+            Agent Edition
+          </h3>
+          <p className="text-[10px] text-fm-text-light leading-relaxed mb-2">
+            freshcrate Agent Edition is the Linux operator lane: minimal agentic substrate, Ubuntu 24.04 x86_64, headless first.
+          </p>
+          <div className="space-y-1.5 text-[10px]">
+            <Link href="/workbench" className="block text-fm-link hover:text-fm-link-hover">
+              → Open Agent Edition workbench
+            </Link>
+            <Link href="/install/agent-edition" className="block text-fm-link hover:text-fm-link-hover">
+              → Install freshcrate Agent Edition
+            </Link>
+          </div>
+        </div>
+
         {/* Stats box */}
         <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
           <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">

@@ -8,8 +8,9 @@ import PageViewBeacon from "./components/page-view-beacon";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://freshcrate.ai"),
-  title: "freshcrate - The Latest Open Source Agent Packages",
-  description: "freshcrate is the Web's largest index of open source agent software, tools, and frameworks. Discover the latest releases from agents, for agents.",
+  title: "freshcrate Agent Edition — Linux for agent operators",
+  description:
+    "freshcrate Agent Edition is a minimal agentic substrate: Linux for agent operators, Ubuntu 24.04 x86_64, headless first, plus the open source agent package index.",
   icons: {
     icon: [
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
@@ -19,15 +20,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "freshcrate",
-    title: "freshcrate — The Latest Open Source Agent Packages",
-    description: "The Web's largest index of open source agent software, tools, and frameworks.",
+    title: "freshcrate Agent Edition — Linux for agent operators",
+    description:
+      "A minimal agentic substrate for serious builders: Ubuntu 24.04 x86_64, headless first, hosted install, machine-readable manifests, plus the open source agent package index.",
     url: "https://freshcrate.ai",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "freshcrate" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "freshcrate Agent Edition" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "freshcrate — The Latest Open Source Agent Packages",
-    description: "The Web's largest index of open source agent software, tools, and frameworks.",
+    title: "freshcrate Agent Edition — Linux for agent operators",
+    description:
+      "A minimal agentic substrate for serious builders: Ubuntu 24.04 x86_64, headless first, hosted install, machine-readable manifests, plus the open source agent package index.",
     images: ["/og-default.png"],
   },
 };
@@ -61,6 +64,10 @@ export default function RootLayout({
               <Link href="/browse" className="text-black hover:text-fm-link no-underline">browse</Link>
               <span className="text-[#999]">|</span>
               <Link href="/research" className="text-black hover:text-fm-link no-underline">research</Link>
+              <span className="text-[#999]">|</span>
+              <Link href="/workbench" className="text-black hover:text-fm-link no-underline">agent edition</Link>
+              <span className="text-[#999]">|</span>
+              <Link href="/orchestra" className="text-black hover:text-fm-link no-underline">orchestra</Link>
               <span className="text-[#999]">|</span>
               <Link href="/legislation" className="text-black hover:text-fm-link no-underline">legislation</Link>
               <span className="text-[#999]">|</span>
@@ -123,6 +130,10 @@ export default function RootLayout({
               <Link href="/submit" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Submit</Link>
               <span style={{ color: "#c8c0d8" }}>{" | "}</span>
               <Link href="/learn" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Learn</Link>
+              <span style={{ color: "#c8c0d8" }}>{" | "}</span>
+              <Link href="/workbench" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Agent Edition</Link>
+              <span style={{ color: "#c8c0d8" }}>{" | "}</span>
+              <Link href="/orchestra" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Orchestra</Link>
               <span style={{ color: "#c8c0d8" }}>{" | "}</span>
               <Link href="/legislation" className="hover:text-fm-link" style={{ color: "#9990b0" }}>Legislation</Link>
               <span style={{ color: "#c8c0d8" }}>{" | "}</span>

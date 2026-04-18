@@ -1,4 +1,6 @@
 import { getDb } from "./db";
+import { buildCanonicalKey } from "./provenance";
+import { isRankingV2Enabled, rankProjectsV2 } from "./ranking";
 
 export interface Project {
   id: number;
@@ -16,6 +18,14 @@ export interface Project {
   forks: number;
   language: string;
   verified: number;
+  verification_json: string;
+  verified_at: string;
+  source_type: string;
+  source_package_id: string;
+  source_url: string;
+  canonical_key: string;
+  provenance_json: string;
+  imported_at: string;
 }
 
 export interface Release {
@@ -211,7 +221,8 @@ export function getProjectsByCategory(category: string): ProjectWithRelease[] {
     ORDER BY p.name
   `).all(category) as ProjectWithRelease[];
 
-  return rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
+  const projects = rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
+  return isRankingV2Enabled() ? rankProjectsV2(projects) : projects;
 }
 
 /**
@@ -305,7 +316,8 @@ export function searchProjects(query: string): ProjectWithRelease[] {
     // unioned with a LIKE search on tags (not in the FTS index)
     const rows = db.prepare(`
       SELECT DISTINCT p.*, r.version as latest_version, r.changes as latest_changes,
-             r.urgency as latest_urgency, r.created_at as release_date
+             r.urgency as latest_urgency, r.created_at as release_date,
+             (SELECT COUNT(*) FROM releases r3 WHERE r3.project_id = p.id) as release_count
       FROM projects p
       JOIN releases r ON r.project_id = p.id
       WHERE r.id = (SELECT r2.id FROM releases r2 WHERE r2.project_id = p.id ORDER BY r2.created_at DESC LIMIT 1)
@@ -325,13 +337,15 @@ export function searchProjects(query: string): ProjectWithRelease[] {
       )
     `).all(query, `%${query}%`, `%${query}%`, query, query) as ProjectWithRelease[];
 
-    return rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
+    const projects = rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
+    return isRankingV2Enabled() ? rankProjectsV2(projects, query) : projects;
   } catch {
     // Fallback to LIKE-based search if FTS5 table doesn't exist
     const like = `%${query}%`;
     const rows = db.prepare(`
       SELECT DISTINCT p.*, r.version as latest_version, r.changes as latest_changes,
-             r.urgency as latest_urgency, r.created_at as release_date
+             r.urgency as latest_urgency, r.created_at as release_date,
+             (SELECT COUNT(*) FROM releases r3 WHERE r3.project_id = p.id) as release_count
       FROM projects p
       JOIN releases r ON r.project_id = p.id
       LEFT JOIN tags t ON t.project_id = p.id
@@ -340,7 +354,8 @@ export function searchProjects(query: string): ProjectWithRelease[] {
       ORDER BY r.created_at DESC
     `).all(like, like, like, like, like, like) as ProjectWithRelease[];
 
-    return rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
+    const projects = rows.map((row) => ({ ...row, tags: getProjectTags(row.id) }));
+    return isRankingV2Enabled() ? rankProjectsV2(projects, query) : projects;
   }
 }
 
@@ -373,11 +388,51 @@ export function submitProject(data: {
   version: string;
   changes: string;
   tags: string[];
+  source_type?: string;
+  source_package_id?: string;
+  source_url?: string;
+  canonical_key?: string;
+  provenance_json?: string;
 }): number {
   const db = getDb();
+
+  const sourceType = data.source_type || "manual";
+  const sourcePackageId = data.source_package_id || data.name;
+  const sourceUrl = data.source_url || data.repo_url || data.homepage_url || "";
+  const canonicalKey = data.canonical_key || buildCanonicalKey({
+    sourceType,
+    name: data.name,
+    repoUrl: data.repo_url,
+    homepageUrl: data.homepage_url,
+  });
+  const provenanceJson = data.provenance_json || JSON.stringify({
+    source_type: sourceType,
+    source_package_id: sourcePackageId,
+    source_url: sourceUrl,
+    canonical_key: canonicalKey,
+    confidence: 1,
+    matched_by: "manual_submission",
+    imported_at: new Date().toISOString(),
+  });
+
   const result = db.prepare(
-    "INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-  ).run(data.name, data.short_desc, data.description, data.homepage_url, data.repo_url, data.license, data.category, data.author);
+    "INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author, source_type, source_package_id, source_url, canonical_key, provenance_json, imported_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  ).run(
+    data.name,
+    data.short_desc,
+    data.description,
+    data.homepage_url,
+    data.repo_url,
+    data.license,
+    data.category,
+    data.author,
+    sourceType,
+    sourcePackageId,
+    sourceUrl,
+    canonicalKey,
+    provenanceJson,
+    new Date().toISOString()
+  );
 
   const projectId = result.lastInsertRowid as number;
 
