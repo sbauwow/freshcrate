@@ -70,6 +70,8 @@ if ! command -v packer >/dev/null 2>&1; then
   exit 1
 fi
 
+packer init "$TEMPLATE" >/dev/null
+
 PACKER_ARGS=(
   -var "bundle=${BUNDLE}"
   -var "mode=${MODE}"
