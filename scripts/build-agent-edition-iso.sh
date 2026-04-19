@@ -7,7 +7,7 @@ MODE="headless"
 CHANNEL="stable"
 OUTPUT_DIR=""
 CACHE_DIR=""
-SOURCE_ISO_URL="https://releases.ubuntu.com/24.04/ubuntu-24.04-live-server-amd64.iso"
+SOURCE_ISO_URL="https://releases.ubuntu.com/24.04.2/ubuntu-24.04.2-live-server-amd64.iso"
 WORK_DIR=""
 # Stable default artifact contract: output/iso-autoinstall-headless/freshcrate-solo-builder-core-stable.iso
 
