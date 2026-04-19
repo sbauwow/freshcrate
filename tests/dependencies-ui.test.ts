@@ -13,6 +13,9 @@ describe("dependency visibility ui", () => {
     expect(page).toContain("conflicts only");
     expect(page).toContain("unresolved-heavy");
     expect(page).toContain("highest conflict count");
+    expect(page).toContain("Presets:");
+    expect(page).toContain("hot conflicts");
+    expect(page).toContain("worst score");
   });
 
   it("surfaces dependency scan status on project detail pages", () => {

@@ -334,6 +334,23 @@ export default async function DependenciesPage({
         {scanHealth.scanned_projects_with_unknowns.toLocaleString()} audited projects still have unresolved license metadata.
       </div>
       <form method="GET" className="bg-fm-sidebar-bg border border-fm-border rounded px-3 py-2 mb-3 text-[10px]">
+        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+          <span className="text-fm-text-light">Presets:</span>
+          {[
+            { label: "hot conflicts", href: "/dependencies?view=conflicts&sort=conflicts#scan-health" },
+            { label: "unknown-heavy", href: "/dependencies?view=unresolved&sort=unresolved#scan-health" },
+            { label: "worst score", href: "/dependencies?view=all&sort=score#scan-health" },
+            { label: "fresh scans", href: "/dependencies?view=all&sort=recent#scan-health" },
+          ].map((preset) => (
+            <Link
+              key={preset.label}
+              href={preset.href}
+              className="px-2 py-0.5 rounded border border-fm-border bg-white text-fm-link hover:text-fm-link-hover hover:border-fm-green"
+            >
+              {preset.label}
+            </Link>
+          ))}
+        </div>
         <div className="flex flex-wrap items-end gap-2">
           <label className="flex flex-col gap-0.5">
             <span className="text-fm-text-light">View</span>
