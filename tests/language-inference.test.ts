@@ -32,4 +32,21 @@ describe("repo language inference", () => {
       }),
     ).toBe("Mixed");
   });
+
+  it("classifies zip-only archive repos as Docs / Meta", () => {
+    expect(
+      inferRepoLanguage({
+        repo: { language: "", name: "archive-repo", description: "" },
+        rootContents: [{ name: "README.md" }, { name: "bundle.zip" }],
+      }),
+    ).toBe("Docs / Meta");
+  });
+
+  it("supports manual edge-case mappings", () => {
+    expect(
+      inferRepoLanguage({
+        repo: { full_name: "tauhidislam929/crypto_market_analysis", language: "", name: "crypto_market_analysis" },
+      }),
+    ).toBe("Python");
+  });
 });

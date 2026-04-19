@@ -57,8 +57,7 @@ async function main() {
   const rows = db.prepare(`
     SELECT id, name, repo_url, description
     FROM projects
-    WHERE repo_url LIKE '%github.com%'
-      AND (language IS NULL OR TRIM(language) = '')
+    WHERE language IS NULL OR TRIM(language) = ''
     ORDER BY COALESCE(stars, 0) DESC, name ASC
     ${LIMIT > 0 ? `LIMIT ${LIMIT}` : ""}
   `).all();
@@ -71,7 +70,9 @@ async function main() {
   for (const row of rows) {
     const parsed = parseGithubUrl(row.repo_url);
     if (!parsed) {
-      stillBlank++;
+      console.log(`  ✅ ${row.name} -> Docs / Meta (no repo URL)`);
+      if (!DRY_RUN) updateStmt.run("Docs / Meta", new Date().toISOString(), row.id);
+      updated++;
       continue;
     }
     const slug = `${parsed.owner}/${parsed.repo}`;

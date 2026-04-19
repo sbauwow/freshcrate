@@ -10,6 +10,9 @@ describe("dependency visibility ui", () => {
     expect(page).toContain("Conflicts found");
     expect(page).toContain("Unknown licenses");
     expect(page).toContain("Audit Score");
+    expect(page).toContain("conflicts only");
+    expect(page).toContain("unresolved-heavy");
+    expect(page).toContain("highest conflict count");
   });
 
   it("surfaces dependency scan status on project detail pages", () => {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
-import { getDependencyScanHealth, getProjectsWithDependencyConflicts } from "@/lib/deps";
+import { getDependencyScanHealth } from "@/lib/deps";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -113,10 +113,28 @@ interface EcoBreakdown {
   top_dep: string;
 }
 
-export default function DependenciesPage() {
+interface AuditProjectRow {
+  project_id: number;
+  name: string;
+  total_deps: number;
+  resolved: number;
+  unresolved: number;
+  conflict_count: number;
+  warning_count: number;
+  score: number;
+  scanned_at: string | null;
+}
+
+export default async function DependenciesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string; sort?: string }>;
+}) {
+  const params = await searchParams;
   const db = getDb();
   const scanHealth = getDependencyScanHealth();
-  const conflictProjects = getProjectsWithDependencyConflicts(15);
+  const view = params.view === "all" || params.view === "unresolved" ? params.view : "conflicts";
+  const sort = params.sort === "unresolved" || params.sort === "score" || params.sort === "recent" || params.sort === "name" ? params.sort : "conflicts";
 
   // ── 1. OVERVIEW ──
   const overview: OverviewStats = {
@@ -211,6 +229,40 @@ export default function DependenciesPage() {
     };
   });
 
+  const viewWhere =
+    view === "all"
+      ? "deps_audit_json IS NOT NULL AND deps_audit_json != ''"
+      : view === "unresolved"
+        ? "deps_audit_json IS NOT NULL AND deps_audit_json != '' AND COALESCE(json_extract(deps_audit_json, '$.unresolved'), 0) > 0"
+        : "deps_audit_json IS NOT NULL AND deps_audit_json != '' AND COALESCE(json_array_length(json_extract(deps_audit_json, '$.conflicts')), 0) > 0";
+
+  const sortSql =
+    sort === "unresolved"
+      ? "unresolved DESC, conflict_count DESC, name ASC"
+      : sort === "score"
+        ? "score ASC, conflict_count DESC, unresolved DESC, name ASC"
+        : sort === "recent"
+          ? "scanned_at DESC, conflict_count DESC, unresolved DESC, name ASC"
+          : sort === "name"
+            ? "name ASC"
+            : "conflict_count DESC, unresolved DESC, name ASC";
+
+  const auditProjects = db.prepare(`
+    SELECT id as project_id,
+           name,
+           deps_scanned_at as scanned_at,
+           COALESCE(json_extract(deps_audit_json, '$.total_deps'), 0) as total_deps,
+           COALESCE(json_extract(deps_audit_json, '$.resolved'), 0) as resolved,
+           COALESCE(json_extract(deps_audit_json, '$.unresolved'), 0) as unresolved,
+           COALESCE(json_array_length(json_extract(deps_audit_json, '$.conflicts')), 0) as conflict_count,
+           COALESCE(json_array_length(json_extract(deps_audit_json, '$.warnings')), 0) as warning_count,
+           COALESCE(json_extract(deps_audit_json, '$.score'), 0) as score
+    FROM projects
+    WHERE ${viewWhere}
+    ORDER BY ${sortSql}
+    LIMIT 25
+  `).all() as AuditProjectRow[];
+
   return (
     <div>
       {/* Page title */}
@@ -281,6 +333,33 @@ export default function DependenciesPage() {
       <div className="text-[10px] text-fm-text-light mb-2">
         {scanHealth.scanned_projects_with_unknowns.toLocaleString()} audited projects still have unresolved license metadata.
       </div>
+      <form method="GET" className="bg-fm-sidebar-bg border border-fm-border rounded px-3 py-2 mb-3 text-[10px]">
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="flex flex-col gap-0.5">
+            <span className="text-fm-text-light">View</span>
+            <select name="view" defaultValue={view} className="border border-fm-border bg-white px-1 py-0.5 text-[10px]">
+              <option value="conflicts">conflicts only</option>
+              <option value="unresolved">unresolved-heavy</option>
+              <option value="all">all audited</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-0.5">
+            <span className="text-fm-text-light">Sort</span>
+            <select name="sort" defaultValue={sort} className="border border-fm-border bg-white px-1 py-0.5 text-[10px]">
+              <option value="conflicts">highest conflict count</option>
+              <option value="unresolved">most unresolved</option>
+              <option value="score">worst audit score</option>
+              <option value="recent">recently scanned</option>
+              <option value="name">name</option>
+            </select>
+          </label>
+          <button type="submit" className="border border-[#999] bg-[#dddddd] text-black px-2 py-0.5 font-bold hover:bg-[#cccccc]">
+            Apply
+          </button>
+          <a href="/dependencies#scan-health" className="text-fm-link hover:text-fm-link-hover">Reset</a>
+          <span className="ml-auto text-fm-text-light">Showing {auditProjects.length} projects</span>
+        </div>
+      </form>
       <div className="overflow-x-auto mb-4">
         <table className="border-collapse text-[10px] w-full">
           <thead>
@@ -293,7 +372,7 @@ export default function DependenciesPage() {
             </tr>
           </thead>
           <tbody>
-            {conflictProjects.map((row, i) => (
+            {auditProjects.map((row, i) => (
               <tr key={row.project_id} className={i % 2 === 0 ? "bg-white/50" : ""}>
                 <td className="px-2 py-1 border border-fm-border">
                   <Link href={`/projects/${encodeURIComponent(row.name)}`} className="text-fm-link font-bold">

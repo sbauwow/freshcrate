@@ -14,6 +14,20 @@ const DOC_META_PATTERNS = [
   /\bvibecoding\b/i,
 ];
 
+const MANUAL_LANGUAGE_MAP = {
+  "kledidoda/skill-evolution": "Docs / Meta",
+  "aionsystem/synara": "Docs / Meta",
+  "facujuli6/antigravity-agent": "Docs / Meta",
+  "yorbisanthony/auto-survey-agent": "Docs / Meta",
+  "shuklao/call-with-ai-agent": "TypeScript",
+  "duowg08/claude-terminal": "Docs / Meta",
+  "nithis77/claude-trinity": "Docs / Meta",
+  "tauhidislam929/crypto_market_analysis": "Python",
+  "muxueqingze/heartbeat-agent-framework": "Docs / Meta",
+  "kaua433/maestro-skill": "Docs / Meta",
+  "dangamuwagedilshan/x0": "Docs / Meta",
+};
+
 const MANIFEST_LANGUAGE_RULES = [
   { language: "Python", match: (names) => names.has("pyproject.toml") || names.has("requirements.txt") || names.has("setup.py") || names.has("pipfile") || names.has("poetry.lock") },
   { language: "Rust", match: (names) => names.has("cargo.toml") },
@@ -40,7 +54,23 @@ function normalizeRootNames(rootContents = []) {
   );
 }
 
+function zipOnlyArchive(rootNames) {
+  const codeLike = Array.from(rootNames).some((name) =>
+    name.endsWith(".ts") || name.endsWith(".tsx") || name.endsWith(".js") || name.endsWith(".jsx") ||
+    name.endsWith(".py") || name.endsWith(".rs") || name.endsWith(".go") || name.endsWith(".java") ||
+    name.endsWith(".kt") || name.endsWith(".rb") || name.endsWith(".php") || name.endsWith(".cs") ||
+    name.endsWith(".cpp") || name.endsWith(".c")
+  );
+  const hasZip = Array.from(rootNames).some((name) => name.endsWith(".zip"));
+  return hasZip && !codeLike;
+}
+
 export function inferRepoLanguage({ repo, rootContents = [], readmeText = "" }) {
+  const fullName = repo?.full_name?.toLowerCase?.();
+  if (fullName && MANUAL_LANGUAGE_MAP[fullName]) {
+    return MANUAL_LANGUAGE_MAP[fullName];
+  }
+
   if (repo?.language) {
     return repo.language;
   }
@@ -78,6 +108,10 @@ export function inferRepoLanguage({ repo, rootContents = [], readmeText = "" }) 
     name === "opendata" ||
     name === "pic"
   );
+
+  if (zipOnlyArchive(rootNames)) {
+    return "Docs / Meta";
+  }
 
   if (DOC_META_PATTERNS.some((pattern) => pattern.test(text)) || docsHeavy) {
     return "Docs / Meta";
