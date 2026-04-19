@@ -40,6 +40,30 @@ export interface LicenseConflict {
   severity: "error" | "warning";
 }
 
+export interface DependencyAuditSummary {
+  project_id: number;
+  total_deps: number;
+  resolved: number;
+  unresolved: number;
+  conflict_count: number;
+  warning_count: number;
+  score: number;
+  scanned_at: string | null;
+}
+
+export interface DependencyConflictProject extends DependencyAuditSummary {
+  name: string;
+}
+
+export interface DependencyScanHealth {
+  total_projects: number;
+  audited_projects: number;
+  unscanned_projects: number;
+  total_conflicts: number;
+  unknown_licenses: number;
+  scanned_projects_with_unknowns: number;
+}
+
 // ── License classification ───────────────────────────────────────────
 
 const PERMISSIVE = new Set([
@@ -505,4 +529,95 @@ export function getDependencyAudit(projectId: number): LicenseAudit | null {
   } catch {
     return null;
   }
+}
+
+export function getDependencyAuditSummary(projectId: number): DependencyAuditSummary | null {
+  const db = getDb();
+  const row = db.prepare(
+    `SELECT id as project_id,
+            deps_scanned_at as scanned_at,
+            json_extract(deps_audit_json, '$.total_deps') as total_deps,
+            json_extract(deps_audit_json, '$.resolved') as resolved,
+            json_extract(deps_audit_json, '$.unresolved') as unresolved,
+            json_array_length(json_extract(deps_audit_json, '$.conflicts')) as conflict_count,
+            json_array_length(json_extract(deps_audit_json, '$.warnings')) as warning_count,
+            json_extract(deps_audit_json, '$.score') as score
+     FROM projects
+     WHERE id = ? AND deps_audit_json IS NOT NULL AND deps_audit_json != ''`
+  ).get(projectId) as {
+    project_id: number;
+    scanned_at: string | null;
+    total_deps: number | null;
+    resolved: number | null;
+    unresolved: number | null;
+    conflict_count: number | null;
+    warning_count: number | null;
+    score: number | null;
+  } | undefined;
+
+  if (!row) return null;
+  return {
+    project_id: row.project_id,
+    scanned_at: row.scanned_at,
+    total_deps: row.total_deps ?? 0,
+    resolved: row.resolved ?? 0,
+    unresolved: row.unresolved ?? 0,
+    conflict_count: row.conflict_count ?? 0,
+    warning_count: row.warning_count ?? 0,
+    score: row.score ?? 0,
+  };
+}
+
+export function getProjectsWithDependencyConflicts(limit = 20): DependencyConflictProject[] {
+  const db = getDb();
+  return db.prepare(
+    `SELECT id as project_id,
+            name,
+            deps_scanned_at as scanned_at,
+            json_extract(deps_audit_json, '$.total_deps') as total_deps,
+            json_extract(deps_audit_json, '$.resolved') as resolved,
+            json_extract(deps_audit_json, '$.unresolved') as unresolved,
+            json_array_length(json_extract(deps_audit_json, '$.conflicts')) as conflict_count,
+            json_array_length(json_extract(deps_audit_json, '$.warnings')) as warning_count,
+            json_extract(deps_audit_json, '$.score') as score
+     FROM projects
+     WHERE deps_audit_json IS NOT NULL AND deps_audit_json != ''
+       AND COALESCE(json_array_length(json_extract(deps_audit_json, '$.conflicts')), 0) > 0
+     ORDER BY conflict_count DESC, unresolved DESC, name ASC
+     LIMIT ?`
+  ).all(limit) as DependencyConflictProject[];
+}
+
+export function getDependencyScanHealth(): DependencyScanHealth {
+  const db = getDb();
+  const total_projects = (db.prepare("SELECT COUNT(*) as c FROM projects").get() as { c: number }).c;
+  const audited_projects = (db.prepare(
+    "SELECT COUNT(*) as c FROM projects WHERE deps_audit_json IS NOT NULL AND deps_audit_json != ''"
+  ).get() as { c: number }).c;
+  const unscanned_projects = (db.prepare(
+    "SELECT COUNT(*) as c FROM projects WHERE deps_scanned_at IS NULL"
+  ).get() as { c: number }).c;
+  const total_conflicts = (db.prepare(
+    `SELECT COALESCE(SUM(COALESCE(json_array_length(json_extract(deps_audit_json, '$.conflicts')), 0)), 0) as c
+     FROM projects
+     WHERE deps_audit_json IS NOT NULL AND deps_audit_json != ''`
+  ).get() as { c: number }).c;
+  const unknown_licenses = (db.prepare(
+    "SELECT COUNT(*) as c FROM dependencies WHERE license IS NULL OR license = '' OR license_category IS NULL OR license_category = 'unknown'"
+  ).get() as { c: number }).c;
+  const scanned_projects_with_unknowns = (db.prepare(
+    `SELECT COUNT(*) as c
+     FROM projects
+     WHERE deps_audit_json IS NOT NULL AND deps_audit_json != ''
+       AND COALESCE(json_extract(deps_audit_json, '$.unresolved'), 0) > 0`
+  ).get() as { c: number }).c;
+
+  return {
+    total_projects,
+    audited_projects,
+    unscanned_projects,
+    total_conflicts,
+    unknown_licenses,
+    scanned_projects_with_unknowns,
+  };
 }

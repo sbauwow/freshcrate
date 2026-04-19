@@ -1,5 +1,3 @@
-import * as fs from "fs";
-import * as path from "path";
 import { getWorkbenchBundles, getWorkbenchFilterOptions, type WorkbenchMode } from "@/lib/workbench";
 
 export type AgentEditionChannel = "stable" | "beta" | "nightly";
@@ -89,9 +87,6 @@ export interface AgentEditionPublishedImageArtifact {
   download_urls: Record<AgentEditionArtifactDownloadKind, string>;
 }
 
-const scriptsRoot = path.join(process.cwd(), "scripts");
-const bootstrapCommonPath = path.join(scriptsRoot, "lib", "bootstrap-common.sh");
-const bootstrapScriptPath = path.join(scriptsRoot, "bootstrap-agent-edition.sh");
 
 const RELEASE_CHANNELS: AgentEditionReleaseChannel[] = [
   {
@@ -131,7 +126,7 @@ const CLOUD_IMAGES: AgentEditionCloudImage[] = [
     format: "template / base service",
     status: "roadmap",
     summary: "Fast path for cloud-hosted automation and webhook lanes with the same Agent Edition receipts, logs, and channel semantics.",
-    target: "automation-node",
+    target: "solo-builder-core",
     audience: "operators shipping cron, webhook, and CI-style workloads",
     nextStep: "Pin bootstrap + verify in a Railway template with persistent volume guidance.",
   },
@@ -170,13 +165,6 @@ const CLOUD_IMAGES: AgentEditionCloudImage[] = [
   },
 ];
 
-export function getHostedAgentEditionInstallScript(): string {
-  const common = fs.readFileSync(bootstrapCommonPath, "utf8").trim();
-  const bootstrapLines = fs.readFileSync(bootstrapScriptPath, "utf8").trim().split("\n");
-  const bootstrap = bootstrapLines.slice(6).join("\n").trim();
-
-  return `${common}\n\n${bootstrap}\n`;
-}
 
 export function getAgentEditionReleaseChannels(): AgentEditionReleaseChannel[] {
   return RELEASE_CHANNELS;
@@ -283,27 +271,21 @@ export function getAgentEditionPresetCards() {
   return [
     {
       id: "solo-builder-core",
-      title: "Solo Builder",
-      summary: "Default lean operator box for one person shipping agents.",
+      title: "Core Operator Box",
+      summary: "Single honest base profile for solo build, automation, and security workflows.",
       href: "/install/agent-edition?bundle=solo-builder-core&mode=headless&channel=stable",
     },
     {
       id: "research-node",
       title: "Research Node",
-      summary: "Grounded browsing, crawling, and synthesis with optional light desktop.",
+      summary: "Grounded browsing, crawling, and synthesis on the same base substrate.",
       href: "/install/agent-edition?bundle=research-node&mode=light-desktop&channel=stable",
     },
     {
-      id: "automation-node",
-      title: "Automation Node",
-      summary: "Headless-first cron, webhook, and CI execution lane.",
-      href: "/install/agent-edition?bundle=automation-node&mode=headless&channel=stable",
-    },
-    {
-      id: "security-ops-node",
-      title: "Security Ops",
-      summary: "Minimal audit box with isolation and evidence-heavy workflows.",
-      href: "/install/agent-edition?bundle=security-ops-node&mode=headless&channel=stable",
+      id: "local-model-box",
+      title: "Local Model Box",
+      summary: "Base substrate reserved for optional local-inference overlays and model-cache workflows.",
+      href: "/install/agent-edition?bundle=local-model-box&mode=headless&channel=stable",
     },
   ];
 }
@@ -347,7 +329,7 @@ export function getAgentEditionImageBuildManifest(input: { bundle?: string; mode
     commands,
     packer: {
       template,
-      template_exists: fs.existsSync(path.join(process.cwd(), template)),
+      template_exists: true,
       cloud_init_url: cloudInitUrl,
       provisioner_script: "scripts/provision-agent-edition-image.sh",
       bootstrap_script: "scripts/bootstrap-agent-edition.sh",
@@ -370,15 +352,12 @@ export function getAgentEditionImageBuildManifest(input: { bundle?: string; mode
   };
 }
 
+function basename(filePath: string): string {
+  return filePath.split("/").filter(Boolean).pop() ?? filePath;
+}
+
 export function getAgentEditionPublishedImageArtifact(input: { bundle?: string; mode?: string; channel?: string; image?: string } = {}): AgentEditionPublishedImageArtifact {
   const manifest = getAgentEditionImageBuildManifest(input);
-  const artifactPath = path.join(process.cwd(), manifest.packer.expected_artifact);
-  const checksumPath = path.join(process.cwd(), manifest.packer.checksum_file);
-  const metadataPath = `${artifactPath}.json`;
-  const artifactExists = fs.existsSync(artifactPath);
-  const checksumExists = fs.existsSync(checksumPath);
-  const stat = artifactExists ? fs.statSync(artifactPath) : null;
-  const checksum = checksumExists ? fs.readFileSync(checksumPath, "utf8").trim().split(/\s+/)[0] ?? null : null;
   const githubReleaseTag = manifest.image.id === "vm-qcow2-headless" && manifest.channel.id === "stable"
     ? "agent-edition-vm-qcow2-latest"
     : manifest.image.id === "iso-autoinstall-headless" && manifest.channel.id === "stable"
@@ -387,9 +366,9 @@ export function getAgentEditionPublishedImageArtifact(input: { bundle?: string; 
   const githubReleasePageUrl = githubReleaseTag ? `https://github.com/sbauwow/freshcrate.ai/releases/tag/${githubReleaseTag}` : null;
   const githubDownloadUrls = githubReleaseTag
     ? {
-        artifact: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${path.basename(manifest.packer.expected_artifact)}.zip`,
-        checksum: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${path.basename(manifest.packer.checksum_file)}`,
-        metadata: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${path.basename(`${manifest.packer.expected_artifact}.json`)}`,
+        artifact: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${basename(manifest.packer.expected_artifact)}.zip`,
+        checksum: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${basename(manifest.packer.checksum_file)}`,
+        metadata: `https://github.com/sbauwow/freshcrate.ai/releases/download/${githubReleaseTag}/${basename(`${manifest.packer.expected_artifact}.json`)}`,
       }
     : null;
 
@@ -399,14 +378,14 @@ export function getAgentEditionPublishedImageArtifact(input: { bundle?: string; 
     mode: manifest.commands.mode,
     channel: manifest.channel.id,
     publish_ready: manifest.packer.publish_ready,
-    available: artifactExists,
+    available: false,
     output_directory: manifest.packer.output_directory,
     artifact_path: manifest.packer.expected_artifact,
     checksum_path: manifest.packer.checksum_file,
     metadata_path: `${manifest.packer.expected_artifact}.json`,
-    sha256: checksum,
-    file_size_bytes: stat?.size ?? null,
-    updated_at: stat?.mtime.toISOString() ?? null,
+    sha256: null,
+    file_size_bytes: null,
+    updated_at: null,
     github_release_tag: githubReleaseTag,
     github_release_page_url: githubReleasePageUrl,
     github_download_urls: githubDownloadUrls,
@@ -418,37 +397,6 @@ export function getAgentEditionPublishedImageArtifact(input: { bundle?: string; 
   };
 }
 
-export function resolveAgentEditionImageArtifactPath(
-  input: { bundle?: string; mode?: string; channel?: string; image?: string },
-  kind: AgentEditionArtifactDownloadKind = "artifact",
-): { path: string; fileName: string; contentType: string } {
-  const published = getAgentEditionPublishedImageArtifact(input);
-  const absoluteArtifactPath = path.join(process.cwd(), published.artifact_path);
-  const absoluteChecksumPath = path.join(process.cwd(), published.checksum_path);
-  const absoluteMetadataPath = path.join(process.cwd(), published.metadata_path);
-
-  if (kind === "checksum") {
-    return {
-      path: absoluteChecksumPath,
-      fileName: path.basename(published.checksum_path),
-      contentType: "text/plain; charset=utf-8",
-    };
-  }
-
-  if (kind === "metadata") {
-    return {
-      path: absoluteMetadataPath,
-      fileName: path.basename(published.metadata_path),
-      contentType: "application/json; charset=utf-8",
-    };
-  }
-
-  return {
-    path: absoluteArtifactPath,
-    fileName: path.basename(published.artifact_path),
-    contentType: published.image === "vm-qcow2-headless" || published.image === "iso-autoinstall-headless" ? "application/octet-stream" : "text/plain; charset=utf-8",
-  };
-}
 
 export function getAgentEditionCloudInitSeed(input: { bundle?: string; mode?: string; channel?: string } = {}) {
   const commands = buildAgentEditionCommands(input);
@@ -508,13 +456,13 @@ export function getAgentEditionRecommendations(input: { persona?: string; task?:
     let score = 0;
     if (bundle.persona === persona) score += 5;
     if (task.includes("security") || task.includes("audit") || task.includes("isolate")) {
-      if (bundle.id === "security-ops-node") score += 4;
+      if (bundle.id === "solo-builder-core") score += 4;
     }
     if (task.includes("research") || task.includes("browse") || task.includes("crawl")) {
       if (bundle.id === "research-node") score += 4;
     }
     if (task.includes("cron") || task.includes("webhook") || task.includes("automation")) {
-      if (bundle.id === "automation-node") score += 4;
+      if (bundle.id === "solo-builder-core") score += 4;
     }
     if (task.includes("model") || task.includes("gpu") || task.includes("ollama")) {
       if (bundle.id === "local-model-box") score += 4;

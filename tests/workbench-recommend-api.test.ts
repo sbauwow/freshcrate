@@ -10,7 +10,7 @@ describe("workbench recommend api", () => {
 
     const data = await response.json();
     expect(data.filters.persona).toBe("security");
-    expect(data.recommendations.primary.bundle.id).toBe("security-ops-node");
+    expect(data.recommendations.primary.bundle.id).toBe("solo-builder-core");
     expect(data.recommendations.primary.why.length).toBeGreaterThan(0);
     expect(data.recommendations.alternatives.length).toBeGreaterThan(0);
   });

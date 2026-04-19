@@ -17,14 +17,14 @@ describe("workbench manifest api", () => {
   });
 
   it("returns downloadable json attachment headers when requested", async () => {
-    const request = new NextRequest("https://freshcrate.ai/api/workbench/manifest?bundle=security-ops-node&mode=headless&channel=stable&download=1");
+    const request = new NextRequest("https://freshcrate.ai/api/workbench/manifest?bundle=solo-builder-core&mode=headless&channel=stable&download=1");
     const response = GET(request);
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("application/json");
     expect(response.headers.get("content-disposition")).toContain("attachment;");
-    expect(response.headers.get("content-disposition")).toContain("freshcrate-agent-edition-security-ops-node-headless-stable.json");
+    expect(response.headers.get("content-disposition")).toContain("freshcrate-agent-edition-solo-builder-core-headless-stable.json");
 
     const data = await response.json();
-    expect(data.bundle.id).toBe("security-ops-node");
+    expect(data.bundle.id).toBe("solo-builder-core");
   });
 });

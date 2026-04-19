@@ -10,7 +10,7 @@ usage() {
 Usage: bash scripts/bootstrap-agent-edition.sh [--bundle BUNDLE] [--mode headless|light-desktop] [--channel stable|beta|nightly]
 
 Bundles:
-  solo-builder-core | research-node | automation-node | security-ops-node | local-model-box
+  solo-builder-core | research-node | local-model-box
 
 This script targets Ubuntu 24.04 x86_64 and lays down the minimal agentic substrate:
 - creates workspace + ~/.freshcrate layout

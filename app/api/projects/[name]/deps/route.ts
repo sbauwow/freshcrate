@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectByName } from "@/lib/queries";
-import { getDependencies, getDependencyAudit, scanDependencies } from "@/lib/deps";
+import { getDependencies, getDependencyAudit, getDependencyAuditSummary, scanDependencies } from "@/lib/deps";
 import { hasApiKeys, extractBearerToken, validateApiKey } from "@/lib/auth";
 import { logRequest } from "@/lib/request-log";
 
@@ -23,9 +23,10 @@ export async function GET(
 
   const deps = getDependencies(project.id);
   const audit = getDependencyAudit(project.id);
+  const summary = getDependencyAuditSummary(project.id);
 
   logRequest(request, 200, start);
-  return NextResponse.json({ deps, audit });
+  return NextResponse.json({ deps, audit, summary });
 }
 
 export async function POST(
@@ -72,7 +73,7 @@ export async function POST(
   try {
     const result = await scanDependencies(project.id, owner, repo.replace(/\.git$/, ""), token);
     logRequest(request, 200, start);
-    return NextResponse.json(result);
+    return NextResponse.json({ ...result, summary: getDependencyAuditSummary(project.id) });
   } catch (err) {
     logRequest(request, 500, start);
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

@@ -19,40 +19,21 @@ require_cmd() {
 
 supports_bundle() {
   case "$1" in
-    solo-builder-core|research-node|automation-node|security-ops-node|local-model-box) return 0 ;;
+    solo-builder-core|research-node|local-model-box) return 0 ;;
     *) return 1 ;;
   esac
 }
 
 bundle_packages() {
   case "$1" in
-    solo-builder-core)
+    solo-builder-core|research-node|local-model-box)
       printf '%s\n' git zsh tmux curl jq ripgrep fd-find sqlite3 python3 python3-venv python3-pip nodejs npm gh
-      ;;
-    research-node)
-      printf '%s\n' git tmux curl jq ripgrep sqlite3 python3 python3-venv python3-pip nodejs npm gh
-      ;;
-    automation-node)
-      printf '%s\n' git zsh tmux curl jq sqlite3 python3 python3-venv python3-pip nodejs npm gh
-      ;;
-    security-ops-node)
-      printf '%s\n' git zsh tmux curl jq ripgrep fd-find sqlite3 python3 python3-venv python3-pip nodejs npm gh
-      ;;
-    local-model-box)
-      printf '%s\n' git tmux curl jq sqlite3 python3 python3-venv python3-pip nodejs npm gh
       ;;
   esac
 }
 
 bundle_services() {
-  case "$1" in
-    local-model-box)
-      printf '%s\n' docker ollama
-      ;;
-    *)
-      printf '%s\n' docker
-      ;;
-  esac
+  printf '%s\n' docker
 }
 
 bundle_dirs() {

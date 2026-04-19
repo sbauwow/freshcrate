@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getProjectByName, getProjectReleases, getProjectWithReadme, getSimilarProjects } from "@/lib/queries";
 import { getVerificationStatus } from "@/lib/verify";
+import { getDependencyAuditSummary } from "@/lib/deps";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { notFound } from "next/navigation";
 import DepGraph from "@/app/components/dep-graph";
@@ -15,6 +16,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
   const enriched = getProjectWithReadme(name);
   const similar = getSimilarProjects(project.id, project.category, project.tags, 5);
   const verification = getVerificationStatus(project.id);
+  const dependencySummary = getDependencyAuditSummary(project.id);
   const provenance = parseProvenanceJson(project.provenance_json);
 
   const urgencyColors: Record<string, string> = {
@@ -218,6 +220,43 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
             </div>
           ) : (
             <p className="text-[10px] text-fm-text-light">Not yet verified</p>
+          )}
+        </div>
+
+        {/* Dependency scan status */}
+        <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
+          <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
+            Dependency Scan
+          </h3>
+          {dependencySummary ? (
+            <div className="space-y-2 text-[11px]">
+              <div className="flex flex-wrap gap-1.5">
+                <span className="inline-block bg-fm-green/10 text-fm-green border border-fm-green/20 px-2 py-0.5 rounded text-[10px] font-bold">
+                  {dependencySummary.conflict_count} conflict{dependencySummary.conflict_count === 1 ? "" : "s"}
+                </span>
+                <span className="inline-block bg-yellow-100 text-yellow-800 border border-yellow-300 px-2 py-0.5 rounded text-[10px] font-bold">
+                  {dependencySummary.unresolved} unresolved
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                <div>
+                  <div className="text-fm-text-light">Audit score</div>
+                  <div className="font-bold">{dependencySummary.score}/100</div>
+                </div>
+                <div>
+                  <div className="text-fm-text-light">Total deps</div>
+                  <div className="font-bold">{dependencySummary.total_deps}</div>
+                </div>
+              </div>
+              <div className="text-[10px] text-fm-text-light pt-1 border-t border-fm-border/30">
+                Scanned: {dependencySummary.scanned_at ? new Date(dependencySummary.scanned_at).toLocaleDateString() : "—"}
+              </div>
+              <Link href="/dependencies#license-risk" className="text-[10px] font-bold text-fm-link hover:text-fm-link-hover">
+                Open dependency risk map
+              </Link>
+            </div>
+          ) : (
+            <p className="text-[10px] text-fm-text-light">No dependency audit cached yet.</p>
           )}
         </div>
 

@@ -59,6 +59,24 @@ export default function ApiDocsPage() {
         </section>
 
         <section>
+          <h3 className="text-[12px] font-bold text-fm-green mb-2">Project Dependency Audit</h3>
+          <div className="bg-white border border-fm-border rounded p-3">
+            <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/projects/:name/deps</code>
+            <div className="text-[10px] text-fm-text-light mt-1 mb-2">Returns cached dependency rows, the full license audit, and a compact summary with conflict count, unresolved licenses, score, and last scanned time.</div>
+            <div className="text-[10px]">
+              <span className="font-bold">Methods:</span>
+              <ul className="ml-4 mt-1 space-y-0.5">
+                <li><code className="font-mono">GET</code> - read cached dependencies + audit summary</li>
+                <li><code className="font-mono">POST</code> - trigger a fresh GitHub dependency scan for that project</li>
+              </ul>
+            </div>
+            <div className="mt-2 bg-fm-bg rounded p-2">
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl https://freshcrate.ai/api/projects/langchain/deps`}</pre>
+            </div>
+          </div>
+        </section>
+
+        <section>
           <h3 className="text-[12px] font-bold text-fm-green mb-2">Hosted Agent Edition Installer</h3>
           <div className="bg-white border border-fm-border rounded p-3">
             <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/install/agent-edition</code>
@@ -96,14 +114,14 @@ export default function ApiDocsPage() {
             <div className="text-[10px]">
               <span className="font-bold">Parameters:</span>
               <ul className="ml-4 mt-1 space-y-0.5">
-                <li><code className="font-mono">bundle</code> (optional) - e.g. <code className="font-mono">security-ops-node</code></li>
+                <li><code className="font-mono">bundle</code> (optional) - e.g. <code className="font-mono">solo-builder-core</code></li>
                 <li><code className="font-mono">mode</code> (optional) - <code className="font-mono">headless</code> or <code className="font-mono">light-desktop</code></li>
                 <li><code className="font-mono">channel</code> (optional) - <code className="font-mono">stable</code>, <code className="font-mono">beta</code>, or <code className="font-mono">nightly</code></li>
                 <li><code className="font-mono">download</code> (optional) - <code className="font-mono">1</code> to force attachment download</li>
               </ul>
             </div>
             <div className="mt-2 bg-fm-bg rounded p-2">
-              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -OJ "https://freshcrate.ai/api/workbench/manifest?bundle=security-ops-node&mode=headless&channel=stable&download=1"`}</pre>
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -OJ "https://freshcrate.ai/api/workbench/manifest?bundle=solo-builder-core&mode=headless&channel=stable&download=1"`}</pre>
             </div>
           </div>
         </section>
@@ -116,7 +134,7 @@ export default function ApiDocsPage() {
               <div className="text-[10px] text-fm-text-light mt-1">Returns a versioned image-build manifest for Packer/cloud-image pipelines. Supports <code className="font-mono">bundle</code>, <code className="font-mono">mode</code>, <code className="font-mono">channel</code>, <code className="font-mono">image</code>, and <code className="font-mono">download=1</code>. Concrete starter templates live under <code className="font-mono">images/*.pkr.hcl</code>, local builds run through <code className="font-mono">scripts/build-agent-edition-image.sh</code>, and the first publish-ready Linux image lane is <code className="font-mono">vm-qcow2-headless</code> with packaging via <code className="font-mono">scripts/package-agent-edition-image.sh</code>.</div>
             </div>
             <div className="mt-2 bg-fm-bg rounded p-2">
-              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -OJ "https://freshcrate.ai/api/workbench/image-build?bundle=automation-node&mode=headless&channel=beta&image=aws-ami-builder&download=1"`}</pre>
+              <pre className="text-[10px] font-mono text-fm-text whitespace-pre-wrap">{`curl -OJ "https://freshcrate.ai/api/workbench/image-build?bundle=solo-builder-core&mode=headless&channel=beta&image=aws-ami-builder&download=1"`}</pre>
             </div>
             <div>
               <code className="text-[11px] text-fm-green font-mono font-bold">GET /api/workbench/image-artifact</code>

@@ -1,10 +1,7 @@
 import * as fs from "fs";
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getAgentEditionPublishedImageArtifact,
-  resolveAgentEditionImageArtifactPath,
-  type AgentEditionArtifactDownloadKind,
-} from "@/lib/workbench-install";
+import { type AgentEditionArtifactDownloadKind } from "@/lib/workbench-install";
+import { getAgentEditionPublishedImageArtifact, resolveAgentEditionImageArtifactPath } from "@/lib/workbench-install-files";
 import { logRequest } from "@/lib/request-log";
 
 export function GET(request: NextRequest) {

@@ -1,3 +1,5 @@
+import { BOOTSTRAP_MANIFEST } from "@/lib/generated/workbench-bootstrap-manifest";
+
 export type WorkbenchTarget = "ubuntu-24.04-x86_64";
 export type WorkbenchPersona = "solo-dev" | "research" | "automation" | "security" | "local-models";
 export type WorkbenchMode = "headless" | "light-desktop";
@@ -7,6 +9,7 @@ export interface WorkbenchBundle {
   name: string;
   target: WorkbenchTarget;
   persona: WorkbenchPersona;
+  personas: WorkbenchPersona[];
   installModes: WorkbenchMode[];
   summary: string;
   philosophy: string;
@@ -46,6 +49,8 @@ export interface WorkbenchPlaybook {
   actions: WorkbenchAction[];
 }
 
+type BundleManifestKey = "solo-builder-core" | "research-node" | "local-model-box";
+
 const INSTALL_MODES: WorkbenchInstallMode[] = [
   {
     id: "headless",
@@ -75,18 +80,20 @@ const BUNDLES: WorkbenchBundle[] = [
     name: "Solo Builder Core",
     target: "ubuntu-24.04-x86_64",
     persona: "solo-dev",
+    personas: ["solo-dev", "automation", "security"],
     installModes: ["headless", "light-desktop"],
-    summary: "A minimal substrate for one operator building and shipping agents without desktop bloat.",
-    philosophy: "Start from Ubuntu minimal, keep only the shell, package/update path, containers, and the agent toolchain.",
-    packages: ["git", "zsh", "tmux", "curl", "jq", "ripgrep", "fd", "sqlite3", "uv", "python3.11", "nodejs", "npm", "gh"],
-    services: ["docker"],
+    summary: "The real base profile: a minimal substrate for solo builders, automation lanes, and security workflows without desktop bloat.",
+    philosophy: "One honest operator base beats five near-duplicate bundles. Start from Ubuntu minimal, keep the shell, containers, search tools, and the agent toolchain.",
+    packages: [...BOOTSTRAP_MANIFEST["solo-builder-core"].packages],
+    services: [...BOOTSTRAP_MANIFEST["solo-builder-core"].services],
     verificationChecks: [
-      "uv and python3.11 available",
+      "uv bootstrap completed and python3 available",
       "docker daemon reachable",
       "gh authenticated or explicitly skipped",
       "~/.freshcrate/logs and ~/.freshcrate/receipts created",
+      "safe default for solo-dev, automation, and security personas",
     ],
-    antiGoals: ["Heavy desktop meta-packages", "Office/media bundles", "Duplicate editors by default"],
+    antiGoals: ["Heavy desktop meta-packages", "Office/media bundles", "Pretend persona-specific package deltas that do not materially change the box"],
     bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle solo-builder-core --channel stable",
     verifyCommand: "bash scripts/verify-agent-edition.sh --bundle solo-builder-core --channel stable",
   },
@@ -95,78 +102,40 @@ const BUNDLES: WorkbenchBundle[] = [
     name: "Research Node",
     target: "ubuntu-24.04-x86_64",
     persona: "research",
+    personas: ["research"],
     installModes: ["headless", "light-desktop"],
-    summary: "A minimal agentic substrate tuned for crawling, synthesis, note capture, and benchmark runs.",
-    philosophy: "Keep the box lean, but include the exact browser, scraping, and notebook-adjacent dependencies needed for grounded research work.",
-    packages: ["git", "tmux", "uv", "python3.11", "nodejs", "npm", "jq", "ripgrep", "sqlite3", "gh"],
-    services: ["docker"],
+    summary: "The same lean substrate, positioned for browsing, crawling, synthesis, and benchmark runs.",
+    philosophy: "Research should reuse the same base operator box; the differentiation is workflow, install mode, and future overlays — not shaving two packages for optics.",
+    packages: [...BOOTSTRAP_MANIFEST["research-node"].packages],
+    services: [...BOOTSTRAP_MANIFEST["research-node"].services],
     verificationChecks: [
-      "playwright/chromium deps installed",
-      "browser sandbox dependencies present",
+      "base operator substrate matches solo-builder-core",
       "workspace/research and receipts directories created",
       "network + DNS checks pass",
+      "light-desktop remains optional, never required",
     ],
-    antiGoals: ["Random desktop utilities", "GUI notebooks as a hard dependency", "Always-on background daemons"],
+    antiGoals: ["Random desktop utilities", "GUI notebooks as a hard dependency", "A separate snowflake bundle that drifts from the operator base"],
     bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle research-node --channel stable",
     verifyCommand: "bash scripts/verify-agent-edition.sh --bundle research-node --channel stable",
-  },
-  {
-    id: "automation-node",
-    name: "Automation Node",
-    target: "ubuntu-24.04-x86_64",
-    persona: "automation",
-    installModes: ["headless"],
-    summary: "CLI-first box for cron, webhooks, CI helpers, and multi-agent execution lanes.",
-    philosophy: "Bias toward unattended reliability: small surface area, review-gated deploy paths, strong logs, and deterministic runtime checks.",
-    packages: ["git", "zsh", "tmux", "uv", "python3.11", "nodejs", "npm", "jq", "sqlite3", "gh", "railway"],
-    services: ["docker"],
-    verificationChecks: [
-      "cron-safe PATH exported",
-      "agent receipts dir writable",
-      "docker/podman reachable",
-      "deploy scripts require explicit review gate",
-    ],
-    antiGoals: ["Heavy desktop login managers", "Ad-hoc manual deploys", "Hidden credentials in shell history"],
-    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle automation-node --channel stable",
-    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle automation-node --channel stable",
-  },
-  {
-    id: "security-ops-node",
-    name: "Security Ops Node",
-    target: "ubuntu-24.04-x86_64",
-    persona: "security",
-    installModes: ["headless"],
-    summary: "Minimal substrate for audits, isolated tooling, and evidence-heavy security workflows.",
-    philosophy: "Keep attack surface low: no extra GUI junk, strong workspace isolation, strict logging, and explicit operator review points.",
-    packages: ["git", "zsh", "tmux", "uv", "python3.11", "nodejs", "npm", "jq", "ripgrep", "fd", "sqlite3", "gh"],
-    services: ["docker"],
-    verificationChecks: [
-      "workspace isolation directories created",
-      "logs and receipts on separate paths",
-      "sudo policy reduced to reviewed paths",
-      "audit toolchain binaries present",
-    ],
-    antiGoals: ["Heavy desktop environment", "Ambient root access", "Unreviewed package sprawl"],
-    bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle security-ops-node --channel stable",
-    verifyCommand: "bash scripts/verify-agent-edition.sh --bundle security-ops-node --channel stable",
   },
   {
     id: "local-model-box",
     name: "Local Model Box",
     target: "ubuntu-24.04-x86_64",
     persona: "local-models",
+    personas: ["local-models"],
     installModes: ["headless", "light-desktop"],
-    summary: "A lean local-model workstation with agent orchestration core and optional inference runtimes.",
-    philosophy: "GPU support matters, but still keep the substrate minimal: model runners are optional packs layered over the same clean operator base.",
-    packages: ["git", "tmux", "uv", "python3.11", "nodejs", "npm", "jq", "sqlite3", "gh", "ollama"],
-    services: ["docker", "ollama"],
+    summary: "The same core substrate, reserved for optional local inference overlays and model-cache workflows.",
+    philosophy: "Do not pretend the base image ships a full local-model stack. Keep the operator substrate clean, then layer inference runtimes intentionally.",
+    packages: [...BOOTSTRAP_MANIFEST["local-model-box"].packages],
+    services: [...BOOTSTRAP_MANIFEST["local-model-box"].services],
     verificationChecks: [
-      "GPU or CPU fallback detected",
+      "base operator substrate matches solo-builder-core",
       "model cache directories created",
-      "ollama or local runtime reachable",
       "workspace/model receipts writable",
+      "local runtime pack may be layered later without mutating the base profile",
     ],
-    antiGoals: ["Desktop bloat for eye candy", "Huge default model downloads", "Forcing GPU-only support"],
+    antiGoals: ["Desktop bloat for eye candy", "Huge default model downloads in the base image", "Pretending ollama is first-class before the runtime lane is actually hardened"],
     bootstrapCommand: "bash scripts/bootstrap-agent-edition.sh --bundle local-model-box --channel stable",
     verifyCommand: "bash scripts/verify-agent-edition.sh --bundle local-model-box --channel stable",
   },
@@ -226,7 +195,7 @@ const PERSONA_TO_ACTIONS: Record<WorkbenchPersona, string[]> = {
 export function getWorkbenchBundles(filters: WorkbenchFilters = {}): WorkbenchBundle[] {
   const q = filters.q?.trim().toLowerCase();
 
-  return BUNDLES.filter((bundle) => (filters.persona ? bundle.persona === filters.persona : true))
+  return BUNDLES.filter((bundle) => (filters.persona ? bundle.personas.includes(filters.persona) : true))
     .filter((bundle) => (filters.target ? bundle.target === filters.target : true))
     .filter((bundle) => (filters.mode ? bundle.installModes.includes(filters.mode) : true))
     .filter((bundle) => {
@@ -249,7 +218,7 @@ export function getWorkbenchBundles(filters: WorkbenchFilters = {}): WorkbenchBu
 
 export function getWorkbenchFilterOptions() {
   return {
-    personas: Array.from(new Set(BUNDLES.map((bundle) => bundle.persona))).sort(),
+    personas: Array.from(new Set(BUNDLES.flatMap((bundle) => bundle.personas))).sort(),
     targets: Array.from(new Set(BUNDLES.map((bundle) => bundle.target))).sort(),
     modes: Array.from(new Set(BUNDLES.flatMap((bundle) => bundle.installModes))).sort(),
   };

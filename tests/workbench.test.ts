@@ -25,7 +25,7 @@ describe("workbench dataset", () => {
   it("filters bundles by persona and install mode", () => {
     const bundles = getWorkbenchBundles({ persona: "security", mode: "headless" });
     expect(bundles.length).toBeGreaterThan(0);
-    expect(bundles.every((bundle) => bundle.persona === "security")).toBe(true);
+    expect(bundles.every((bundle) => bundle.personas.includes("security"))).toBe(true);
     expect(bundles.every((bundle) => bundle.installModes.includes("headless"))).toBe(true);
   });
 
@@ -56,6 +56,13 @@ describe("workbench dataset", () => {
       expect(bundle.verifyCommand).toContain("scripts/verify-agent-edition.sh");
       expect(bundle.verifyCommand).toContain(bundle.id);
     }
+  });
+
+  it("derives package and service lists from bootstrap-common.sh", () => {
+    const bundles = getWorkbenchBundles();
+    expect(bundles.every((bundle) => bundle.packages.includes("git"))).toBe(true);
+    expect(bundles.every((bundle) => bundle.packages.includes("fd-find"))).toBe(true);
+    expect(bundles.every((bundle) => bundle.services.includes("docker"))).toBe(true);
   });
 
   it("builds an actionable playbook for a minimal agentic substrate", () => {

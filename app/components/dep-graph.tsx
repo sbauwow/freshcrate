@@ -37,6 +37,15 @@ interface LicenseAudit {
 interface DepsData {
   deps: Dependency[];
   audit: LicenseAudit | null;
+  summary: {
+    total_deps: number;
+    resolved: number;
+    unresolved: number;
+    conflict_count: number;
+    warning_count: number;
+    score: number;
+    scanned_at: string | null;
+  } | null;
 }
 
 const LICENSE_COLORS: Record<string, string> = {
@@ -88,7 +97,7 @@ export default function DepGraph({ projectName }: { projectName: string }) {
       });
       if (res.ok) {
         const result = await res.json();
-        setData({ deps: result.deps, audit: result.audit });
+        setData({ deps: result.deps, audit: result.audit, summary: result.summary ?? null });
       }
     } catch {}
     setScanning(false);
@@ -104,6 +113,7 @@ export default function DepGraph({ projectName }: { projectName: string }) {
 
   const deps = data?.deps || [];
   const audit = data?.audit;
+  const summary = data?.summary;
   const hasDeps = deps.length > 0;
 
   const filteredDeps = filter === "all"
@@ -127,6 +137,23 @@ export default function DepGraph({ projectName }: { projectName: string }) {
           {scanning ? "Scanning..." : hasDeps ? "Rescan" : "Scan Dependencies"}
         </button>
       </div>
+
+      {summary && (
+        <div className="flex flex-wrap gap-2 text-[10px] text-fm-text-light">
+          <span className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-1">
+            {summary.conflict_count} conflict{summary.conflict_count === 1 ? "" : "s"}
+          </span>
+          <span className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-1">
+            {summary.unresolved} unresolved
+          </span>
+          <span className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-1">
+            {summary.total_deps} total deps
+          </span>
+          <span className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-1">
+            scanned {summary.scanned_at ? new Date(summary.scanned_at).toLocaleDateString() : "—"}
+          </span>
+        </div>
+      )}
 
       {/* License Audit Summary */}
       {audit && (

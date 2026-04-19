@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
+import { getDependencyScanHealth, getProjectsWithDependencyConflicts } from "@/lib/deps";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -114,6 +115,8 @@ interface EcoBreakdown {
 
 export default function DependenciesPage() {
   const db = getDb();
+  const scanHealth = getDependencyScanHealth();
+  const conflictProjects = getProjectsWithDependencyConflicts(15);
 
   // ── 1. OVERVIEW ──
   const overview: OverviewStats = {
@@ -225,6 +228,8 @@ export default function DependenciesPage() {
         <span className="font-bold text-fm-text">Jump to: </span>
         <Link href="#overview" className="text-fm-link">overview</Link>
         {" | "}
+        <Link href="#scan-health" className="text-fm-link">scan health</Link>
+        {" | "}
         <Link href="#most-depended" className="text-fm-link">most depended-on</Link>
         {" | "}
         <Link href="#heaviest" className="text-fm-link">heaviest packages</Link>
@@ -250,6 +255,55 @@ export default function DependenciesPage() {
               <tr key={label} className={i % 2 === 0 ? "bg-fm-sidebar-bg" : ""}>
                 <td className="px-2 py-1 border border-fm-border font-bold text-fm-text">{label}</td>
                 <td className="px-2 py-1 border border-fm-border font-mono text-right">{val}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <SectionHeader id="scan-health" title="Scan Health" />
+      <p className="text-[10px] text-fm-text-light mb-2">
+        Live backfill health: what has been audited, what is still missing, and which packages currently carry license conflicts.
+      </p>
+      <div className="grid gap-2 md:grid-cols-4 mb-3">
+        {[
+          ["Audited projects", scanHealth.audited_projects.toLocaleString()],
+          ["Unscanned projects", scanHealth.unscanned_projects.toLocaleString()],
+          ["Conflicts found", scanHealth.total_conflicts.toLocaleString()],
+          ["Unknown licenses", scanHealth.unknown_licenses.toLocaleString()],
+        ].map(([label, value]) => (
+          <div key={label} className="bg-fm-sidebar-bg border border-fm-border rounded px-3 py-2">
+            <div className="text-[10px] text-fm-text-light">{label}</div>
+            <div className="text-[14px] font-bold text-fm-text">{value}</div>
+          </div>
+        ))}
+      </div>
+      <div className="text-[10px] text-fm-text-light mb-2">
+        {scanHealth.scanned_projects_with_unknowns.toLocaleString()} audited projects still have unresolved license metadata.
+      </div>
+      <div className="overflow-x-auto mb-4">
+        <table className="border-collapse text-[10px] w-full">
+          <thead>
+            <tr className="bg-fm-sidebar-bg">
+              <th className="px-2 py-1 border border-fm-border text-left">Project</th>
+              <th className="px-2 py-1 border border-fm-border text-right">Conflicts</th>
+              <th className="px-2 py-1 border border-fm-border text-right">Unresolved</th>
+              <th className="px-2 py-1 border border-fm-border text-right">Audit Score</th>
+              <th className="px-2 py-1 border border-fm-border text-right">Scanned</th>
+            </tr>
+          </thead>
+          <tbody>
+            {conflictProjects.map((row, i) => (
+              <tr key={row.project_id} className={i % 2 === 0 ? "bg-white/50" : ""}>
+                <td className="px-2 py-1 border border-fm-border">
+                  <Link href={`/projects/${encodeURIComponent(row.name)}`} className="text-fm-link font-bold">
+                    {row.name}
+                  </Link>
+                </td>
+                <td className="px-2 py-1 border border-fm-border text-right font-mono font-bold text-red-700">{row.conflict_count}</td>
+                <td className="px-2 py-1 border border-fm-border text-right font-mono text-yellow-700">{row.unresolved}</td>
+                <td className="px-2 py-1 border border-fm-border text-right font-mono">{row.score}</td>
+                <td className="px-2 py-1 border border-fm-border text-right text-fm-text-light">{row.scanned_at ? new Date(row.scanned_at).toLocaleDateString() : "—"}</td>
               </tr>
             ))}
           </tbody>

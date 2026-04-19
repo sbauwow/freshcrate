@@ -14,10 +14,10 @@ import {
   getAgentEditionComparisonMatrix,
   getAgentEditionImageArtifactDownload,
   getAgentEditionManifestDownload,
-  getAgentEditionPublishedImageArtifact,
   getAgentEditionRecommendations,
   getAgentEditionReleaseChannels,
 } from "@/lib/workbench-install";
+import { getAgentEditionPublishedImageArtifact } from "@/lib/workbench-install-files";
 
 export const metadata: Metadata = {
   title: "freshcrate workbench — minimal agentic substrate",
@@ -100,7 +100,7 @@ export default async function WorkbenchPage({
           <div className="font-bold text-[13px]">{brief.verificationChecks}</div>
         </div>
         <div className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-2">
-          <div className="text-fm-text-light">Operator score</div>
+          <div className="text-fm-text-light">Substrate fit</div>
           <div className="font-bold text-[13px]">{playbook.score}/100</div>
         </div>
       </div>
@@ -209,7 +209,7 @@ export default async function WorkbenchPage({
         </div>
         <div className="p-2 space-y-2 text-[11px]">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-bold text-fm-text">Minimal substrate score:</span>
+            <span className="font-bold text-fm-text">Substrate fit:</span>
             <span className="px-1.5 py-0.5 rounded bg-[#bbddff]/60 text-fm-link font-bold">{playbook.score}/100</span>
             <span className={`px-1.5 py-0.5 rounded font-bold text-[9px] ${playbook.level === "high" ? "bg-red-100 text-red-800" : playbook.level === "medium" ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}`}>
               {playbook.level}
@@ -275,7 +275,7 @@ export default async function WorkbenchPage({
             Alternatives: {recommendations.alternatives.map((bundle) => bundle.name).join(" • ")}
           </div>
           <div className="text-[10px] text-fm-text-light">
-            API: <a href={`/api/workbench/recommend?persona=${recommendations.primary.bundle.persona}&task=${encodeURIComponent(q ?? recommendations.primary.bundle.summary)}`} className="text-fm-link hover:text-fm-link-hover">/api/workbench/recommend</a>
+            API: <a href={`/api/workbench/recommend?persona=${persona ?? recommendations.primary.bundle.persona}&task=${encodeURIComponent(q ?? recommendations.primary.bundle.summary)}`} className="text-fm-link hover:text-fm-link-hover">/api/workbench/recommend</a>
           </div>
           <div className="text-[10px] text-fm-text-light">
             Download: <a href={manifestDownload.href} className="text-fm-link hover:text-fm-link-hover">{manifestDownload.label}</a>
@@ -383,7 +383,7 @@ export default async function WorkbenchPage({
             <div key={bundle.id} className="p-2 text-[11px] space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-bold text-[12px] text-fm-link">{bundle.name}</span>
-                <span className="px-1.5 py-0.5 rounded bg-[#bbddff]/50 text-fm-link text-[9px]">{personaLabel(bundle.persona)}</span>
+                <span className="px-1.5 py-0.5 rounded bg-[#bbddff]/50 text-fm-link text-[9px]">{bundle.personas.map(personaLabel).join(" • ")}</span>
                 <span className="px-1.5 py-0.5 rounded bg-[#f3f3f3] text-fm-text-light text-[9px]">{bundle.target}</span>
                 <span className="text-fm-text-light">{bundle.summary}</span>
               </div>

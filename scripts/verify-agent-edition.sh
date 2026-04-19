@@ -110,14 +110,6 @@ else
   pass "docker optional for current bootstrap image lane"
 fi
 
-if [[ "$BUNDLE" == "local-model-box" ]]; then
-  if command -v ollama >/dev/null 2>&1; then
-    pass "ollama available"
-  else
-    fail "ollama missing for local-model-box"
-  fi
-fi
-
 VERIFY_RECEIPT_PATH="${FRESHCRATE_HOME}/receipts/verify-${BUNDLE}.txt"
 cat > "$VERIFY_RECEIPT_PATH" <<EOF
 bundle=${BUNDLE}

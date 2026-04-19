@@ -11,6 +11,10 @@
   "homepage": "https://freshcrate.ai",
   "private": true,
   "scripts": {
+    "generate:workbench-manifest": "node scripts/generate-workbench-bootstrap-manifest.mjs",
+    "predev": "npm run generate:workbench-manifest",
+    "prebuild": "npm run generate:workbench-manifest",
+    "pretest": "npm run generate:workbench-manifest",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

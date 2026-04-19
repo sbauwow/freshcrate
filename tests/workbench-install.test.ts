@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   buildAgentEditionCommands,
   getAgentEditionPresetCards,
-  getHostedAgentEditionInstallScript,
   getAgentEditionReleaseChannels,
   getAgentEditionCloudImages,
   getAgentEditionManifestDownload,
@@ -10,9 +9,12 @@ import {
   getAgentEditionCloudInitSeed,
   getAgentEditionImageArtifactDownload,
   getAgentEditionImageBuildCommand,
-  getAgentEditionPublishedImageArtifact,
-  resolveAgentEditionImageArtifactPath,
 } from "@/lib/workbench-install";
+import {
+  getAgentEditionPublishedImageArtifact,
+  getHostedAgentEditionInstallScript,
+  resolveAgentEditionImageArtifactPath,
+} from "@/lib/workbench-install-files";
 
 describe("workbench hosted install script", () => {
   it("returns a single-file install script suitable for curl | bash", () => {
@@ -45,18 +47,18 @@ describe("workbench hosted install script", () => {
 
   it("returns preset cards with stable bundle/mode deep links", () => {
     const presets = getAgentEditionPresetCards();
-    expect(presets.length).toBeGreaterThanOrEqual(4);
-    expect(presets.some((preset) => preset.href.includes("bundle=automation-node"))).toBe(true);
+    expect(presets.length).toBe(3);
+    expect(presets.some((preset) => preset.href.includes("bundle=local-model-box"))).toBe(true);
     expect(presets.some((preset) => preset.href.includes("mode=headless"))).toBe(true);
     expect(presets.every((preset) => preset.summary.length > 0)).toBe(true);
   });
 
   it("exports a machine-readable manifest for the selected bundle", async () => {
     const mod = await import("@/lib/workbench-install");
-    const manifest = mod.getAgentEditionManifest({ bundle: "security-ops-node", mode: "headless" });
-    expect(manifest.bundle.id).toBe("security-ops-node");
+    const manifest = mod.getAgentEditionManifest({ bundle: "solo-builder-core", mode: "headless" });
+    expect(manifest.bundle.id).toBe("solo-builder-core");
     expect(manifest.mode).toBe("headless");
-    expect(manifest.commands.hosted).toContain("security-ops-node");
+    expect(manifest.commands.hosted).toContain("solo-builder-core");
     expect(manifest.bundle.packages.length).toBeGreaterThan(0);
     expect(manifest.bundle.verificationChecks.length).toBeGreaterThan(0);
   });
@@ -64,27 +66,27 @@ describe("workbench hosted install script", () => {
   it("builds a comparison matrix across bundles", async () => {
     const mod = await import("@/lib/workbench-install");
     const matrix = mod.getAgentEditionComparisonMatrix();
-    expect(matrix.rows.length).toBeGreaterThanOrEqual(4);
+    expect(matrix.rows.length).toBe(3);
     expect(matrix.columns).toContain("bundle");
     expect(matrix.columns).toContain("persona");
     expect(matrix.columns).toContain("recommended_mode");
-    expect(matrix.rows.some((row: { bundle: string; includes_ollama: string }) => row.bundle === "local-model-box" && row.includes_ollama === "yes")).toBe(true);
+    expect(matrix.rows.some((row: { bundle: string }) => row.bundle === "local-model-box")).toBe(true);
   });
 
   it("recommends bundles by persona and task intent", async () => {
     const mod = await import("@/lib/workbench-install");
     const recommendations = mod.getAgentEditionRecommendations({ persona: "security", task: "audit logs and isolate tooling" });
-    expect(recommendations.primary.bundle.id).toBe("security-ops-node");
+    expect(recommendations.primary.bundle.id).toBe("solo-builder-core");
     expect(recommendations.primary.why.length).toBeGreaterThan(0);
     expect(recommendations.alternatives.length).toBeGreaterThan(0);
   });
 
   it("builds channel-aware commands and normalizes unsupported channels", () => {
-    const commands = buildAgentEditionCommands({ bundle: "automation-node", mode: "headless", channel: "beta" });
+    const commands = buildAgentEditionCommands({ bundle: "solo-builder-core", mode: "headless", channel: "beta" });
     expect(commands.channel).toBe("beta");
     expect(commands.version).toBe("0.2.0-beta");
     expect(commands.hosted).toContain("--channel beta");
-    expect(commands.local).toBe("bash scripts/bootstrap-agent-edition.sh --bundle automation-node --mode headless --channel beta");
+    expect(commands.local).toBe("bash scripts/bootstrap-agent-edition.sh --bundle solo-builder-core --mode headless --channel beta");
 
     const fallback = buildAgentEditionCommands({ channel: "weird" as never });
     expect(fallback.channel).toBe("stable");
@@ -108,8 +110,8 @@ describe("workbench hosted install script", () => {
   });
 
   it("builds deterministic manifest download metadata", () => {
-    const download = getAgentEditionManifestDownload({ bundle: "security-ops-node", mode: "headless", channel: "beta" });
-    expect(download.fileName).toBe("freshcrate-agent-edition-security-ops-node-headless-beta.json");
+    const download = getAgentEditionManifestDownload({ bundle: "solo-builder-core", mode: "headless", channel: "beta" });
+    expect(download.fileName).toBe("freshcrate-agent-edition-solo-builder-core-headless-beta.json");
     expect(download.href).toContain("download=1");
     expect(download.href).toContain("channel=beta");
     expect(download.label).toContain("manifest JSON");
@@ -125,10 +127,10 @@ describe("workbench hosted install script", () => {
   });
 
   it("builds image-build manifest and artifact download metadata", () => {
-    const manifest = getAgentEditionImageBuildManifest({ bundle: "automation-node", mode: "headless", channel: "beta", image: "aws-ami-builder" });
+    const manifest = getAgentEditionImageBuildManifest({ bundle: "solo-builder-core", mode: "headless", channel: "beta", image: "aws-ami-builder" });
     expect(manifest.artifact).toBe("image-build-manifest");
     expect(manifest.image.id).toBe("aws-ami-builder");
-    expect(manifest.bundle.id).toBe("automation-node");
+    expect(manifest.bundle.id).toBe("solo-builder-core");
     expect(manifest.packer.variables.channel).toBe("beta");
     expect(manifest.packer.template).toBe("images/aws-ami-builder.pkr.hcl");
     expect(manifest.packer.template_exists).toBe(true);
@@ -137,12 +139,12 @@ describe("workbench hosted install script", () => {
     expect(manifest.packer.bootstrap_script).toBe("scripts/bootstrap-agent-edition.sh");
     expect(manifest.packer.verify_script).toBe("scripts/verify-agent-edition.sh");
 
-    const download = getAgentEditionImageArtifactDownload({ artifact: "image-build", bundle: "automation-node", mode: "headless", channel: "beta", image: "aws-ami-builder" });
-    expect(download.fileName).toBe("freshcrate-image-build-automation-node-headless-beta-aws-ami-builder.json");
+    const download = getAgentEditionImageArtifactDownload({ artifact: "image-build", bundle: "solo-builder-core", mode: "headless", channel: "beta", image: "aws-ami-builder" });
+    expect(download.fileName).toBe("freshcrate-image-build-solo-builder-core-headless-beta-aws-ami-builder.json");
     expect(download.href).toContain("artifact=image-build");
     expect(download.href).toContain("image=aws-ami-builder");
 
-    const command = getAgentEditionImageBuildCommand({ bundle: "automation-node", mode: "headless", channel: "beta", image: "aws-ami-builder" });
+    const command = getAgentEditionImageBuildCommand({ bundle: "solo-builder-core", mode: "headless", channel: "beta", image: "aws-ami-builder" });
     expect(command.script_path).toBe("scripts/build-agent-edition-image.sh");
     expect(command.validate_script_path).toBe("scripts/validate-agent-edition-templates.sh");
     expect(command.command).toContain("scripts/build-agent-edition-image.sh");

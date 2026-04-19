@@ -7,10 +7,10 @@ import {
   getAgentEditionImageArtifactDownload,
   getAgentEditionManifestDownload,
   getAgentEditionPresetCards,
-  getAgentEditionPublishedImageArtifact,
   getAgentEditionRecommendations,
   getAgentEditionReleaseChannels,
 } from "@/lib/workbench-install";
+import { getAgentEditionPublishedImageArtifact } from "@/lib/workbench-install-files";
 import { getWorkbenchBundles, getWorkbenchFilterOptions, getWorkbenchInstallModes, type WorkbenchMode } from "@/lib/workbench";
 
 export const metadata: Metadata = {

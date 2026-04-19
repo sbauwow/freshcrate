@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getHostedAgentEditionInstallScript } from "@/lib/workbench-install";
+import { getHostedAgentEditionInstallScript } from "@/lib/workbench-install-files";
 import { logRequest } from "@/lib/request-log";
 
 export function GET(request: NextRequest) {
