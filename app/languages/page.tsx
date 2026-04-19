@@ -19,6 +19,8 @@ const LANG_COLORS: Record<string, string> = {
   "C#": "#178600",
   Kotlin: "#A97BFF",
   Shell: "#89E051",
+  Mixed: "#6B7280",
+  "Docs / Meta": "#9A3412",
 };
 
 const OTHERS_COLOR = "#8B8B8B";

@@ -24,6 +24,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
+import { inferRepoLanguage } from "./lib/repo-language.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -167,10 +168,16 @@ async function main() {
       const repoData = await ghFetch(`https://api.github.com/repos/${owner}/${repo}`);
       if (repoData) {
         if (!DRY_RUN) {
+          let rootContents = [];
+          if (!repoData.language) {
+            rootContents = await ghFetch(`https://api.github.com/repos/${owner}/${repo}/contents`) || [];
+            await sleep(GITHUB_TOKEN ? 50 : 500);
+          }
+
           updateProject.run(
             repoData.stargazers_count || 0,
             repoData.forks_count || 0,
-            repoData.language || "",
+            inferRepoLanguage({ repo: repoData, rootContents }),
             repoData.created_at,      // real GitHub creation date
             repoData.pushed_at,        // last push as updated_at
             project.id

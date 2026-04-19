@@ -37,6 +37,7 @@
     "topics:list": "node scripts/topic-watch.mjs --list",
     "backfill": "node scripts/backfill.mjs",
     "backfill:dry": "node scripts/backfill.mjs --dry-run",
+    "infer-languages": "node scripts/infer-languages.mjs",
     "import:npm": "node scripts/import-npm.mjs",
     "import:npm:dry": "node scripts/import-npm.mjs --dry-run",
     "import:pypi": "node scripts/import-pypi.mjs",

@@ -18,6 +18,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
+import { inferRepoLanguage } from "./lib/repo-language.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -115,17 +116,28 @@ async function enrichProject(project) {
 
   await sleep(SLEEP_MS);
 
+  let rootContents = [];
+  if (!repoData.language) {
+    const contentsRes = await fetchGithubApi(`/repos/${slug}/contents`);
+    if (contentsRes.ok) {
+      rootContents = await contentsRes.json();
+      await sleep(SLEEP_MS);
+    }
+  }
+
+  const readmeText = stripHtml(readmeHtml);
+
   return {
     stars: repoData.stargazers_count || 0,
     forks: repoData.forks_count || 0,
-    language: repoData.language || "",
+    language: inferRepoLanguage({ repo: repoData, rootContents, readmeText }),
     readme_html: readmeHtml
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
       .replace(/<iframe\b[^>]*>.*?<\/iframe>/gi, "")
       .replace(/<object\b[^>]*>.*?<\/object>/gi, "")
       .replace(/<embed\b[^>]*>/gi, "")
       .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, ""),
-    readme_text: stripHtml(readmeHtml),
+    readme_text: readmeText,
   };
 }
 

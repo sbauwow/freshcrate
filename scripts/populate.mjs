@@ -21,6 +21,7 @@ import { fileURLToPath } from "url";
 import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 import { exec } from "child_process";
 import { buildCanonicalKey } from "./lib/canonical-id.mjs";
+import { inferRepoLanguage } from "./lib/repo-language.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -339,6 +340,12 @@ async function main() {
       const license = repo.license?.spdx_id || "Unknown";
       const shortDesc = (repo.description || "No description").slice(0, 200);
       const topics = repo.topics || [];
+      let inferredLanguage = repo.language || "";
+      if (!inferredLanguage) {
+        const rootContents = await ghFetch(`https://api.github.com/repos/${repo.full_name}/contents`);
+        inferredLanguage = inferRepoLanguage({ repo, rootContents: rootContents || [] });
+        await sleep(token ? 50 : 500);
+      }
 
       // Insert with enrichment data
       const result = insertProject.run(
@@ -352,7 +359,7 @@ async function main() {
         owner,
         repo.stargazers_count || 0,
         repo.forks_count || 0,
-        repo.language || "",
+        inferredLanguage,
         "github",
         repo.full_name,
         repo.html_url,
@@ -374,7 +381,7 @@ async function main() {
 
       // Tags
       for (const topic of topics.slice(0, 8)) { insertTag.run(projectId, topic.toLowerCase()); }
-      if (repo.language) insertTag.run(projectId, repo.language.toLowerCase());
+      if (inferredLanguage) insertTag.run(projectId, inferredLanguage.toLowerCase());
 
       // Fetch README (HTML rendered) — strip dangerous tags at ingestion
       const readmeRes = await ghFetch(

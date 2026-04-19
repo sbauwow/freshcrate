@@ -26,6 +26,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 import { buildCanonicalKey } from "./lib/canonical-id.mjs";
+import { inferRepoLanguage } from "./lib/repo-language.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -299,6 +300,12 @@ async function main() {
       const category = categorize(repo);
       const shortDesc = (repo.description || "No description").slice(0, 200);
       const repoTopics = repo.topics || [];
+      let inferredLanguage = repo.language || "";
+      if (!inferredLanguage) {
+        const rootContents = await ghFetch(`https://api.github.com/repos/${owner}/${repoName}/contents`);
+        inferredLanguage = inferRepoLanguage({ repo, rootContents: rootContents || [] });
+        await sleep(GITHUB_TOKEN ? 100 : 1000);
+      }
 
       if (DRY_RUN) {
         console.log(`   📦 [DRY] ${repo.full_name} → ${category} (${version}) ⭐${repo.stargazers_count}`);
@@ -313,7 +320,7 @@ async function main() {
           repo.name, shortDesc, repo.description || "",
           repo.homepage || repo.html_url, repo.html_url,
           repo.license?.spdx_id || "Unknown", category, owner,
-          repo.stargazers_count || 0, repo.forks_count || 0, repo.language || "",
+          repo.stargazers_count || 0, repo.forks_count || 0, inferredLanguage,
           "github", repo.full_name, repo.html_url, canonicalKey,
           JSON.stringify({
             source_type: "github",
@@ -332,7 +339,7 @@ async function main() {
           urgencyFromAge(releaseDate), releaseDate || new Date().toISOString());
 
         for (const t of repoTopics.slice(0, 8)) { insertTag.run(projectId, t.toLowerCase()); }
-        if (repo.language) insertTag.run(projectId, repo.language.toLowerCase());
+        if (inferredLanguage) insertTag.run(projectId, inferredLanguage.toLowerCase());
         // Also tag with the watched topic
         insertTag.run(projectId, topic);
 
