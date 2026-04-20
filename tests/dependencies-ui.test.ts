@@ -23,6 +23,7 @@ describe("dependency visibility ui", () => {
     expect(page).toContain("Dependency Scan");
     expect(page).toContain("Open dependency risk map");
     expect(page).toContain("Audit score");
+    expect(page).toContain("Language source");
   });
 
   it("documents the dependency audit api summary", () => {
@@ -30,5 +31,6 @@ describe("dependency visibility ui", () => {
     expect(page).toContain("Project Dependency Audit");
     expect(page).toContain("GET /api/projects/:name/deps");
     expect(page).toContain("conflict count");
+    expect(page).toContain("language_source");
   });
 });

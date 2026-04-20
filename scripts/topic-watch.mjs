@@ -26,7 +26,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
 import { buildCanonicalKey } from "./lib/canonical-id.mjs";
-import { inferRepoLanguage } from "./lib/repo-language.mjs";
+import { resolveRepoLanguage } from "./lib/repo-language.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -228,8 +228,8 @@ async function main() {
   );
 
   const insertProject = db.prepare(
-    `INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author, stars, forks, language, source_type, source_package_id, source_url, canonical_key, provenance_json, imported_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author, stars, forks, language, language_source, source_type, source_package_id, source_url, canonical_key, provenance_json, imported_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const insertRelease = db.prepare(
     "INSERT INTO releases (project_id, version, changes, urgency, created_at) VALUES (?, ?, ?, ?, ?)"
@@ -300,12 +300,13 @@ async function main() {
       const category = categorize(repo);
       const shortDesc = (repo.description || "No description").slice(0, 200);
       const repoTopics = repo.topics || [];
-      let inferredLanguage = repo.language || "";
-      if (!inferredLanguage) {
-        const rootContents = await ghFetch(`https://api.github.com/repos/${owner}/${repoName}/contents`);
-        inferredLanguage = inferRepoLanguage({ repo, rootContents: rootContents || [] });
+      let rootContents = [];
+      if (!repo.language) {
+        rootContents = await ghFetch(`https://api.github.com/repos/${owner}/${repoName}/contents`) || [];
         await sleep(GITHUB_TOKEN ? 100 : 1000);
       }
+      const languageMeta = resolveRepoLanguage({ repo, rootContents });
+      const inferredLanguage = languageMeta.language;
 
       if (DRY_RUN) {
         console.log(`   📦 [DRY] ${repo.full_name} → ${category} (${version}) ⭐${repo.stargazers_count}`);
@@ -321,6 +322,7 @@ async function main() {
           repo.homepage || repo.html_url, repo.html_url,
           repo.license?.spdx_id || "Unknown", category, owner,
           repo.stargazers_count || 0, repo.forks_count || 0, inferredLanguage,
+          languageMeta.source,
           "github", repo.full_name, repo.html_url, canonicalKey,
           JSON.stringify({
             source_type: "github",

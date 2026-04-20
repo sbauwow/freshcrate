@@ -28,6 +28,8 @@ const MANUAL_LANGUAGE_MAP = {
   "dangamuwagedilshan/x0": "Docs / Meta",
 };
 
+const REGISTRY_LANGUAGE_SOURCES = new Set(["npm", "pypi"]);
+
 const MANIFEST_LANGUAGE_RULES = [
   { language: "Python", match: (names) => names.has("pyproject.toml") || names.has("requirements.txt") || names.has("setup.py") || names.has("pipfile") || names.has("poetry.lock") },
   { language: "Rust", match: (names) => names.has("cargo.toml") },
@@ -65,25 +67,29 @@ function zipOnlyArchive(rootNames) {
   return hasZip && !codeLike;
 }
 
-export function inferRepoLanguage({ repo, rootContents = [], readmeText = "" }) {
+export function resolveRepoLanguage({ repo, rootContents = [], readmeText = "" }) {
   const fullName = repo?.full_name?.toLowerCase?.();
   if (fullName && MANUAL_LANGUAGE_MAP[fullName]) {
-    return MANUAL_LANGUAGE_MAP[fullName];
+    return { language: MANUAL_LANGUAGE_MAP[fullName], source: "manual" };
+  }
+
+  if (REGISTRY_LANGUAGE_SOURCES.has(String(repo?.source_type || "").toLowerCase()) && repo?.language) {
+    return { language: repo.language, source: "registry" };
   }
 
   if (repo?.language) {
-    return repo.language;
+    return { language: repo.language, source: "github" };
   }
 
   const rootNames = normalizeRootNames(rootContents);
   const detected = MANIFEST_LANGUAGE_RULES.filter((rule) => rule.match(rootNames)).map((rule) => rule.language);
   if (detected.length === 1) {
-    return detected[0];
+    return { language: detected[0], source: "inferred" };
   }
   if (detected.length > 1) {
-    if (detected.includes("TypeScript") && detected.includes("JavaScript")) return "TypeScript";
-    if (detected.includes("Kotlin") && detected.includes("Java")) return "Kotlin";
-    return "Mixed";
+    if (detected.includes("TypeScript") && detected.includes("JavaScript")) return { language: "TypeScript", source: "inferred" };
+    if (detected.includes("Kotlin") && detected.includes("Java")) return { language: "Kotlin", source: "inferred" };
+    return { language: "Mixed", source: "inferred" };
   }
 
   const text = [repo?.name, repo?.description, ...(repo?.topics || []), readmeText]
@@ -110,12 +116,16 @@ export function inferRepoLanguage({ repo, rootContents = [], readmeText = "" }) 
   );
 
   if (zipOnlyArchive(rootNames)) {
-    return "Docs / Meta";
+    return { language: "Docs / Meta", source: "docs_meta" };
   }
 
   if (DOC_META_PATTERNS.some((pattern) => pattern.test(text)) || docsHeavy) {
-    return "Docs / Meta";
+    return { language: "Docs / Meta", source: "docs_meta" };
   }
 
-  return "";
+  return { language: "", source: "" };
+}
+
+export function inferRepoLanguage({ repo, rootContents = [], readmeText = "" }) {
+  return resolveRepoLanguage({ repo, rootContents, readmeText }).language;
 }

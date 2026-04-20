@@ -24,7 +24,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
-import { inferRepoLanguage } from "./lib/repo-language.mjs";
+import { resolveRepoLanguage } from "./lib/repo-language.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -136,7 +136,7 @@ async function main() {
      VALUES (?, ?, ?, ?, ?)`
   );
   const updateProject = db.prepare(
-    `UPDATE projects SET stars = ?, forks = ?, language = ?,
+    `UPDATE projects SET stars = ?, forks = ?, language = ?, language_source = ?,
      created_at = ?, updated_at = ?, last_github_sync = datetime('now')
      WHERE id = ?`
   );
@@ -174,10 +174,13 @@ async function main() {
             await sleep(GITHUB_TOKEN ? 50 : 500);
           }
 
+          const languageMeta = resolveRepoLanguage({ repo: repoData, rootContents });
+
           updateProject.run(
             repoData.stargazers_count || 0,
             repoData.forks_count || 0,
-            inferRepoLanguage({ repo: repoData, rootContents }),
+            languageMeta.language,
+            languageMeta.source,
             repoData.created_at,      // real GitHub creation date
             repoData.pushed_at,        // last push as updated_at
             project.id

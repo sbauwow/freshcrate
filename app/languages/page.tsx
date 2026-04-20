@@ -65,6 +65,19 @@ interface CatLang {
   count: number;
 }
 
+interface LanguageSourceRow {
+  language_source: string;
+  count: number;
+}
+
+const LANGUAGE_SOURCE_LABELS: Record<string, string> = {
+  github: "GitHub primary",
+  inferred: "Inferred",
+  manual: "Manual map",
+  docs_meta: "Docs / Meta bucket",
+  registry: "Registry default",
+};
+
 export default function LanguagesPage() {
   const db = getDb();
 
@@ -82,6 +95,16 @@ export default function LanguagesPage() {
     .all() as LangRow[];
 
   const totalProjects = langRows.reduce((s, r) => s + r.count, 0);
+
+  const sourceRows = db
+    .prepare(
+      `SELECT language_source, COUNT(*) as count
+       FROM projects
+       WHERE language_source IS NOT NULL AND language_source != ''
+       GROUP BY language_source
+       ORDER BY count DESC, language_source ASC`
+    )
+    .all() as LanguageSourceRow[];
 
   // --- Top 5 packages per language ---
   const topPkgsByLang: Record<string, TopPkg[]> = {};
@@ -244,6 +267,21 @@ export default function LanguagesPage() {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      <SectionHeader id="source-audit" title="Language source audit" />
+      <div className="bg-white border border-fm-border rounded p-3 mb-4">
+        <p className="text-[10px] text-fm-text-light mb-2">
+          Audit trail for where each language label came from.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+          {sourceRows.map((row) => (
+            <div key={row.language_source} className="border border-fm-border rounded px-2 py-2 bg-fm-sidebar-bg/40">
+              <div className="text-[10px] text-fm-text-light">{LANGUAGE_SOURCE_LABELS[row.language_source] || row.language_source}</div>
+              <div className="text-[13px] font-bold text-fm-green">{row.count.toLocaleString()}</div>
+            </div>
+          ))}
         </div>
       </div>
 

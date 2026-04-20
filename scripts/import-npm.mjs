@@ -79,8 +79,8 @@ async function main() {
   const existingNames = new Set(db.prepare("SELECT name FROM projects").all().map((r) => r.name));
 
   const insertProject = db.prepare(
-    `INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author, stars, forks, language, source_type, source_package_id, source_url, canonical_key, provenance_json, imported_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO projects (name, short_desc, description, homepage_url, repo_url, license, category, author, stars, forks, language, language_source, source_type, source_package_id, source_url, canonical_key, provenance_json, imported_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const insertRelease = db.prepare(
     "INSERT INTO releases (project_id, version, changes, urgency, created_at) VALUES (?, ?, ?, ?, ?)"
@@ -164,6 +164,7 @@ async function main() {
       0,
       0,
       "JavaScript",
+      "registry",
       "npm",
       pkg.name,
       sourceUrl,

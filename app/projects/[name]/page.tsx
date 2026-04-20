@@ -25,6 +25,13 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
     High: "text-fm-urgency-high",
     Critical: "text-fm-urgency-critical",
   };
+  const languageSourceLabel = {
+    github: "GitHub primary",
+    inferred: "Inferred",
+    manual: "Manual map",
+    docs_meta: "Docs / Meta bucket",
+    registry: "Registry default",
+  }[enriched?.language_source || project.language_source || ""];
 
   return (
     <div className="flex flex-col md:flex-row gap-5">
@@ -285,6 +292,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
                 <div className="flex items-center gap-1.5">
                   <span className="text-fm-text-light">🔤</span>
                   <span className="font-bold">{enriched.language}</span>
+                  {languageSourceLabel && (
+                    <span className="text-[10px] text-fm-text-light">Language source: {languageSourceLabel}</span>
+                  )}
                 </div>
               )}
             </div>

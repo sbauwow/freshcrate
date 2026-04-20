@@ -18,7 +18,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
-import { inferRepoLanguage } from "./lib/repo-language.mjs";
+import { resolveRepoLanguage } from "./lib/repo-language.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -127,10 +127,13 @@ async function enrichProject(project) {
 
   const readmeText = stripHtml(readmeHtml);
 
+  const languageMeta = resolveRepoLanguage({ repo: repoData, rootContents, readmeText });
+
   return {
     stars: repoData.stargazers_count || 0,
     forks: repoData.forks_count || 0,
-    language: inferRepoLanguage({ repo: repoData, rootContents, readmeText }),
+    language: languageMeta.language,
+    language_source: languageMeta.source,
     readme_html: readmeHtml
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
       .replace(/<iframe\b[^>]*>.*?<\/iframe>/gi, "")
@@ -160,7 +163,7 @@ async function main() {
 
   const updateStmt = db.prepare(`
     UPDATE projects
-    SET stars = ?, forks = ?, language = ?, readme_html = ?, readme_text = ?,
+    SET stars = ?, forks = ?, language = ?, language_source = ?, readme_html = ?, readme_text = ?,
         last_github_sync = ?, readme_fetched_at = ?
     WHERE id = ?
   `);
@@ -177,7 +180,7 @@ async function main() {
 
       if (!DRY_RUN) {
         const now = new Date().toISOString();
-        updateStmt.run(data.stars, data.forks, data.language, data.readme_html, data.readme_text, now, now, project.id);
+        updateStmt.run(data.stars, data.forks, data.language, data.language_source, data.readme_html, data.readme_text, now, now, project.id);
       }
 
       updated++;

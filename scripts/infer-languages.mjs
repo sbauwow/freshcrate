@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { ensureDbDir, getDbPath } from "./lib/db-path.mjs";
-import { inferRepoLanguage } from "./lib/repo-language.mjs";
+import { resolveRepoLanguage } from "./lib/repo-language.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -50,57 +50,93 @@ function parseGithubUrl(url) {
   return { owner: match[1], repo: match[2].replace(/\.git$/, "") };
 }
 
+function registryLanguageMeta(row) {
+  if (row.source_type === "npm") return { language: row.language || "JavaScript", source: "registry" };
+  if (row.source_type === "pypi") return { language: row.language || "Python", source: "registry" };
+  return null;
+}
+
+function fallbackLanguageMeta(row) {
+  const registryMeta = registryLanguageMeta(row);
+  if (registryMeta) return registryMeta;
+  if (row.language === "Docs / Meta") return { language: row.language, source: "docs_meta" };
+  if (row.language) return { language: row.language, source: row.source_type === "github" ? "github" : "manual" };
+  return { language: "Docs / Meta", source: "docs_meta" };
+}
+
 async function main() {
   console.log(`🔤 freshcrate language inference ${DRY_RUN ? "(DRY RUN)" : ""}`);
   ensureDbDir();
   const db = new Database(DB_PATH);
   const rows = db.prepare(`
-    SELECT id, name, repo_url, description
+    SELECT id, name, repo_url, description, language, language_source, source_type
     FROM projects
-    WHERE language IS NULL OR TRIM(language) = ''
+    WHERE (language IS NULL OR TRIM(language) = '')
+       OR (language_source IS NULL OR TRIM(language_source) = '')
     ORDER BY COALESCE(stars, 0) DESC, name ASC
     ${LIMIT > 0 ? `LIMIT ${LIMIT}` : ""}
   `).all();
 
-  console.log(`Found ${rows.length} blank-language repos`);
-  const updateStmt = db.prepare("UPDATE projects SET language = ?, last_github_sync = ? WHERE id = ?");
+  console.log(`Found ${rows.length} repos needing language metadata`);
+  const updateStmt = db.prepare("UPDATE projects SET language = ?, language_source = ?, last_github_sync = ? WHERE id = ?");
   let updated = 0;
-  let stillBlank = 0;
+  let unresolved = 0;
 
   for (const row of rows) {
-    const parsed = parseGithubUrl(row.repo_url);
-    if (!parsed) {
-      console.log(`  ✅ ${row.name} -> Docs / Meta (no repo URL)`);
-      if (!DRY_RUN) updateStmt.run("Docs / Meta", new Date().toISOString(), row.id);
+    const registryMeta = registryLanguageMeta(row);
+    if (registryMeta) {
+      console.log(`  ✅ ${row.name} -> ${registryMeta.language} [${registryMeta.source}]`);
+      if (!DRY_RUN) updateStmt.run(registryMeta.language, registryMeta.source, new Date().toISOString(), row.id);
       updated++;
       continue;
     }
+
+    const parsed = parseGithubUrl(row.repo_url);
+    if (!parsed) {
+      const fallbackMeta = fallbackLanguageMeta(row);
+      console.log(`  ✅ ${row.name} -> ${fallbackMeta.language} [${fallbackMeta.source}]`);
+      if (!DRY_RUN) updateStmt.run(fallbackMeta.language, fallbackMeta.source, new Date().toISOString(), row.id);
+      updated++;
+      continue;
+    }
+
     const slug = `${parsed.owner}/${parsed.repo}`;
     const repo = await ghFetchJson(`https://api.github.com/repos/${slug}`);
     if (!repo) {
-      console.log(`  ⚠ ${row.name}: repo fetch failed`);
-      stillBlank++;
+      const fallbackMeta = fallbackLanguageMeta(row);
+      console.log(`  ⚠ ${row.name}: repo fetch failed, fallback -> ${fallbackMeta.language} [${fallbackMeta.source}]`);
+      if (!DRY_RUN) updateStmt.run(fallbackMeta.language, fallbackMeta.source, new Date().toISOString(), row.id);
+      updated++;
       continue;
     }
+
+    if (repo.language && row.language && repo.language === row.language) {
+      console.log(`  ✅ ${row.name} -> ${row.language} [github]`);
+      if (!DRY_RUN) updateStmt.run(row.language, "github", new Date().toISOString(), row.id);
+      updated++;
+      await sleep(GITHUB_TOKEN ? 40 : 400);
+      continue;
+    }
+
     const rootContents = await ghFetchJson(`https://api.github.com/repos/${slug}/contents`) || [];
     const readme = await ghFetchJson(`https://api.github.com/repos/${slug}/readme`);
     const readmeText = typeof readme?.content === "string"
       ? Buffer.from(readme.content, "base64").toString("utf-8")
       : "";
-    const language = inferRepoLanguage({ repo, rootContents, readmeText });
-    if (language) {
-      console.log(`  ✅ ${row.name} -> ${language}`);
-      if (!DRY_RUN) updateStmt.run(language, new Date().toISOString(), row.id);
+    const resolved = resolveRepoLanguage({ repo: { ...repo, source_type: row.source_type }, rootContents, readmeText });
+    if (resolved.language && resolved.source) {
+      console.log(`  ✅ ${row.name} -> ${resolved.language} [${resolved.source}]`);
+      if (!DRY_RUN) updateStmt.run(resolved.language, resolved.source, new Date().toISOString(), row.id);
       updated++;
     } else {
-      console.log(`  · ${row.name} -> still blank`);
-      stillBlank++;
+      console.log(`  · ${row.name} -> still unresolved`);
+      unresolved++;
     }
     await sleep(GITHUB_TOKEN ? 75 : 750);
   }
 
   db.close();
-  console.log(`Done: ${updated} updated, ${stillBlank} still blank`);
+  console.log(`Done: ${updated} updated, ${unresolved} unresolved`);
 }
 
 main().catch((err) => {

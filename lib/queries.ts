@@ -17,6 +17,7 @@ export interface Project {
   stars: number;
   forks: number;
   language: string;
+  language_source: string;
   verified: number;
   verification_json: string;
   verified_at: string;
@@ -459,6 +460,7 @@ export interface ProjectWithReadme extends ProjectWithRelease {
   stars: number;
   forks: number;
   language: string;
+  language_source: string;
   readme_html: string;
 }
 
@@ -470,7 +472,7 @@ export interface ProjectWithReadme extends ProjectWithRelease {
 export function getProjectWithReadme(name: string): ProjectWithReadme | null {
   const db = getDb();
   const row = db.prepare(`
-    SELECT p.*, p.stars, p.forks, p.language, p.readme_html,
+    SELECT p.*, p.stars, p.forks, p.language, p.language_source, p.readme_html,
            r.version as latest_version, r.changes as latest_changes,
            r.urgency as latest_urgency, r.created_at as release_date
     FROM projects p
