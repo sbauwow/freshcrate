@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getProjectByName, getProjectReleases, getProjectWithReadme, getSimilarProjects } from "@/lib/queries";
 import { getVerificationStatus } from "@/lib/verify";
+import { getHealthStatus } from "@/lib/health";
+import { getMCPManifest, MCP_LABELS } from "@/lib/mcp";
 import { getDependencyAuditSummary } from "@/lib/deps";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { notFound } from "next/navigation";
@@ -16,6 +18,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
   const enriched = getProjectWithReadme(name);
   const similar = getSimilarProjects(project.id, project.category, project.tags, 5);
   const verification = getVerificationStatus(project.id);
+  const health = getHealthStatus(project.id);
+  const mcp = getMCPManifest(project.id);
   const dependencySummary = getDependencyAuditSummary(project.id);
   const provenance = parseProvenanceJson(project.provenance_json);
 
@@ -190,6 +194,80 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
             </div>
           </div>
         </div>
+
+        {/* MCP compatibility matrix */}
+        {mcp && (
+          <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
+            <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
+              MCP Compatibility
+            </h3>
+            <div className="space-y-2 text-[11px]">
+              {[
+                { key: "transports", label: "Transport", values: mcp.transports },
+                { key: "auth", label: "Auth", values: mcp.auth },
+                { key: "runtime", label: "Runtime", values: mcp.runtime },
+                { key: "hosting", label: "Hosting", values: mcp.hosting },
+              ].map((row) => (
+                <div key={row.key}>
+                  <span className="text-fm-text-light block mb-0.5">{row.label}:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {row.values.length === 0 ? (
+                      <span className="text-fm-text-light text-[10px]">—</span>
+                    ) : (
+                      row.values.map((v) => (
+                        <span key={v} className="bg-fm-green/10 text-fm-green px-1.5 py-0.5 rounded text-[10px]">
+                          {MCP_LABELS[v] || v}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div className="text-fm-text-light text-[10px] pt-1 border-t border-fm-border/30">
+                Detected from README ({new Date(mcp.detected_at).toLocaleDateString()})
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Health / trust score */}
+        {health && (
+          <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
+            <h3 className="text-[11px] font-bold text-fm-green border-b border-fm-border pb-1 mb-2">
+              Health Score
+            </h3>
+            <div className="space-y-2 text-[11px]">
+              <div>
+                <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${
+                  health.score >= 75
+                    ? "bg-green-900/30 text-green-400 border-green-700/50"
+                    : health.score >= 50
+                    ? "bg-yellow-900/30 text-yellow-400 border-yellow-700/50"
+                    : "bg-red-900/30 text-red-400 border-red-700/50"
+                }`}>
+                  {health.score}/100
+                </span>
+              </div>
+              <div className="space-y-1">
+                {health.factors.map((f) => (
+                  <div key={f.name} title={f.explain} className="flex items-baseline justify-between gap-2">
+                    <span className="text-fm-text-light">{f.label}</span>
+                    <span className={`font-mono font-bold ${
+                      !f.present ? "text-fm-text-light" :
+                      f.score >= 75 ? "text-green-400" :
+                      f.score >= 50 ? "text-yellow-400" : "text-red-400"
+                    }`}>
+                      {f.present ? f.score : "—"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="text-fm-text-light text-[10px] pt-1 border-t border-fm-border/30">
+                Computed: {new Date(health.computed_at).toLocaleDateString()}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Verification status */}
         <div className="bg-fm-sidebar-bg border border-fm-border rounded p-3 mb-4">
