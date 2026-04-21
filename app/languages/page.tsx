@@ -8,6 +8,9 @@ export const metadata: Metadata = {
     "Explore the programming language ecosystem across freshcrate packages. See which languages dominate, discover rising stars, and browse the category × language heatmap.",
 };
 
+// Language coverage changes as GitHub enrichment/backfills run; render from the live DB.
+export const dynamic = "force-dynamic";
+
 const LANG_COLORS: Record<string, string> = {
   Python: "#3572A5",
   TypeScript: "#3178C6",

@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   description: "Comprehensive statistics about the freshcrate package directory. Numbers, charts, and fun facts for humans and agents alike.",
 };
 
+// Stats drift quickly during imports/backfills; render from the live DB instead of build-time snapshots.
+export const dynamic = "force-dynamic";
+
 function timeAgo(dateStr: string): string {
   const now = new Date();
   const date = new Date(dateStr);
