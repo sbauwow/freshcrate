@@ -109,9 +109,13 @@ rm -f "$FINAL_ISO"
 xorriso \
   -indev "$SOURCE_ISO" \
   -outdev "$FINAL_ISO" \
-  -map "$STAGING_DIR" / \
-  -boot_image any replay \
-  -volid "freshcrate-${BUNDLE}-${CHANNEL}" \
+  -compliance no_emul_toc \
+  -boot_image any keep \
+  -map "${SEED_DIR}" /nocloud \
+  -map "${FRESHCRATE_DIR}" /freshcrate \
+  -map "${STAGING_DIR}/boot/grub/grub.cfg" /boot/grub/grub.cfg \
+  -map "${STAGING_DIR}/boot/grub/loopback.cfg" /boot/grub/loopback.cfg \
+  -volid "$(echo "freshcrate-${BUNDLE}-${CHANNEL}" | cut -c1-32)" \
   >/dev/null
 
 sha256sum "$FINAL_ISO"
