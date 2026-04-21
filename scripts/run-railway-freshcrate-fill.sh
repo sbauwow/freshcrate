@@ -25,29 +25,32 @@ railway run sh -lc '
   set -euo pipefail
   export FRESHCRATE_DB_PATH=/data/freshcrate.db
 
-  echo "[1/8] migrate"
+  echo "[1/9] migrate"
   npm run migrate
 
-  echo "[2/8] github populate"
+  echo "[2/9] github populate"
   node scripts/populate.mjs
 
-  echo "[3/8] npm import"
+  echo "[3/9] npm import"
   node scripts/import-npm.mjs
 
-  echo "[4/8] pypi import"
+  echo "[4/9] pypi import"
   node scripts/import-pypi.mjs
 
-  echo "[5/8] dedupe merge"
+  echo "[5/9] dedupe merge"
   node scripts/merge-duplicates.mjs --apply
 
-  echo "[6/8] topic watch"
+  echo "[6/9] topic watch"
   npm run topics
 
-  echo "[7/8] backfill + enrich"
+  echo "[7/9] backfill + enrich"
   npm run backfill
   npm run enrich
 
-  echo "[8/8] verify"
+  echo "[8/9] dependency scan"
+  npm run scan-deps
+
+  echo "[9/9] verify"
   npm run verify
 '
 
