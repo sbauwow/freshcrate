@@ -4,16 +4,16 @@ import { GET } from "@/app/api/workbench/manifest/route";
 
 describe("workbench manifest api", () => {
   it("returns a normalized manifest with release channel metadata", async () => {
-    const request = new NextRequest("https://freshcrate.ai/api/workbench/manifest?bundle=research-node&mode=light-desktop&channel=beta");
+    const request = new NextRequest("https://freshcrate.ai/api/workbench/manifest?bundle=research-node&mode=light-desktop&channel=stable");
     const response = GET(request);
     expect(response.status).toBe(200);
 
     const data = await response.json();
     expect(data.bundle.id).toBe("research-node");
     expect(data.mode).toBe("light-desktop");
-    expect(data.channel.id).toBe("beta");
-    expect(data.channel.version).toBe("0.2.0-beta");
-    expect(data.commands.hosted).toContain("--channel beta");
+    expect(data.channel.id).toBe("stable");
+    expect(data.channel.version).toBe("0.1.0");
+    expect(data.commands.hosted).toContain("--channel stable");
   });
 
   it("returns downloadable json attachment headers when requested", async () => {

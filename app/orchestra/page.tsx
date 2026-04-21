@@ -47,7 +47,7 @@ export default async function OrchestraPage({
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px]">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[10px]">
         <div className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-2">
           <div className="text-fm-text-light">Patterns tracked</div>
           <div className="font-bold text-[13px]">{brief.patterns}</div>
@@ -59,10 +59,6 @@ export default async function OrchestraPage({
         <div className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-2">
           <div className="text-fm-text-light">Anti-patterns named</div>
           <div className="font-bold text-[13px]">{brief.antiPatterns}</div>
-        </div>
-        <div className="bg-fm-sidebar-bg border border-fm-border rounded px-2 py-2">
-          <div className="text-fm-text-light">Operator score</div>
-          <div className="font-bold text-[13px]">{playbook.score}/100</div>
         </div>
       </div>
 
@@ -112,14 +108,6 @@ export default async function OrchestraPage({
           Freshcrate opinionated playbook
         </div>
         <div className="p-2 space-y-2 text-[11px]">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-bold text-fm-text">Orchestration maturity:</span>
-            <span className="px-1.5 py-0.5 rounded bg-[#bbddff]/60 text-fm-link font-bold">{playbook.score}/100</span>
-            <span className={`px-1.5 py-0.5 rounded font-bold text-[9px] ${playbook.level === "high" ? "bg-red-100 text-red-800" : playbook.level === "medium" ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}`}>
-              {playbook.level}
-            </span>
-            <span className="text-fm-text-light">{playbook.rationale}</span>
-          </div>
           <div className="space-y-2">
             {playbook.actions.map((action) => (
               <div key={action.id} className="border border-fm-border rounded p-2 bg-fm-bg/20">

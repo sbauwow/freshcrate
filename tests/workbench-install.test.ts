@@ -81,39 +81,34 @@ describe("workbench hosted install script", () => {
     expect(recommendations.alternatives.length).toBeGreaterThan(0);
   });
 
-  it("builds channel-aware commands and normalizes unsupported channels", () => {
-    const commands = buildAgentEditionCommands({ bundle: "solo-builder-core", mode: "headless", channel: "beta" });
-    expect(commands.channel).toBe("beta");
-    expect(commands.version).toBe("0.2.0-beta");
-    expect(commands.hosted).toContain("--channel beta");
-    expect(commands.local).toBe("bash scripts/bootstrap-agent-edition.sh --bundle solo-builder-core --mode headless --channel beta");
-
+  it("normalizes unsupported channels to stable", () => {
     const fallback = buildAgentEditionCommands({ channel: "weird" as never });
     expect(fallback.channel).toBe("stable");
     expect(fallback.version).toBe("0.1.0");
+    expect(fallback.hosted).toContain("--channel stable");
   });
 
   it("exports deterministic release channels with versions", () => {
     const channels = getAgentEditionReleaseChannels();
-    expect(channels.map((channel) => channel.id)).toEqual(["stable", "beta", "nightly"]);
+    expect(channels.map((channel) => channel.id)).toEqual(["stable"]);
     expect(channels[0]?.version).toBe("0.1.0");
-    expect(channels[2]?.cadence).toContain("Daily");
+    expect(channels[0]?.risk).toBe("low");
   });
 
   it("includes release channel details in the manifest", async () => {
     const mod = await import("@/lib/workbench-install");
-    const manifest = mod.getAgentEditionManifest({ bundle: "research-node", mode: "light-desktop", channel: "nightly" });
-    expect(manifest.channel.id).toBe("nightly");
-    expect(manifest.channel.version).toBe("0.3.0-nightly");
-    expect(manifest.commands.channel).toBe("nightly");
+    const manifest = mod.getAgentEditionManifest({ bundle: "research-node", mode: "light-desktop", channel: "stable" });
+    expect(manifest.channel.id).toBe("stable");
+    expect(manifest.channel.version).toBe("0.1.0");
+    expect(manifest.commands.channel).toBe("stable");
     expect(manifest.bundle.id).toBe("research-node");
   });
 
   it("builds deterministic manifest download metadata", () => {
-    const download = getAgentEditionManifestDownload({ bundle: "solo-builder-core", mode: "headless", channel: "beta" });
-    expect(download.fileName).toBe("freshcrate-agent-edition-solo-builder-core-headless-beta.json");
+    const download = getAgentEditionManifestDownload({ bundle: "solo-builder-core", mode: "headless", channel: "stable" });
+    expect(download.fileName).toBe("freshcrate-agent-edition-solo-builder-core-headless-stable.json");
     expect(download.href).toContain("download=1");
-    expect(download.href).toContain("channel=beta");
+    expect(download.href).toContain("channel=stable");
     expect(download.label).toContain("manifest JSON");
   });
 
@@ -127,11 +122,11 @@ describe("workbench hosted install script", () => {
   });
 
   it("builds image-build manifest and artifact download metadata", () => {
-    const manifest = getAgentEditionImageBuildManifest({ bundle: "solo-builder-core", mode: "headless", channel: "beta", image: "aws-ami-builder" });
+    const manifest = getAgentEditionImageBuildManifest({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "aws-ami-builder" });
     expect(manifest.artifact).toBe("image-build-manifest");
     expect(manifest.image.id).toBe("aws-ami-builder");
     expect(manifest.bundle.id).toBe("solo-builder-core");
-    expect(manifest.packer.variables.channel).toBe("beta");
+    expect(manifest.packer.variables.channel).toBe("stable");
     expect(manifest.packer.template).toBe("images/aws-ami-builder.pkr.hcl");
     expect(manifest.packer.template_exists).toBe(true);
     expect(manifest.packer.cloud_init_url).toContain("/api/workbench/cloud-init");
@@ -139,17 +134,17 @@ describe("workbench hosted install script", () => {
     expect(manifest.packer.bootstrap_script).toBe("scripts/bootstrap-agent-edition.sh");
     expect(manifest.packer.verify_script).toBe("scripts/verify-agent-edition.sh");
 
-    const download = getAgentEditionImageArtifactDownload({ artifact: "image-build", bundle: "solo-builder-core", mode: "headless", channel: "beta", image: "aws-ami-builder" });
-    expect(download.fileName).toBe("freshcrate-image-build-solo-builder-core-headless-beta-aws-ami-builder.json");
+    const download = getAgentEditionImageArtifactDownload({ artifact: "image-build", bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "aws-ami-builder" });
+    expect(download.fileName).toBe("freshcrate-image-build-solo-builder-core-headless-stable-aws-ami-builder.json");
     expect(download.href).toContain("artifact=image-build");
     expect(download.href).toContain("image=aws-ami-builder");
 
-    const command = getAgentEditionImageBuildCommand({ bundle: "solo-builder-core", mode: "headless", channel: "beta", image: "aws-ami-builder" });
+    const command = getAgentEditionImageBuildCommand({ bundle: "solo-builder-core", mode: "headless", channel: "stable", image: "aws-ami-builder" });
     expect(command.script_path).toBe("scripts/build-agent-edition-image.sh");
     expect(command.validate_script_path).toBe("scripts/validate-agent-edition-templates.sh");
     expect(command.command).toContain("scripts/build-agent-edition-image.sh");
     expect(command.command).toContain("--image aws-ami-builder");
-    expect(command.command).toContain("--channel beta");
+    expect(command.command).toContain("--channel stable");
     expect(command.template).toBe("images/aws-ami-builder.pkr.hcl");
     expect(command.validate_command).toContain("scripts/validate-agent-edition-templates.sh");
 

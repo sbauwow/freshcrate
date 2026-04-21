@@ -100,7 +100,6 @@ export default async function Home({
               <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">headless first</span>
             </div>
             <div className="flex flex-wrap gap-3 mt-3">
-              <Link href="/workbench" className="text-fm-link hover:text-fm-link-hover font-bold">Open Agent Edition</Link>
               <Link href="/install/agent-edition" className="text-fm-link hover:text-fm-link-hover font-bold">Install Agent Edition</Link>
             </div>
           </div>
@@ -249,9 +248,6 @@ export default async function Home({
             freshcrate Agent Edition is the Linux operator lane: minimal agentic substrate, Ubuntu 24.04 x86_64, headless first.
           </p>
           <div className="space-y-1.5 text-[10px]">
-            <Link href="/workbench" className="block text-fm-link hover:text-fm-link-hover">
-              → Open Agent Edition workbench
-            </Link>
             <Link href="/install/agent-edition" className="block text-fm-link hover:text-fm-link-hover">
               → Install freshcrate Agent Edition
             </Link>

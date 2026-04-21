@@ -10,8 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/browse`, changeFrequency: "daily", priority: 0.8 },
     { url: `${baseUrl}/submit`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/agent-edition`, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${baseUrl}/workbench`, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${baseUrl}/install/agent-edition`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${baseUrl}/orchestra`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${baseUrl}/legislation`, changeFrequency: "daily", priority: 0.7 },
     { url: `${baseUrl}/api`, changeFrequency: "monthly", priority: 0.5 },

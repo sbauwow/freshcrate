@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(process.cwd()),
   },
+  async redirects() {
+    return [
+      { source: "/workbench", destination: "/agent-edition", permanent: true },
+      { source: "/install/agent-edition", destination: "/agent-edition", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

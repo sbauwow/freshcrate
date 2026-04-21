@@ -5,11 +5,11 @@ import { GET as GET_CLOUD_INIT } from "@/app/api/workbench/cloud-init/route";
 
 describe("workbench image artifact apis", () => {
   it("returns image-build manifest json with attachment headers", async () => {
-    const request = new NextRequest("https://freshcrate.ai/api/workbench/image-build?bundle=solo-builder-core&mode=headless&channel=beta&image=aws-ami-builder&download=1");
+    const request = new NextRequest("https://freshcrate.ai/api/workbench/image-build?bundle=solo-builder-core&mode=headless&channel=stable&image=aws-ami-builder&download=1");
     const response = GET_IMAGE_BUILD(request);
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("application/json");
-    expect(response.headers.get("content-disposition")).toContain("freshcrate-image-build-solo-builder-core-headless-beta-aws-ami-builder.json");
+    expect(response.headers.get("content-disposition")).toContain("freshcrate-image-build-solo-builder-core-headless-stable-aws-ami-builder.json");
 
     const data = await response.json();
     expect(data.artifact).toBe("image-build-manifest");

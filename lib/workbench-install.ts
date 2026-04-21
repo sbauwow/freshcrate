@@ -98,24 +98,6 @@ const RELEASE_CHANNELS: AgentEditionReleaseChannel[] = [
     summary: "Slowest-moving channel. Use for production-ish agent boxes that need predictable receipts and fewer surprises.",
     risk: "low",
   },
-  {
-    id: "beta",
-    name: "Beta",
-    version: "0.2.0-beta",
-    cadence: "Weekly preview cuts",
-    supportWindow: "Short-lived preview lane before stable promotion",
-    summary: "Preview channel for new bundles, installer behavior, and product copy before promotion to stable.",
-    risk: "medium",
-  },
-  {
-    id: "nightly",
-    name: "Nightly",
-    version: "0.3.0-nightly",
-    cadence: "Daily tip-of-tree snapshots",
-    supportWindow: "No long support window; expect churn",
-    summary: "Fastest-moving channel for testing fresh bootstrap logic, manifests, and workbench experiments before they harden.",
-    risk: "high",
-  },
 ];
 
 const CLOUD_IMAGES: AgentEditionCloudImage[] = [

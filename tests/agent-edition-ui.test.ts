@@ -10,9 +10,7 @@ describe("agent edition ui surfacing", () => {
     expect(homepage).toContain("Linux for agent operators");
     expect(homepage).toContain("minimal agentic substrate");
     expect(homepage).toContain("Ubuntu 24.04 x86_64");
-    expect(homepage).toContain("/workbench");
     expect(homepage).toContain("/install/agent-edition");
-    expect(homepage).toContain("Open Agent Edition");
     expect(homepage).toContain("Install Agent Edition");
   });
 
@@ -28,8 +26,17 @@ describe("agent edition ui surfacing", () => {
     expect(layout).toContain(">agent edition<");
     expect(sitemap).toContain("/agent-edition");
     expect(landing).toContain("freshcrate Agent Edition");
-    expect(landing).toContain("/workbench");
-    expect(landing).toContain("/install/agent-edition");
+  });
+
+  it("redirects legacy workbench and install routes to /agent-edition", () => {
+    const nextConfig = fs.readFileSync(path.join(process.cwd(), "next.config.ts"), "utf-8");
+    expect(nextConfig).toContain('source: "/workbench"');
+    expect(nextConfig).toContain('source: "/install/agent-edition"');
+    expect(nextConfig).toContain('destination: "/agent-edition"');
+    const workbenchPagePath = path.join(process.cwd(), "app", "workbench", "page.tsx");
+    const installPagePath = path.join(process.cwd(), "app", "install", "agent-edition", "page.tsx");
+    expect(fs.existsSync(workbenchPagePath)).toBe(false);
+    expect(fs.existsSync(installPagePath)).toBe(false);
   });
 
   it("keeps the original freshcrate logo in the hero position", () => {
