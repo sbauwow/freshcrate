@@ -3,15 +3,15 @@ import * as fs from "fs";
 import * as path from "path";
 
 describe("agent edition ui surfacing", () => {
-  it("surfaces a strong Agent Edition homepage hero with operator framing and CTAs", () => {
+  it("surfaces a broader freshcrate homepage hero with ecosystem framing and CTAs", () => {
     const homepage = fs.readFileSync(path.join(process.cwd(), "app", "page.tsx"), "utf-8");
 
-    expect(homepage).toContain("freshcrate Agent Edition");
-    expect(homepage).toContain("Linux for agent operators");
-    expect(homepage).toContain("minimal agentic substrate");
-    expect(homepage).toContain("Ubuntu 24.04 x86_64");
-    expect(homepage).toContain("/install/agent-edition");
-    expect(homepage).toContain("Install Agent Edition");
+    expect(homepage).toContain("Open source packages for agents");
+    expect(homepage).toContain("Discover the agent ecosystem in one place");
+    expect(homepage).toContain("MCP servers");
+    expect(homepage).toContain("Explore Orchestra");
+    expect(homepage).toContain("/agent-edition");
+    expect(homepage).toContain("Browse ecosystem");
   });
 
   it("adds a canonical /agent-edition landing page and routes navigation to it", () => {

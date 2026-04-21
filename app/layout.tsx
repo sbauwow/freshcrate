@@ -8,9 +8,9 @@ import PageViewBeacon from "./components/page-view-beacon";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://freshcrate.ai"),
-  title: "freshcrate Agent Edition — Linux for agent operators",
+  title: "freshcrate — open source packages for agents",
   description:
-    "freshcrate Agent Edition is a minimal agentic substrate: Linux for agent operators, Ubuntu 24.04 x86_64, headless first, plus the open source agent package index.",
+    "freshcrate is the open source package directory for the agent ecosystem: MCP servers, orchestration frameworks, coding agents, research tooling, infrastructure, and operator playbooks.",
   icons: {
     icon: [
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
@@ -20,17 +20,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "freshcrate",
-    title: "freshcrate Agent Edition — Linux for agent operators",
+    title: "freshcrate — open source packages for agents",
     description:
-      "A minimal agentic substrate for serious builders: Ubuntu 24.04 x86_64, headless first, hosted install, machine-readable manifests, plus the open source agent package index.",
+      "The open source package directory for the agent ecosystem: MCP servers, orchestration frameworks, coding agents, research tooling, infrastructure, and operator playbooks.",
     url: "https://freshcrate.ai",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "freshcrate Agent Edition" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "freshcrate" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "freshcrate Agent Edition — Linux for agent operators",
+    title: "freshcrate — open source packages for agents",
     description:
-      "A minimal agentic substrate for serious builders: Ubuntu 24.04 x86_64, headless first, hosted install, machine-readable manifests, plus the open source agent package index.",
+      "The open source package directory for the agent ecosystem: MCP servers, orchestration frameworks, coding agents, research tooling, infrastructure, and operator playbooks.",
     images: ["/og-default.png"],
   },
 };

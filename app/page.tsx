@@ -89,18 +89,21 @@ export default async function Home({
           </div>
 
           <div className="bg-fm-sidebar-bg border border-fm-border rounded px-3 py-3 mb-3 text-[10px]">
-            <div className="text-[12px] font-bold text-fm-green">freshcrate Agent Edition</div>
-            <div className="text-fm-text mt-1 font-bold">Linux for agent operators.</div>
+            <div className="text-[12px] font-bold text-fm-green">freshcrate</div>
+            <div className="text-fm-text mt-1 font-bold">Open source packages for agents.</div>
             <div className="text-fm-text-light mt-1 leading-relaxed">
-              A minimal agentic substrate for serious builders: Ubuntu 24.04 x86_64, headless first, hosted install, machine-readable manifests, control-plane surfaces.
+              Discover the agent ecosystem in one place: MCP servers, orchestration frameworks, coding agents, infra, research tooling, security, and operator playbooks.
             </div>
             <div className="flex flex-wrap gap-2 mt-2 text-[9px]">
-              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">minimal agentic substrate</span>
-              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">Ubuntu 24.04 x86_64</span>
-              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">headless first</span>
+              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">agent ecosystem</span>
+              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">MCP servers</span>
+              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">orchestration</span>
+              <span className="bg-[#bbddff]/50 text-fm-link px-1.5 py-0.5 rounded">research + infra</span>
             </div>
             <div className="flex flex-wrap gap-3 mt-3">
-              <Link href="/install/agent-edition" className="text-fm-link hover:text-fm-link-hover font-bold">Install Agent Edition</Link>
+              <Link href="/browse" className="text-fm-link hover:text-fm-link-hover font-bold">Browse ecosystem</Link>
+              <Link href="/orchestra" className="text-fm-link hover:text-fm-link-hover font-bold">Explore Orchestra</Link>
+              <Link href="/agent-edition" className="text-fm-link hover:text-fm-link-hover">Agent Edition</Link>
             </div>
           </div>
 

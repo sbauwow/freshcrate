@@ -8,9 +8,25 @@ import {
 } from "@/lib/orchestra";
 
 export const metadata: Metadata = {
-  title: "freshcrate orchestra — Best practices for orchestrating agents",
+  title: "freshcrate orchestra — orchestration patterns for the agent ecosystem",
   description:
-    "Opinionated guidance on orchestrating agents: supervision, delegation, review gates, artifact spines, and human escalation.",
+    "Patterns, anti-patterns, and operator guidance for orchestrating agents across delegation, supervision, review loops, artifact spines, and human escalation.",
+  openGraph: {
+    title: "freshcrate orchestra — orchestration patterns for the agent ecosystem",
+    description:
+      "Explore freshcrate Orchestra: practical patterns for multi-agent delegation, supervision, review gates, artifact spines, and human-in-the-loop control.",
+    url: "https://freshcrate.ai/orchestra",
+    siteName: "freshcrate",
+    type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "freshcrate orchestra" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "freshcrate orchestra — orchestration patterns for the agent ecosystem",
+    description:
+      "Practical orchestration guidance for the agent ecosystem: delegation, supervision, review gates, artifact spines, and human escalation.",
+    images: ["/og-default.png"],
+  },
 };
 
 function stagePill(stage: OrchestraStage): string {
@@ -41,9 +57,9 @@ export default async function OrchestraPage({
   return (
     <div className="flex flex-col gap-4">
       <div className="border-b-2 border-fm-green pb-1">
-        <h2 className="text-[14px] font-bold text-fm-green">Orchestra — how to orchestrate agents without making a mess</h2>
+        <h2 className="text-[14px] font-bold text-fm-green">Orchestra — patterns for coordinating the agent ecosystem</h2>
         <p className="text-[11px] text-fm-text-light mt-1">
-          Opinionated operator guidance for multi-agent systems: what scales, what fails, and where to keep humans in the loop.
+          Practical guidance for multi-agent systems across delegation, supervision, review gates, artifact spines, and human-in-the-loop control.
         </p>
       </div>
 
