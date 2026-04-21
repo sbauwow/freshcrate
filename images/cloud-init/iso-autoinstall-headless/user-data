@@ -1,6 +1,9 @@
 #cloud-config
 autoinstall:
   version: 1
+  interactive-sections: []
+  refresh-installer:
+    update: false
   identity:
     hostname: freshcrate-agent-edition
     realname: freshcrate operator
