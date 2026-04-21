@@ -69,10 +69,17 @@ if [[ ! -f "$SOURCE_ISO" ]]; then
 fi
 
 7z x -y -o"$STAGING_DIR" "$SOURCE_ISO" >/dev/null
-rm -rf "${STAGING_DIR}/[BOOT]"
+# Keep [BOOT]/ — it contains the El Torito boot images (BIOS + EFI) that
+# xorriso -as mkisofs needs. Move out of the ISO root via -- exclusion later.
+EFI_BOOT_IMG="${STAGING_DIR}/[BOOT]/2-Boot-NoEmul.img"
+[[ -f "$EFI_BOOT_IMG" ]] || { echo "missing EFI boot image at $EFI_BOOT_IMG" >&2; exit 1; }
 
-cp "${ROOT_DIR}/images/cloud-init/iso-autoinstall-headless/meta-data" "${SEED_DIR}/meta-data"
-cp "${ROOT_DIR}/images/cloud-init/iso-autoinstall-headless/user-data" "${SEED_DIR}/user-data"
+# Inject seed + freshcrate scripts directly into staging (so they end up in ISO root)
+mkdir -p "${STAGING_DIR}/nocloud" "${STAGING_DIR}/freshcrate/scripts/lib"
+cp "${ROOT_DIR}/images/cloud-init/iso-autoinstall-headless/meta-data" "${STAGING_DIR}/nocloud/meta-data"
+cp "${ROOT_DIR}/images/cloud-init/iso-autoinstall-headless/user-data" "${STAGING_DIR}/nocloud/user-data"
+SEED_DIR="${STAGING_DIR}/nocloud"
+FRESHCRATE_DIR="${STAGING_DIR}/freshcrate"
 python3 - "$BUNDLE" "$MODE" "$CHANNEL" "${SEED_DIR}/user-data" <<'PY'
 from pathlib import Path
 import sys
@@ -94,7 +101,7 @@ from pathlib import Path
 import sys
 staging = Path(sys.argv[1])
 needle = " ---"
-insert = " autoinstall ds=nocloud\\;s=/cdrom/nocloud/ ---"
+insert = " autoinstall ds=nocloud\\;s=/cdrom/nocloud/ console=tty0 console=ttyS0,115200n8 ---"
 for relative in ("boot/grub/grub.cfg", "boot/grub/loopback.cfg", "isolinux/txt.cfg"):
     path = staging / relative
     if not path.exists():
@@ -106,16 +113,27 @@ for relative in ("boot/grub/grub.cfg", "boot/grub/loopback.cfg", "isolinux/txt.c
 PY
 
 rm -f "$FINAL_ISO"
-xorriso \
-  -indev "$SOURCE_ISO" \
-  -outdev "$FINAL_ISO" \
-  -compliance no_emul_toc \
-  -boot_image any keep \
-  -map "${SEED_DIR}" /nocloud \
-  -map "${FRESHCRATE_DIR}" /freshcrate \
-  -map "${STAGING_DIR}/boot/grub/grub.cfg" /boot/grub/grub.cfg \
-  -map "${STAGING_DIR}/boot/grub/loopback.cfg" /boot/grub/loopback.cfg \
-  -volid "$(echo "freshcrate-${BUNDLE}-${CHANNEL}" | cut -c1-32)" \
+VOL_ID="$(echo "freshcrate-${BUNDLE}-${CHANNEL}" | cut -c1-32)"
+# Move [BOOT] out of staging so it doesn't end up in the ISO filesystem,
+# but use its EFI image as an appended GPT partition (canonical Ubuntu pattern).
+BOOT_TMP="${WORK_DIR}/boot-images"
+mv "${STAGING_DIR}/[BOOT]" "$BOOT_TMP"
+
+xorriso -as mkisofs \
+  -V "$VOL_ID" \
+  -r -joliet-long -cache-inodes \
+  -partition_offset 16 \
+  -appended_part_as_gpt \
+  -append_partition 2 0xef "${BOOT_TMP}/2-Boot-NoEmul.img" \
+  -c boot.catalog \
+  -b boot/grub/i386-pc/eltorito.img \
+  -no-emul-boot -boot-load-size 4 -boot-info-table \
+  -eltorito-alt-boot \
+  -e '--interval:appended_partition_2:all::' \
+  -no-emul-boot \
+  -isohybrid-gpt-basdat \
+  -o "$FINAL_ISO" \
+  "$STAGING_DIR" \
   >/dev/null
 
 sha256sum "$FINAL_ISO"
