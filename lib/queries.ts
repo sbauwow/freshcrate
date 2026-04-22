@@ -2,6 +2,15 @@ import { getDb } from "./db";
 import { buildCanonicalKey } from "./provenance";
 import { isRankingV2Enabled, rankProjectsV2 } from "./ranking";
 
+function maybeApplyRankingV2(
+  projects: ProjectWithRelease[],
+  options: { sort?: ReleaseSort; query?: string } = {}
+): ProjectWithRelease[] {
+  if (!isRankingV2Enabled()) return projects;
+  if (options.sort && options.sort !== "rank") return projects;
+  return rankProjectsV2(projects, options.query);
+}
+
 export interface Project {
   id: number;
   name: string;
@@ -47,7 +56,7 @@ export interface ProjectWithRelease extends Project {
   tags: string[];
 }
 
-export type ReleaseSort = "newest" | "oldest" | "stars" | "name";
+export type ReleaseSort = "rank" | "newest" | "oldest" | "stars" | "name";
 
 export interface LatestReleaseOptions {
   category?: string;
@@ -105,6 +114,7 @@ export function getLatestReleases(
   }
 
   const orderBy: Record<ReleaseSort, string> = {
+    rank: "r.created_at DESC",
     newest: "r.created_at DESC",
     oldest: "r.created_at ASC",
     stars: "COALESCE(p.stars, 0) DESC, r.created_at DESC",
@@ -127,10 +137,12 @@ export function getLatestReleases(
 
   const rows = db.prepare(sql).all(...params, limit, offset) as ProjectWithRelease[];
 
-  return rows.map((row) => ({
+  const projects = rows.map((row) => ({
     ...row,
     tags: getProjectTags(row.id),
   }));
+
+  return maybeApplyRankingV2(projects, { sort });
 }
 
 /**

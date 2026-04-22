@@ -71,6 +71,54 @@ describe("getLatestReleases", () => {
     expect(verified).toHaveLength(1);
     expect(verified[0].name).toBe("verified-one");
   });
+
+  it("uses ranking v2 for browse when sort=rank", () => {
+    const weakId = insertTestProject(db, {
+      name: "aaa-zombie",
+      category: "Security",
+      short_desc: "agent sandbox guardrail",
+      repo_url: "https://github.com/test/aaa-zombie",
+    });
+    const strongId = insertTestProject(db, {
+      name: "zzz-active",
+      category: "Security",
+      short_desc: "agent sandbox guardrail",
+      repo_url: "https://github.com/test/zzz-active",
+    });
+
+    db.prepare("UPDATE projects SET stars = 5, forks = 1, verified = 0, created_at = datetime('now', '-900 days') WHERE id = ?").run(weakId);
+    db.prepare("UPDATE releases SET created_at = datetime('now', '-500 days') WHERE project_id = ?").run(weakId);
+
+    db.prepare("UPDATE projects SET stars = 120, forks = 30, verified = 1, verification_json = '{\"score\":92}', created_at = datetime('now', '-120 days') WHERE id = ?").run(strongId);
+    db.prepare("UPDATE releases SET created_at = datetime('now', '-3 days') WHERE project_id = ?").run(strongId);
+    db.prepare("INSERT INTO releases (project_id, version, changes, urgency, created_at) VALUES (?, '1.1.0', 'fresh', 'Low', datetime('now', '-2 days'))").run(strongId);
+    db.prepare("INSERT INTO releases (project_id, version, changes, urgency, created_at) VALUES (?, '1.2.0', 'fresher', 'Low', datetime('now', '-1 days'))").run(strongId);
+
+    const ranked = getLatestReleases(20, 0, { sort: "rank", category: "Security" });
+    expect(ranked).toHaveLength(2);
+    expect(ranked[0].name).toBe("zzz-active");
+  });
+
+  it("keeps deterministic SQL ordering for browse when ranking sort is not selected", () => {
+    const weakId = insertTestProject(db, {
+      name: "aaa-zombie",
+      category: "Security",
+      short_desc: "agent sandbox guardrail",
+      repo_url: "https://github.com/test/aaa-zombie",
+    });
+    const strongId = insertTestProject(db, {
+      name: "zzz-active",
+      category: "Security",
+      short_desc: "agent sandbox guardrail",
+      repo_url: "https://github.com/test/zzz-active",
+    });
+
+    db.prepare("UPDATE projects SET stars = 5, forks = 1, verified = 0, created_at = datetime('now', '-900 days') WHERE id = ?").run(weakId);
+    db.prepare("UPDATE projects SET stars = 120, forks = 30, verified = 1, verification_json = '{\"score\":92}', created_at = datetime('now', '-120 days') WHERE id = ?").run(strongId);
+
+    const alphabetical = getLatestReleases(20, 0, { sort: "name", category: "Security" });
+    expect(alphabetical.map((p) => p.name)).toEqual(["aaa-zombie", "zzz-active"]);
+  });
 });
 
 describe("getLatestVerifiedReleases", () => {

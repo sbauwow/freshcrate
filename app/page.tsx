@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getLatestReleases, getCategories, getStats, getLanguages, type ReleaseSort } from "@/lib/queries";
+import { isRankingV2Enabled } from "@/lib/ranking";
 import { computeLifecycle } from "@/lib/lifecycle";
 import ResearchFeed from "./components/research-feed";
 
@@ -59,11 +60,12 @@ export default async function Home({
   const languages = getLanguages();
   const stats = getStats();
 
-  const rawSort = typeof params.sort === "string" ? params.sort : "newest";
-  const allowedSorts: ReleaseSort[] = ["newest", "oldest", "stars", "name"];
+  const defaultSort: ReleaseSort = isRankingV2Enabled() ? "rank" : "newest";
+  const rawSort = typeof params.sort === "string" ? params.sort : defaultSort;
+  const allowedSorts: ReleaseSort[] = ["rank", "newest", "oldest", "stars", "name"];
   const sort: ReleaseSort = allowedSorts.includes(rawSort as ReleaseSort)
     ? (rawSort as ReleaseSort)
-    : "newest";
+    : defaultSort;
 
   const categorySet = new Set(categories.map((c) => c.category));
   const languageSet = new Set(languages.map((l) => l.language));
@@ -112,6 +114,7 @@ export default async function Home({
             <label className="flex flex-col gap-0.5">
               <span className="text-fm-text-light">Sort</span>
               <select name="sort" defaultValue={sort} className="border border-fm-border bg-white px-1 py-0.5 text-[10px]">
+                <option value="rank">Recommended</option>
                 <option value="newest">Newest release</option>
                 <option value="oldest">Oldest release</option>
                 <option value="stars">Most stars</option>
