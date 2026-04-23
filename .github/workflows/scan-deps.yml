@@ -1,0 +1,58 @@
+name: Scan dependencies
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Weekly, Monday 8am UTC
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max projects to scan'
+        required: false
+        default: '200'
+      all:
+        description: 'Rescan all (not just unscanned)'
+        required: false
+        default: 'false'
+      name:
+        description: 'Single project name to scan'
+        required: false
+        default: ''
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Hit scan-deps endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SCAN_URL: ${{ secrets.REFRESH_URL && format('{0}/../scan-deps', secrets.REFRESH_URL) || 'https://freshcrateai-production.up.railway.app/api/cron/scan-deps' }}
+          LIMIT: ${{ github.event.inputs.limit || '200' }}
+          ALL: ${{ github.event.inputs.all == 'true' && '1' || '0' }}
+          NAME: ${{ github.event.inputs.name || '' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "::error::CRON_SECRET secret is not set"
+            exit 1
+          fi
+
+          URL="https://freshcrateai-production.up.railway.app/api/cron/scan-deps?limit=${LIMIT}&all=${ALL}"
+          if [ -n "${NAME}" ]; then
+            URL="${URL}&name=${NAME}"
+          fi
+
+          echo "Hitting: $URL"
+          status=$(curl -sS -o /tmp/body -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            --max-time 600 \
+            "$URL")
+
+          echo "HTTP status: $status"
+          cat /tmp/body | python3 -m json.tool || cat /tmp/body
+          echo
+
+          if [ "$status" != "200" ]; then
+            echo "::error::Scan endpoint returned HTTP $status"
+            exit 1
+          fi
