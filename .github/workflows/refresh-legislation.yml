@@ -1,0 +1,44 @@
+name: Refresh legislation feeds
+
+on:
+  schedule:
+    - cron: '0 7 * * *'  # Daily 7am UTC
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max items per feed'
+        required: false
+        default: '50'
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Hit refresh-legislation endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          LIMIT: ${{ github.event.inputs.limit || '50' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "::error::CRON_SECRET secret is not set"
+            exit 1
+          fi
+
+          URL="https://freshcrateai-production.up.railway.app/api/cron/refresh-legislation?limit=${LIMIT}"
+          echo "Hitting: $URL"
+
+          status=$(curl -sS -o /tmp/body -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            --max-time 120 \
+            "$URL")
+
+          echo "HTTP status: $status"
+          cat /tmp/body | python3 -m json.tool || cat /tmp/body
+          echo
+
+          if [ "$status" != "200" ]; then
+            echo "::error::Legislation refresh returned HTTP $status"
+            exit 1
+          fi

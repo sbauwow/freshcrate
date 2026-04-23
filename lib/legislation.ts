@@ -1,3 +1,5 @@
+import { getDb } from "./db";
+
 export type GovernanceStatus =
   | "in_force"
   | "approved_not_effective"
@@ -51,7 +53,84 @@ export interface OperatorPlaybook {
   actions: OperatorAction[];
 }
 
-const LEGISLATION_ITEMS: LegislationItem[] = [
+// ── DB-backed data loading (falls back to hardcoded if table missing) ──
+
+interface DbLegislationRow {
+  id: string;
+  jurisdiction: string;
+  region: string;
+  instrument: string;
+  status: string;
+  effective_date: string | null;
+  themes: string; // JSON
+  summary: string;
+  issues: string; // JSON
+  source_url: string;
+  last_updated: string;
+}
+
+interface DbGovernanceRow {
+  id: string;
+  title: string;
+  scope: string;
+  regions: string; // JSON
+  severity: string;
+  why_it_matters: string;
+  signals_to_watch: string; // JSON
+}
+
+function loadFromDb(): { items: LegislationItem[]; issues: GovernanceIssue[] } | null {
+  try {
+    const db = getDb();
+    // Check if the table exists
+    const tableCheck = db.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='legislation'"
+    ).get();
+    if (!tableCheck) return null;
+
+    const rows = db.prepare("SELECT * FROM legislation ORDER BY jurisdiction").all() as DbLegislationRow[];
+    if (rows.length === 0) return null;
+
+    const items: LegislationItem[] = rows.map((r) => ({
+      id: r.id,
+      jurisdiction: r.jurisdiction,
+      region: r.region,
+      instrument: r.instrument,
+      status: r.status as GovernanceStatus,
+      effective_date: r.effective_date,
+      themes: JSON.parse(r.themes || "[]"),
+      summary: r.summary,
+      issues: JSON.parse(r.issues || "[]"),
+      source_url: r.source_url,
+      last_updated: r.last_updated,
+    }));
+
+    const issueRows = db.prepare("SELECT * FROM governance_issues ORDER BY severity DESC, title").all() as DbGovernanceRow[];
+    const issues: GovernanceIssue[] = issueRows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      scope: r.scope as GovernanceIssue["scope"],
+      regions: JSON.parse(r.regions || "[]"),
+      severity: r.severity as GovernanceIssue["severity"],
+      why_it_matters: r.why_it_matters,
+      signals_to_watch: JSON.parse(r.signals_to_watch || "[]"),
+    }));
+
+    return { items, issues };
+  } catch {
+    return null;
+  }
+}
+
+function getData() {
+  const dbData = loadFromDb();
+  if (dbData) return dbData;
+  return { items: HARDCODED_LEGISLATION_ITEMS, issues: HARDCODED_GOVERNANCE_ISSUES };
+}
+
+// ── Hardcoded fallback data ──
+
+const HARDCODED_LEGISLATION_ITEMS: LegislationItem[] = [
   {
     id: "eu-ai-act",
     jurisdiction: "European Union",
@@ -210,7 +289,7 @@ const LEGISLATION_ITEMS: LegislationItem[] = [
   },
 ];
 
-const GOVERNANCE_ISSUES: GovernanceIssue[] = [
+const HARDCODED_GOVERNANCE_ISSUES: GovernanceIssue[] = [
   {
     id: "compute-threshold-fragmentation",
     title: "Compute-threshold fragmentation",
@@ -368,6 +447,7 @@ const THEME_TO_ACTIONS: Record<string, string[]> = {
 
 export function getLegislation(filters: LegislationFilters = {}): LegislationItem[] {
   const q = filters.q?.trim().toLowerCase();
+  const { items: LEGISLATION_ITEMS } = getData();
 
   return LEGISLATION_ITEMS
     .filter((item) => (filters.region ? item.region === filters.region : true))
@@ -391,6 +471,7 @@ export function getLegislation(filters: LegislationFilters = {}): LegislationIte
 }
 
 export function getGovernanceIssues(region?: string): GovernanceIssue[] {
+  const { issues: GOVERNANCE_ISSUES } = getData();
   return GOVERNANCE_ISSUES.filter((issue) => {
     if (!region) return true;
     return issue.regions.includes("Global") || issue.regions.includes(region);
@@ -454,16 +535,18 @@ export function getOperatorPlaybook(filters: LegislationFilters = {}): OperatorP
 }
 
 export function getLegislationFilterOptions() {
-  const regions = Array.from(new Set(LEGISLATION_ITEMS.map((item) => item.region))).sort();
-  const statuses = Array.from(new Set(LEGISLATION_ITEMS.map((item) => item.status))).sort();
-  const themes = Array.from(new Set(LEGISLATION_ITEMS.flatMap((item) => item.themes))).sort();
+  const { items } = getData();
+  const regions = Array.from(new Set(items.map((item) => item.region))).sort();
+  const statuses = Array.from(new Set(items.map((item) => item.status))).sort();
+  const themes = Array.from(new Set(items.flatMap((item) => item.themes))).sort();
   return { regions, statuses, themes };
 }
 
 export function getLegislationSummary() {
-  const total = LEGISLATION_ITEMS.length;
-  const inForce = LEGISLATION_ITEMS.filter((x) => x.status === "in_force").length;
-  const negotiatedOrProposed = LEGISLATION_ITEMS.filter((x) => x.status === "in_negotiation" || x.status === "proposed").length;
-  const approvedPending = LEGISLATION_ITEMS.filter((x) => x.status === "approved_not_effective").length;
+  const { items } = getData();
+  const total = items.length;
+  const inForce = items.filter((x) => x.status === "in_force").length;
+  const negotiatedOrProposed = items.filter((x) => x.status === "in_negotiation" || x.status === "proposed").length;
+  const approvedPending = items.filter((x) => x.status === "approved_not_effective").length;
   return { total, inForce, negotiatedOrProposed, approvedPending };
 }
