@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   getGovernanceIssues,
   getLegislation,
@@ -6,8 +6,18 @@ import {
   getLegislationSummary,
   getOperatorPlaybook,
 } from "@/lib/legislation";
+import { getDb } from "@/lib/db";
+import { createTestDb, _resetDb } from "./setup";
 
 describe("legislation dataset", () => {
+  beforeEach(() => {
+    createTestDb();
+  });
+
+  afterEach(() => {
+    _resetDb();
+  });
+
   it("returns non-empty summary counts", () => {
     const summary = getLegislationSummary();
     expect(summary.total).toBeGreaterThan(0);
@@ -57,5 +67,66 @@ describe("legislation dataset", () => {
     expect(playbook.score).toBeGreaterThan(0);
     expect(playbook.actions.length).toBeGreaterThan(0);
     expect(playbook.actions.some((a) => a.evidence.length > 0)).toBe(true);
+  });
+
+  it("merges DB-ingested items with hardcoded anchors", () => {
+    const baseline = getLegislationSummary().total;
+
+    getDb()
+      .prepare(
+        `INSERT INTO legislation_items
+         (id, source, jurisdiction, region, instrument, status, effective_date,
+          themes, summary, issues, source_url, last_updated)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        "uk-parliament-9999",
+        "uk-parliament",
+        "United Kingdom",
+        "Europe",
+        "Test AI Bill",
+        "proposed",
+        null,
+        JSON.stringify(["ai-policy"]),
+        "Live ingested test bill",
+        JSON.stringify([]),
+        "https://bills.parliament.uk/bills/9999",
+        "2026-04-26"
+      );
+
+    const after = getLegislationSummary().total;
+    expect(after).toBe(baseline + 1);
+
+    const ukRows = getLegislation({ region: "Europe" }).filter(
+      (r) => r.jurisdiction === "United Kingdom"
+    );
+    expect(ukRows.some((r) => r.id === "uk-parliament-9999")).toBe(true);
+  });
+
+  it("anchor items take precedence over DB items with same id", () => {
+    getDb()
+      .prepare(
+        `INSERT INTO legislation_items
+         (id, source, jurisdiction, region, instrument, status, effective_date,
+          themes, summary, issues, source_url, last_updated)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        "eu-ai-act",
+        "eu-eur-lex",
+        "European Union",
+        "Europe",
+        "STALE TITLE",
+        "proposed",
+        null,
+        "[]",
+        "stale",
+        "[]",
+        "https://example.com",
+        "2020-01-01"
+      );
+
+    const euAiAct = getLegislation().find((l) => l.id === "eu-ai-act");
+    expect(euAiAct?.instrument).toBe("EU AI Act");
   });
 });

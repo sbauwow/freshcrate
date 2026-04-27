@@ -1,0 +1,50 @@
+name: Refresh legislation data
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: 'Comma-separated source list (uk-parliament,us-congress,us-federal-register,eu-eur-lex). Empty = all.'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Dry run (no DB writes)'
+        required: false
+        default: 'false'
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Hit refresh endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          REFRESH_URL: ${{ secrets.LEGISLATION_REFRESH_URL || 'https://freshcrateai-production.up.railway.app/api/cron/refresh-legislation' }}
+          SOURCES: ${{ github.event.inputs.sources || '' }}
+          DRY: ${{ github.event.inputs.dry_run == 'true' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "::error::CRON_SECRET secret is not set in repo settings"
+            exit 1
+          fi
+          query="dry=${DRY}"
+          if [ -n "${SOURCES}" ]; then
+            query="${query}&sources=${SOURCES}"
+          fi
+          status=$(curl -sS -o /tmp/body -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            --max-time 300 \
+            "${REFRESH_URL}?${query}")
+          echo "HTTP status: $status"
+          echo "Response body:"
+          cat /tmp/body
+          echo
+          if [ "$status" != "200" ]; then
+            echo "::error::Refresh endpoint returned HTTP $status"
+            exit 1
+          fi
+          python3 -m json.tool < /tmp/body
