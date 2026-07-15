@@ -166,6 +166,8 @@ export default async function RootLayout({
               <span style={{ color: "var(--fm-footer-text)" }}>{" | "}</span>
               <Link href="/learn" className="hover:text-fm-link" style={{ color: "var(--fm-footer-text)" }}>{t.footerLearn}</Link>
               <span style={{ color: "var(--fm-footer-text)" }}>{" | "}</span>
+              <Link href="/resources" className="hover:text-fm-link" style={{ color: "var(--fm-footer-text)" }}>Resources</Link>
+              <span style={{ color: "var(--fm-footer-text)" }}>{" | "}</span>
               <Link href="/agent-edition" className="hover:text-fm-link" style={{ color: "var(--fm-footer-text)" }}>Agent Edition</Link>
               <span style={{ color: "var(--fm-footer-text)" }}>{" | "}</span>
               <Link href="/orchestra" className="hover:text-fm-link" style={{ color: "var(--fm-footer-text)" }}>Orchestra</Link>

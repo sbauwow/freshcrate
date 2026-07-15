@@ -17,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/api`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${baseUrl}/mcp`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/learn`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/resources`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/learn/best-mcp-servers-for-claude-code`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${baseUrl}/learn/best-open-source-ai-agent-frameworks`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${baseUrl}/learn/best-coding-agents`, changeFrequency: "weekly", priority: 0.8 },
