@@ -100,7 +100,12 @@ const appearsInGuidesByProject: Record<string, Array<{ href: string; title: stri
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
   const project = getProjectByName(name);
-  if (!project) return {};
+  if (!project) {
+    // Hallucinated / mistyped crate names (logs showed 2,100+ distinct ones,
+    // e.g. /projects/sandboxed.sh 678x). Keep them out of the search index so
+    // crawlers stop treating phantom URLs as real, indexable pages.
+    return { title: "Crate not found — freshcrate", robots: { index: false, follow: true } };
+  }
   const mdUrl = `/projects/${encodeURIComponent(project.name)}.md`;
   return {
     title: `${project.name} — freshcrate`,

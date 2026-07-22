@@ -179,6 +179,13 @@ export function proxy(request: NextRequest) {
   const response = NextResponse.next({ request: { headers: fwdHeaders } });
   response.headers.set("X-Request-Start", Date.now().toString());
   response.headers.set("X-Request-Id", reqId);
+
+  // Advertise the Markdown alternate for crate pages via an HTTP Link header,
+  // so AI crawlers that read headers (not just the HTML <head>) can discover
+  // /projects/<name>.md. Mirrors the alternates.types metadata on the page.
+  if (surface === "page" && !path.endsWith(".md") && /^\/projects\/[^/]+$/.test(path)) {
+    response.headers.set("Link", `<${path}.md>; rel="alternate"; type="text/markdown"`);
+  }
   return response;
 }
 

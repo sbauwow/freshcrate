@@ -69,6 +69,27 @@ describe("scoped-name canonicalization", () => {
   });
 });
 
+describe("markdown alternate Link header", () => {
+  const CHROME = {
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+    accept: "text/html",
+    "sec-ch-ua": '"Chromium";v="133"',
+    "sec-fetch-mode": "navigate",
+  };
+
+  it("advertises /projects/<name>.md on crate pages", () => {
+    const res = proxy(new NextRequest("https://www.freshcrate.ai/projects/vllm", { headers: CHROME }));
+    expect(res.headers.get("link")).toBe('</projects/vllm.md>; rel="alternate"; type="text/markdown"');
+  });
+
+  it("does not set it on the .md route itself or non-crate pages", () => {
+    const md = proxy(new NextRequest("https://www.freshcrate.ai/projects/vllm.md", { headers: CHROME }));
+    expect(md.headers.get("link")).toBeNull();
+    const home = proxy(new NextRequest("https://www.freshcrate.ai/browse", { headers: CHROME }));
+    expect(home.headers.get("link")).toBeNull();
+  });
+});
+
 describe("proxy spoofed-chrome gate", () => {
   const SPOOFED_UA = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36";
 
