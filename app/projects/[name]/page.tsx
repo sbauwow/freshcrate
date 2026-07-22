@@ -217,7 +217,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
             </h3>
             <div
               className="text-[11px] text-fm-text leading-relaxed prose prose-sm max-w-none overflow-x-auto"
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolveReadmeLinks(enriched.readme_html, project.repo_url)) }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolveReadmeLinks(enriched.readme_html, project.repo_url, project.homepage_url)) }}
             />
           </div>
         )}

@@ -20,20 +20,41 @@ import { classifyTraffic } from "@/lib/traffic-classification";
 const STATIC_RE = /\.(png|jpe?g|gif|svg|webp|ico|css|js|woff2?|ttf|eot|map|xml|txt)$/i;
 const SKIP_PREFIXES = ["/_next/", "/api/beacon"]; // beacon has its own log path
 
-// Bots scrape README links and walk paths that never existed under our
-// /projects/<name>/ namespace (docs/, .github/, SETUP.md, *.yaml.example, ...).
-// Return 410 Gone so Google + co. drop them, and skip the React 404 cost.
-// Note: /projects/<name>.md is a real route (LLM-friendly Markdown alternate),
-// so it is excluded here and from robots.txt.
-const GONE_RE = /^\/projects\/[^/]+\/(docs|documentation|i18n|\.github)(\/|$)|^\/projects\/[^/]+\/(SETUP|CHANGELOG|CODE_OF_CONDUCT|CONTRIBUTING|README-)|^\/projects\/[^/]+\.(yaml(\.example)?)$/i;
+// Bots scrape README links and walk repo-relative paths that never existed
+// under our route. Only /projects/<name> and /projects/<name>.md are real, so
+// ANY multi-segment /projects/<x>/<y>... path (docs/, examples/, packages/,
+// nested READMEs, *.md/*.py/... files) is a phantom — 410 Gone so crawlers drop
+// it and we skip the React 404 render. Real scoped names (@scope/pkg) arrive
+// URL-encoded as one segment and are unaffected; raw-slash scoped links are
+// canonicalized by the redirect in proxy() before this gate runs.
+const PHANTOM_PROJECT_RE = /^\/projects\/[^/]+\/.+/i;
 
-// Generic hostile/scanner probes that should never hit app rendering.
-// Return 410 Gone so they disappear from crawler recrawl loops and stop
-// polluting normal page-route 4xx summaries.
-const PROBE_RE = /^\/(?:\.env(?:\.|$)?|\.git(?:\/|$)|wp-admin(?:\/|$)|wp-login\.php$|xmlrpc\.php$|adminer\.php$|boaform(?:\/|$))/i;
+// Repo-file refs that land as a single segment (name.yaml, name.yml[.example]).
+// /projects/<name>.md is intentionally excluded — it's a real Markdown route.
+const REPO_FILE_RE = /^\/projects\/[^/]+\.(?:ya?ml)(?:\.example)?$/i;
+
+// Generic hostile/scanner probes that should never hit app rendering. This is a
+// Next.js app: it serves no PHP, no dotfiles (.env/.git/.aws/.ssh/...), no wp-*,
+// and nothing under /var|/etc|/cgi-bin — so these can only be scanners. 410 them
+// so they disappear from crawler recrawl loops and stop polluting 4xx summaries.
+// Scoped to path/extension boundaries so real project names (e.g.
+// /projects/xmlrpc-client, /projects/adminer-ui) are never caught.
+const PROBE_RE =
+  /(?:^|\/)\.(?:env|git|aws|ssh|svn|hg)(?:$|[/.])|\.php(?:$|[/?])|(?:^|\/)(?:wp-admin|wp-login|wp-content|wp-includes|wp-config|xmlrpc|adminer|phpmyadmin|boaform)(?:$|[/.])|^\/(?:var|etc|cgi-bin)\//i;
 
 export function shouldReturnGone(path: string): boolean {
-  return GONE_RE.test(path) || PROBE_RE.test(path);
+  return PHANTOM_PROJECT_RE.test(path) || REPO_FILE_RE.test(path) || PROBE_RE.test(path);
+}
+
+// Raw-slash scoped/owner names (/projects/@scope/pkg) predate the encodeURIComponent
+// fix and still arrive from external inbound links and crawler memory. Canonicalize
+// them to the single encoded segment the [name] route expects, before the phantom
+// gate would otherwise 410 them.
+const SCOPED_NAME_RE = /^\/projects\/(@[^/]+\/[^/]+)$/;
+
+export function scopedRedirectTarget(path: string): string | null {
+  const m = path.match(SCOPED_NAME_RE);
+  return m ? `/projects/${encodeURIComponent(m[1])}` : null;
 }
 
 export function proxy(request: NextRequest) {
@@ -42,6 +63,13 @@ export function proxy(request: NextRequest) {
 
   if (STATIC_RE.test(path) || SKIP_PREFIXES.some((p) => path.startsWith(p))) {
     return NextResponse.next();
+  }
+
+  const scopedTarget = scopedRedirectTarget(path);
+  if (scopedTarget) {
+    const dest = url.clone();
+    dest.pathname = scopedTarget;
+    return NextResponse.redirect(dest, 308);
   }
 
   if (shouldReturnGone(path)) {

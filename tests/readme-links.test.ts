@@ -34,11 +34,34 @@ describe("readme relative link resolution", () => {
     }
   });
 
-  it("passes through unchanged when the repo is not on github", () => {
-    const html = '<a href="docs/x.md">x</a>';
-    expect(resolveReadmeLinks(html, "https://gitlab.com/acme/widget")).toBe(html);
-    expect(resolveReadmeLinks(html, "")).toBe(html);
-    expect(resolveReadmeLinks(html, null)).toBe(html);
+  it("re-anchors relative links for gitlab repos to /-/blob and /-/raw", () => {
+    expect(resolveReadmeLinks('<a href="docs/x.md">x</a>', "https://gitlab.com/acme/widget")).toBe(
+      '<a href="https://gitlab.com/acme/widget/-/blob/HEAD/docs/x.md">x</a>',
+    );
+    expect(resolveReadmeLinks('<img src="logo.png">', "https://gitlab.com/acme/widget.git")).toBe(
+      '<img src="https://gitlab.com/acme/widget/-/raw/HEAD/logo.png">',
+    );
+  });
+
+  it("re-anchors against any other repo host so links never hit our origin", () => {
+    const out = resolveReadmeLinks('<a href="docs/x.md">x</a>', "https://codeberg.org/acme/widget");
+    expect(out).toContain("codeberg.org/acme/widget/docs/x.md");
+    expect(out).not.toContain("/projects/");
+  });
+
+  it("falls back to homepage_url when repo_url is missing", () => {
+    const out = resolveReadmeLinks('<a href="guide.md">g</a>', "", "https://widget.example.com/");
+    expect(out).toBe('<a href="https://widget.example.com/guide.md">g</a>');
+  });
+
+  it("makes relative links inert when there is no usable base", () => {
+    // No repo, no homepage: the link must not survive as an origin-relative href/src.
+    const href = resolveReadmeLinks('<a href="docs/x.md">x</a>', null);
+    expect(href).not.toContain('href="docs/x.md"');
+    expect(href).toContain("data-fc-rel");
+    const img = resolveReadmeLinks('<img src="logo.png">', "");
+    expect(img).not.toContain('src="logo.png"');
+    expect(img).not.toContain('src=""');
   });
 
   it("strips .git suffix from the repo url", () => {
