@@ -413,7 +413,7 @@ export default async function SearchPage({
                   <TrackedNextLink
                     event="click"
                     eventTarget={`project:${project.name}@search`}
-                    href={`/projects/${project.name}`}
+                    href={`/projects/${encodeURIComponent(project.name)}`}
                     className="text-[13px] font-bold text-fm-link hover:text-fm-link-hover"
                   >
                     {project.name}
@@ -533,7 +533,7 @@ export default async function SearchPage({
                           <TrackedNextLink
                             event="related_click"
                             eventTarget={`search-rescue-project:${(q || author || "").slice(0, 40)}->${p.name}`}
-                            href={`/projects/${p.name}`}
+                            href={`/projects/${encodeURIComponent(p.name)}`}
                             className="font-bold text-fm-link hover:text-fm-link-hover"
                           >
                             {p.name}

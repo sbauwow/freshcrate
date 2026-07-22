@@ -176,7 +176,7 @@ export default function LangGraphVsCrewAiVsAutoGenPage() {
                 <TrackedLink
                   event="related_click"
                   eventTarget={`compare:langgraph-crewai-autogen->project:${framework.name}`}
-                  href={`/projects/${framework.name}`}
+                  href={`/projects/${encodeURIComponent(framework.name)}`}
                   className="text-[13px] font-bold text-fm-link hover:text-fm-link-hover"
                 >
                   {framework.name}

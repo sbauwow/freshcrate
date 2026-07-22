@@ -271,7 +271,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
                   <TrackedLink
                     event="related_click"
                     eventTarget={`similar:${project.name}->${p.name}`}
-                    href={`/projects/${p.name}`}
+                    href={`/projects/${encodeURIComponent(p.name)}`}
                     className="font-bold text-fm-link hover:text-fm-link-hover"
                   >
                     {p.name}
@@ -295,7 +295,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
                   <TrackedLink
                     event="related_click"
                     eventTarget={`author:${project.name}->${p.name}`}
-                    href={`/projects/${p.name}`}
+                    href={`/projects/${encodeURIComponent(p.name)}`}
                     className="font-bold text-fm-link hover:text-fm-link-hover"
                   >
                     {p.name}
@@ -318,7 +318,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ name: 
                   <TrackedLink
                     event="related_click"
                     eventTarget={`category:${project.name}->${p.name}`}
-                    href={`/projects/${p.name}`}
+                    href={`/projects/${encodeURIComponent(p.name)}`}
                     className="font-bold text-fm-link hover:text-fm-link-hover"
                   >
                     {p.name}

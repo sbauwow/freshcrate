@@ -142,7 +142,7 @@ export default function BestRagMemoryToolsPage() {
                 <TrackedLink
                   event="related_click"
                   eventTarget={`guide:rag-memory->project:${project.name}`}
-                  href={`/projects/${project.name}`}
+                  href={`/projects/${encodeURIComponent(project.name)}`}
                   className="text-[13px] font-bold text-fm-link hover:text-fm-link-hover"
                 >
                   {project.name}
@@ -178,7 +178,7 @@ export default function BestRagMemoryToolsPage() {
                     <TrackedLink
                       event="related_click"
                       eventTarget={`guide:rag-memory->table:${project.name}`}
-                      href={`/projects/${project.name}`}
+                      href={`/projects/${encodeURIComponent(project.name)}`}
                       className="text-fm-link hover:text-fm-link-hover"
                     >
                       {project.name}

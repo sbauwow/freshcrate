@@ -129,7 +129,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: Promi
                   className={`py-2.5 px-2 ${i % 2 === 0 ? "bg-fm-surface/50" : ""} border-b border-fm-border/50`}
                 >
                   <div className="flex items-center gap-2 mb-0.5">
-                    <TrackedNextLink event="related_click" eventTarget={`browse:project:${project.name}`} href={`/projects/${project.name}`} className="text-[13px] font-bold text-fm-link hover:text-fm-link-hover">
+                    <TrackedNextLink event="related_click" eventTarget={`browse:project:${project.name}`} href={`/projects/${encodeURIComponent(project.name)}`} className="text-[13px] font-bold text-fm-link hover:text-fm-link-hover">
                       {project.name}
                     </TrackedNextLink>
                     <span className="text-[11px] text-fm-text-light font-mono">{project.latest_version}</span>

@@ -224,7 +224,7 @@ export default async function TagPage({
                   key={`inline-${p.id}`}
                   event="related_click"
                   eventTarget={`tag:${normalizedTag}->inline-trending:${p.name}`}
-                  href={`/projects/${p.name}`}
+                  href={`/projects/${encodeURIComponent(p.name)}`}
                   className="text-[10px] bg-fm-accent/10 text-fm-link px-1.5 py-0.5 rounded hover:bg-fm-accent/20"
                 >
                   {p.name} ⭐{(p.stars || 0).toLocaleString()}
@@ -255,7 +255,7 @@ export default async function TagPage({
                   <TrackedLink
                     event="related_click"
                     eventTarget={`tag:${normalizedTag}->project:${project.name}`}
-                    href={`/projects/${project.name}`}
+                    href={`/projects/${encodeURIComponent(project.name)}`}
                     className="text-[13px] font-bold text-fm-link hover:text-fm-link-hover"
                   >
                     {project.name}
@@ -343,7 +343,7 @@ export default async function TagPage({
                   key={p.id}
                   event="related_click"
                   eventTarget={`tag:${normalizedTag}->trending:${p.name}`}
-                  href={`/projects/${p.name}`}
+                  href={`/projects/${encodeURIComponent(p.name)}`}
                   className="flex items-center justify-between text-fm-link hover:text-fm-link-hover"
                 >
                   <span className="truncate pr-2">{p.name}</span>

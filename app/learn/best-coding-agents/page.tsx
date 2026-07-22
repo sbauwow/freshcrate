@@ -142,7 +142,7 @@ export default function BestCodingAgentsPage() {
                 <TrackedLink
                   event="related_click"
                   eventTarget={`guide:coding-agents->project:${project.name}`}
-                  href={`/projects/${project.name}`}
+                  href={`/projects/${encodeURIComponent(project.name)}`}
                   className="text-[13px] font-bold text-fm-link hover:text-fm-link-hover"
                 >
                   {project.name}
@@ -180,7 +180,7 @@ export default function BestCodingAgentsPage() {
                     <TrackedLink
                       event="related_click"
                       eventTarget={`guide:coding-agents->table:${project.name}`}
-                      href={`/projects/${project.name}`}
+                      href={`/projects/${encodeURIComponent(project.name)}`}
                       className="text-fm-link hover:text-fm-link-hover"
                     >
                       {project.name}

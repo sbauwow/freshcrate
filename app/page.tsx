@@ -239,7 +239,7 @@ export default async function Home({
                     <TrackedNextLink
                       event="click"
                       eventTarget={`project:${project.name}@home`}
-                      href={`/projects/${project.name}`}
+                      href={`/projects/${encodeURIComponent(project.name)}`}
                       className="feed-title text-[13px] font-bold text-fm-link hover:text-fm-link-hover"
                     >
                       {project.name}

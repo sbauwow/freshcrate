@@ -213,12 +213,12 @@ export default async function ComparePage({
           <tr className="border-b-2 border-fm-green">
             <th className="py-1.5 px-2 text-left text-fm-green font-bold w-[140px]">Field</th>
             <th className="py-1.5 px-2 text-left text-fm-green font-bold">
-              <Link href={`/projects/${projectA.name}`} className="text-fm-green hover:text-fm-link-hover">
+              <Link href={`/projects/${encodeURIComponent(projectA.name)}`} className="text-fm-green hover:text-fm-link-hover">
                 {projectA.name}
               </Link>
             </th>
             <th className="py-1.5 px-2 text-left text-fm-green font-bold">
-              <Link href={`/projects/${projectB.name}`} className="text-fm-green hover:text-fm-link-hover">
+              <Link href={`/projects/${encodeURIComponent(projectB.name)}`} className="text-fm-green hover:text-fm-link-hover">
                 {projectB.name}
               </Link>
             </th>

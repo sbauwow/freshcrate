@@ -141,7 +141,7 @@ export default function BestBrowserAutomationToolsPage() {
                 <TrackedLink
                   event="related_click"
                   eventTarget={`guide:browser-automation->project:${project.name}`}
-                  href={`/projects/${project.name}`}
+                  href={`/projects/${encodeURIComponent(project.name)}`}
                   className="text-[13px] font-bold text-fm-link hover:text-fm-link-hover"
                 >
                   {project.name}
@@ -177,7 +177,7 @@ export default function BestBrowserAutomationToolsPage() {
                     <TrackedLink
                       event="related_click"
                       eventTarget={`guide:browser-automation->table:${project.name}`}
-                      href={`/projects/${project.name}`}
+                      href={`/projects/${encodeURIComponent(project.name)}`}
                       className="text-fm-link hover:text-fm-link-hover"
                     >
                       {project.name}

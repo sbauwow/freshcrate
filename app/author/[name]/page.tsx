@@ -128,7 +128,7 @@ export default async function AuthorPage({
               >
                 <div className="flex items-center gap-2 mb-0.5">
                   <Link
-                    href={`/projects/${project.name}`}
+                    href={`/projects/${encodeURIComponent(project.name)}`}
                     className="text-[13px] font-bold text-fm-link hover:text-fm-link-hover"
                   >
                     {project.name}
