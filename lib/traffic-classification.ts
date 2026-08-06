@@ -1,7 +1,29 @@
 import { NextRequest } from "next/server";
 
+/**
+ * What this file can and cannot tell you.
+ *
+ * Every value here is derived from request headers, so every value describes
+ * what a client *claims* plus how consistent that claim is — never who is on
+ * the other end. `browser_shaped` was called `human_browser` until 2026-08-06,
+ * and the name was doing real damage: it read as a count of people, and it was
+ * off by ~300x.
+ *
+ * The measurement that settled it: 13,226 hits/24h classified as a browser
+ * against 45 page views recorded by the beacon, which only fires from a
+ * `useEffect` and therefore only from a client that executes JavaScript. The
+ * difference is clients sending a complete, correct Chrome header set —
+ * `sec-ch-ua` and `sec-fetch-*` included — that never run a line of script.
+ * That is what curl-impersonate and the tls-client family produce by default,
+ * and no header rule can separate them from Chrome, because headers are
+ * exactly what they copy.
+ *
+ * So: use these buckets to shape traffic (throttles, gates, cache policy),
+ * which is what they are good for. For "how many people visited", read
+ * page_views — the beacon is the only signal here with a human behind it.
+ */
 export type TrafficType =
-  | "human_browser"
+  | "browser_shaped"
   | "browser_unverified"
   | "agent_browser"
   | "ai_agent"
@@ -110,11 +132,12 @@ function browserLike(headers: HeaderSource, ua: string): boolean {
  * engine still shipping sends at least one: Chrome 76+, Firefox 90+, Safari
  * 16.4+.
  *
- * This used to also accept `Mozilla/` + `text/html` + `accept-language`, which
- * is the exact header set every HTTP scraping library emits by default. On
- * 2026-08-06 that branch put 13,559 hits/24h into `human_browser` against 45
- * real beacon page views — a ~300x overcount that made every human-traffic
- * number downstream fiction. Header shape alone cannot carry this decision.
+ * This used to also accept `Mozilla/` + `text/html` + `accept-language`, the
+ * default header set of every HTTP scraping library. Over the first 414
+ * requests after that branch was removed it caught 2 (0.5%) — at this site's
+ * volume the scrapers that matter send the full modern header set instead.
+ * Removing it is still right, it was free signal being thrown away, but see
+ * the file header for why no version of this function reaches a human count.
  */
 function hasEngineSignals(headers: HeaderSource): boolean {
   const hasSecFetch = hasHeader(headers, "sec-fetch-mode") || hasHeader(headers, "sec-fetch-site") || hasHeader(headers, "sec-fetch-dest");
@@ -212,7 +235,7 @@ export function classifyHeaders(headers: HeaderSource, surface: "api" | "page"):
 
   if (browserLike(headers, ua)) {
     if (hasEngineSignals(headers) || hasVerifiedSession(headers)) {
-      return { trafficType: "human_browser", uaFamily: ua.includes("Mozilla/") ? "Browser" : "Unknown Browser", host };
+      return { trafficType: "browser_shaped", uaFamily: ua.includes("Mozilla/") ? "Browser" : "Unknown Browser", host };
     }
     // Browser-shaped, but nothing here was produced by a browser engine: a UA
     // string, an accept header and a language are all caller-supplied. Real but
@@ -220,7 +243,7 @@ export function classifyHeaders(headers: HeaderSource, surface: "api" | "page"):
     // this point, so bucket them apart from both instead of guessing. Not
     // counted as human, and not gated as a bot either — the /search throttle
     // and the spoofed-UA 429 both stay off this bucket, so a genuine old
-    // browser still gets served and can earn `human_browser` via fc_sid.
+    // browser still gets served and can earn `browser_shaped` via fc_sid.
     return { trafficType: "browser_unverified", uaFamily: ua.includes("Mozilla/") ? "Browser" : "Unknown Browser", host };
   }
 

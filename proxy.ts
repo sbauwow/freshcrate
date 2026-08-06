@@ -9,9 +9,10 @@ import { classifyTraffic } from "@/lib/traffic-classification";
  *   - /api/*                 → keep request_in (logRequest emits the paired
  *                              `request` line on success; entry log is the
  *                              only signal if the handler crashes mid-flight).
- *   - page + human_browser   → suppress (the /api/beacon pixel records the
- *                              page_view; emitting here would double-count
- *                              and pegs Railway's 500-logs/sec replica cap).
+ *   - page + browser_shaped  → suppress (a JS-executing client will fire the
+ *                              /api/beacon pixel and record the page_view;
+ *                              emitting here too would double-count the ones
+ *                              that do, and pegs Railway's 500-logs/sec cap).
  *   - page + bot/api_client  → keep (no beacon fires for these clients).
  *   - page + browser_unverified → keep. Not firing the beacon is most of why
  *                              they are unverified, so the entry log is the
@@ -120,7 +121,7 @@ export function proxy(request: NextRequest) {
   // Suppress entry log for traffic that has a paired completion log elsewhere
   // (see header comment). The remaining `request_in` lines are the ones where
   // an unpaired entry is the only available signal.
-  const willBeacon = surface === "page" && trafficType === "human_browser";
+  const willBeacon = surface === "page" && trafficType === "browser_shaped";
   if (!willBeacon) {
     console.log(JSON.stringify({
       ts: new Date().toISOString(),

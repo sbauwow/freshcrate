@@ -21,7 +21,7 @@ function insertEvent(row: {
   utmCampaign?: string;
 }) {
   db.prepare(
-    "INSERT INTO page_views (path, referrer, ip_hash, user_agent, is_bot, host, traffic_type, ua_family, session_id, event_type, event_target, utm_source, utm_medium, utm_campaign, created_at) VALUES (?, ?, ?, 'Mozilla/5.0', 0, 'www.freshcrate.ai', 'human_browser', 'Browser', ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO page_views (path, referrer, ip_hash, user_agent, is_bot, host, traffic_type, ua_family, session_id, event_type, event_target, utm_source, utm_medium, utm_campaign, created_at) VALUES (?, ?, ?, 'Mozilla/5.0', 0, 'www.freshcrate.ai', 'browser_shaped', 'Browser', ?, ?, ?, ?, ?, ?, ?)"
   ).run(
     row.path,
     row.referrer || "",

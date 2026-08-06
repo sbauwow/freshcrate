@@ -45,7 +45,7 @@ describe("classifyTraffic — SpoofedChromeUA", () => {
       "sec-ch-ua": '"Chromium";v="133", "Not(A:Brand";v="24"',
       "sec-fetch-mode": "navigate",
     });
-    expect(classifyTraffic(r, "page").trafficType).toBe("human_browser");
+    expect(classifyTraffic(r, "page").trafficType).toBe("browser_shaped");
   });
 
   it("classifies a Chrome UA with only sec-fetch-mode and no accept-language as crawler noise", () => {
@@ -72,14 +72,14 @@ describe("classifyTraffic — SpoofedChromeUA", () => {
     }));
   });
 
-  it("keeps a Chrome UA with accept-language and sec-fetch-mode as human_browser", () => {
+  it("keeps a Chrome UA with accept-language and sec-fetch-mode as browser_shaped", () => {
     const r = build({
       "user-agent": CHROME_133,
       accept: "text/html",
       "accept-language": "en-US,en;q=0.9",
       "sec-fetch-mode": "navigate",
     });
-    expect(classifyTraffic(r, "page").trafficType).toBe("human_browser");
+    expect(classifyTraffic(r, "page").trafficType).toBe("browser_shaped");
   });
 
   it("does NOT misclassify a Googlebot UA that happens to mention Chrome", () => {
@@ -119,7 +119,7 @@ describe("classifyTraffic — well-formed clients still pass", () => {
 
 describe("classifyTraffic — browser_unverified", () => {
   // The regression this bucket exists for: these are the default headers of
-  // every HTTP scraping library, and they used to read as human_browser.
+  // every HTTP scraping library, and they used to read as browser_shaped.
   it("does not count default scraper headers as human", () => {
     const r = build({
       "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
@@ -129,14 +129,14 @@ describe("classifyTraffic — browser_unverified", () => {
     expect(classifyTraffic(r, "page").trafficType).toBe("browser_unverified");
   });
 
-  it("promotes to human_browser once the request carries an fc_sid session", () => {
+  it("promotes to browser_shaped once the request carries an fc_sid session", () => {
     const r = build({
       "user-agent": SAFARI_17,
       accept: "text/html",
       "accept-language": "en-US,en;q=0.9",
       cookie: "fc_theme=modern; fc_sid=8f14e45fceea167a5a36dedd4bea2543; fc_lang=en",
     });
-    expect(classifyTraffic(r, "page").trafficType).toBe("human_browser");
+    expect(classifyTraffic(r, "page").trafficType).toBe("browser_shaped");
   });
 
   it("ignores an fc_sid that is not shaped like a session id", () => {

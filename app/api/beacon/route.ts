@@ -7,9 +7,12 @@ import crypto from "crypto";
 /**
  * GET /api/beacon — page view + custom event tracker.
  *
- * Loaded as an <img> in the layout for pageviews; can also be fired from
- * client JS for custom events (clicks, installs, outbound, search) by
- * appending `?e=<type>&t=<target>`.
+ * Fired from client JS: PageViewBeacon requests it via `new Image()` inside a
+ * useEffect on every route change, and custom events (clicks, installs,
+ * outbound, search) append `?e=<type>&t=<target>`. There is no <img> in the
+ * server-rendered HTML, so nothing reaches this route without executing
+ * JavaScript — which is exactly why page_views is the only human-ish number
+ * here, and why it reads ~300x below the browser-shaped request_log buckets.
  *
  * Logs:
  *   - Path (from `p` param or Referer header)

@@ -30,13 +30,12 @@ function normalize4xxRouteGroup(path: string): string {
   return path;
 }
 
-// The `top_4xx_human_browser_*` panels exist to surface broken links that
-// something other than a crawler walked into, so they read both browser-shaped
-// buckets. `browser_unverified` absorbed most of what used to land in
-// `human_browser` when the classifier tightened (see lib/traffic-classification),
-// and narrowing these to verified humans only would have quietly emptied them.
-// The JSON keys keep their names — consumers read them by shape.
-const BROWSER_SHAPED_TYPES = "('human_browser', 'browser_unverified')";
+// The `top_4xx_browser_*` panels exist to surface broken links that something
+// presenting as a browser walked into, so they read both browser-ish buckets.
+// These were `top_4xx_human_browser_*` until 2026-08-06; nothing about the
+// underlying rows says "human" (see lib/traffic-classification) and the key
+// name was the whole reason the numbers got read as people.
+const BROWSER_SHAPED_TYPES = "('browser_shaped', 'browser_unverified')";
 
 function getTrafficWindowSummary(db: ReturnType<typeof getDb>, days: number) {
   const window = `datetime('now', '-${days} day')`;
@@ -90,7 +89,7 @@ function getTrafficWindowSummary(db: ReturnType<typeof getDb>, days: number) {
     }
   })();
 
-  const top4xxHumanBrowserPaths = (() => {
+  const top4xxBrowserPaths = (() => {
     try {
       return db.prepare(`SELECT path, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type IN ${BROWSER_SHAPED_TYPES} GROUP BY path ORDER BY hits DESC LIMIT 10`).all() as Array<{ path: string; hits: number }>;
     } catch {
@@ -98,7 +97,7 @@ function getTrafficWindowSummary(db: ReturnType<typeof getDb>, days: number) {
     }
   })();
 
-  const top4xxHumanBrowserMethods = (() => {
+  const top4xxBrowserMethods = (() => {
     try {
       return db.prepare(`SELECT method, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type IN ${BROWSER_SHAPED_TYPES} GROUP BY method ORDER BY hits DESC LIMIT 10`).all() as Array<{ method: string; hits: number }>;
     } catch {
@@ -106,7 +105,7 @@ function getTrafficWindowSummary(db: ReturnType<typeof getDb>, days: number) {
     }
   })();
 
-  const top4xxHumanBrowserHosts = (() => {
+  const top4xxBrowserHosts = (() => {
     try {
       return db.prepare(`SELECT COALESCE(NULLIF(host, ''), '(unknown)') as host, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type IN ${BROWSER_SHAPED_TYPES} GROUP BY host ORDER BY hits DESC LIMIT 10`).all() as Array<{ host: string; hits: number }>;
     } catch {
@@ -114,7 +113,7 @@ function getTrafficWindowSummary(db: ReturnType<typeof getDb>, days: number) {
     }
   })();
 
-  const top4xxHumanBrowserCountries = (() => {
+  const top4xxBrowserCountries = (() => {
     try {
       return db.prepare(`SELECT COALESCE(NULLIF(country, ''), '(unknown)') as country, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type IN ${BROWSER_SHAPED_TYPES} GROUP BY country ORDER BY hits DESC LIMIT 10`).all() as Array<{ country: string; hits: number }>;
     } catch {
@@ -128,10 +127,10 @@ function getTrafficWindowSummary(db: ReturnType<typeof getDb>, days: number) {
     top_4xx_paths: top4xxPaths,
     top_4xx_clients: top4xxClients,
     top_4xx_route_groups: top4xxRouteGroups,
-    top_4xx_human_browser_paths: top4xxHumanBrowserPaths,
-    top_4xx_human_browser_methods: top4xxHumanBrowserMethods,
-    top_4xx_human_browser_hosts: top4xxHumanBrowserHosts,
-    top_4xx_human_browser_countries: top4xxHumanBrowserCountries,
+    top_4xx_browser_paths: top4xxBrowserPaths,
+    top_4xx_browser_methods: top4xxBrowserMethods,
+    top_4xx_browser_hosts: top4xxBrowserHosts,
+    top_4xx_browser_countries: top4xxBrowserCountries,
   };
 }
 
@@ -310,10 +309,10 @@ export const GET = withRequestLog(async () => {
       top_4xx_paths: traffic1hSummary.top_4xx_paths,
       top_4xx_clients: traffic1hSummary.top_4xx_clients,
       top_4xx_route_groups: traffic1hSummary.top_4xx_route_groups,
-      top_4xx_human_browser_paths: traffic1hSummary.top_4xx_human_browser_paths,
-      top_4xx_human_browser_methods: traffic1hSummary.top_4xx_human_browser_methods,
-      top_4xx_human_browser_hosts: traffic1hSummary.top_4xx_human_browser_hosts,
-      top_4xx_human_browser_countries: traffic1hSummary.top_4xx_human_browser_countries,
+      top_4xx_browser_paths: traffic1hSummary.top_4xx_browser_paths,
+      top_4xx_browser_methods: traffic1hSummary.top_4xx_browser_methods,
+      top_4xx_browser_hosts: traffic1hSummary.top_4xx_browser_hosts,
+      top_4xx_browser_countries: traffic1hSummary.top_4xx_browser_countries,
     },
 
     traffic_24h: {
@@ -322,10 +321,10 @@ export const GET = withRequestLog(async () => {
       top_4xx_paths: traffic24hSummary.top_4xx_paths,
       top_4xx_clients: traffic24hSummary.top_4xx_clients,
       top_4xx_route_groups: traffic24hSummary.top_4xx_route_groups,
-      top_4xx_human_browser_paths: traffic24hSummary.top_4xx_human_browser_paths,
-      top_4xx_human_browser_methods: traffic24hSummary.top_4xx_human_browser_methods,
-      top_4xx_human_browser_hosts: traffic24hSummary.top_4xx_human_browser_hosts,
-      top_4xx_human_browser_countries: traffic24hSummary.top_4xx_human_browser_countries,
+      top_4xx_browser_paths: traffic24hSummary.top_4xx_browser_paths,
+      top_4xx_browser_methods: traffic24hSummary.top_4xx_browser_methods,
+      top_4xx_browser_hosts: traffic24hSummary.top_4xx_browser_hosts,
+      top_4xx_browser_countries: traffic24hSummary.top_4xx_browser_countries,
       avg_duration_ms: Math.round(avgDuration),
       page_views: (() => { try { return (db.prepare("SELECT COUNT(*) as c FROM page_views WHERE created_at > datetime('now', '-1 day')").get() as { c: number }).c; } catch { return 0; } })(),
       unique_visitors: (() => { try { return (db.prepare("SELECT COUNT(DISTINCT ip_hash) as c FROM page_views WHERE created_at > datetime('now', '-1 day') AND is_bot = 0").get() as { c: number }).c; } catch { return 0; } })(),
@@ -347,10 +346,10 @@ export const GET = withRequestLog(async () => {
       top_4xx_paths: trafficSinceBootSummary.top_4xx_paths,
       top_4xx_clients: trafficSinceBootSummary.top_4xx_clients,
       top_4xx_route_groups: trafficSinceBootSummary.top_4xx_route_groups,
-      top_4xx_human_browser_paths: trafficSinceBootSummary.top_4xx_human_browser_paths,
-      top_4xx_human_browser_methods: trafficSinceBootSummary.top_4xx_human_browser_methods,
-      top_4xx_human_browser_hosts: trafficSinceBootSummary.top_4xx_human_browser_hosts,
-      top_4xx_human_browser_countries: trafficSinceBootSummary.top_4xx_human_browser_countries,
+      top_4xx_browser_paths: trafficSinceBootSummary.top_4xx_browser_paths,
+      top_4xx_browser_methods: trafficSinceBootSummary.top_4xx_browser_methods,
+      top_4xx_browser_hosts: trafficSinceBootSummary.top_4xx_browser_hosts,
+      top_4xx_browser_countries: trafficSinceBootSummary.top_4xx_browser_countries,
     },
 
     traffic_7d: {
@@ -359,10 +358,10 @@ export const GET = withRequestLog(async () => {
       top_4xx_paths: traffic7dSummary.top_4xx_paths,
       top_4xx_clients: traffic7dSummary.top_4xx_clients,
       top_4xx_route_groups: traffic7dSummary.top_4xx_route_groups,
-      top_4xx_human_browser_paths: traffic7dSummary.top_4xx_human_browser_paths,
-      top_4xx_human_browser_methods: traffic7dSummary.top_4xx_human_browser_methods,
-      top_4xx_human_browser_hosts: traffic7dSummary.top_4xx_human_browser_hosts,
-      top_4xx_human_browser_countries: traffic7dSummary.top_4xx_human_browser_countries,
+      top_4xx_browser_paths: traffic7dSummary.top_4xx_browser_paths,
+      top_4xx_browser_methods: traffic7dSummary.top_4xx_browser_methods,
+      top_4xx_browser_hosts: traffic7dSummary.top_4xx_browser_hosts,
+      top_4xx_browser_countries: traffic7dSummary.top_4xx_browser_countries,
     },
   };
 
@@ -373,7 +372,7 @@ export const GET = withRequestLog(async () => {
     page_views_24h: metrics.traffic_24h.page_views,
     unique_visitors_24h: metrics.traffic_24h.unique_visitors,
     bot_hits_24h: metrics.traffic_24h.bot_hits,
-    human_browser_24h: trafficBreakdown.find((row) => row.traffic_type === "human_browser")?.hits || 0,
+    browser_shaped_24h: trafficBreakdown.find((row) => row.traffic_type === "browser_shaped")?.hits || 0,
     browser_unverified_24h: trafficBreakdown.find((row) => row.traffic_type === "browser_unverified")?.hits || 0,
     agent_browser_24h: trafficBreakdown.find((row) => row.traffic_type === "agent_browser")?.hits || 0,
     ai_agent_24h: trafficBreakdown.find((row) => row.traffic_type === "ai_agent")?.hits || 0,
