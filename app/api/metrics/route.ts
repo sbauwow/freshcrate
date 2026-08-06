@@ -30,6 +30,14 @@ function normalize4xxRouteGroup(path: string): string {
   return path;
 }
 
+// The `top_4xx_human_browser_*` panels exist to surface broken links that
+// something other than a crawler walked into, so they read both browser-shaped
+// buckets. `browser_unverified` absorbed most of what used to land in
+// `human_browser` when the classifier tightened (see lib/traffic-classification),
+// and narrowing these to verified humans only would have quietly emptied them.
+// The JSON keys keep their names — consumers read them by shape.
+const BROWSER_SHAPED_TYPES = "('human_browser', 'browser_unverified')";
+
 function getTrafficWindowSummary(db: ReturnType<typeof getDb>, days: number) {
   const window = `datetime('now', '-${days} day')`;
 
@@ -84,7 +92,7 @@ function getTrafficWindowSummary(db: ReturnType<typeof getDb>, days: number) {
 
   const top4xxHumanBrowserPaths = (() => {
     try {
-      return db.prepare(`SELECT path, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type = 'human_browser' GROUP BY path ORDER BY hits DESC LIMIT 10`).all() as Array<{ path: string; hits: number }>;
+      return db.prepare(`SELECT path, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type IN ${BROWSER_SHAPED_TYPES} GROUP BY path ORDER BY hits DESC LIMIT 10`).all() as Array<{ path: string; hits: number }>;
     } catch {
       return [] as Array<{ path: string; hits: number }>;
     }
@@ -92,7 +100,7 @@ function getTrafficWindowSummary(db: ReturnType<typeof getDb>, days: number) {
 
   const top4xxHumanBrowserMethods = (() => {
     try {
-      return db.prepare(`SELECT method, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type = 'human_browser' GROUP BY method ORDER BY hits DESC LIMIT 10`).all() as Array<{ method: string; hits: number }>;
+      return db.prepare(`SELECT method, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type IN ${BROWSER_SHAPED_TYPES} GROUP BY method ORDER BY hits DESC LIMIT 10`).all() as Array<{ method: string; hits: number }>;
     } catch {
       return [] as Array<{ method: string; hits: number }>;
     }
@@ -100,7 +108,7 @@ function getTrafficWindowSummary(db: ReturnType<typeof getDb>, days: number) {
 
   const top4xxHumanBrowserHosts = (() => {
     try {
-      return db.prepare(`SELECT COALESCE(NULLIF(host, ''), '(unknown)') as host, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type = 'human_browser' GROUP BY host ORDER BY hits DESC LIMIT 10`).all() as Array<{ host: string; hits: number }>;
+      return db.prepare(`SELECT COALESCE(NULLIF(host, ''), '(unknown)') as host, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type IN ${BROWSER_SHAPED_TYPES} GROUP BY host ORDER BY hits DESC LIMIT 10`).all() as Array<{ host: string; hits: number }>;
     } catch {
       return [] as Array<{ host: string; hits: number }>;
     }
@@ -108,7 +116,7 @@ function getTrafficWindowSummary(db: ReturnType<typeof getDb>, days: number) {
 
   const top4xxHumanBrowserCountries = (() => {
     try {
-      return db.prepare(`SELECT COALESCE(NULLIF(country, ''), '(unknown)') as country, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type = 'human_browser' GROUP BY country ORDER BY hits DESC LIMIT 10`).all() as Array<{ country: string; hits: number }>;
+      return db.prepare(`SELECT COALESCE(NULLIF(country, ''), '(unknown)') as country, COUNT(*) as hits FROM request_log WHERE created_at > ${window} AND status >= 400 AND status < 500 AND traffic_type IN ${BROWSER_SHAPED_TYPES} GROUP BY country ORDER BY hits DESC LIMIT 10`).all() as Array<{ country: string; hits: number }>;
     } catch {
       return [] as Array<{ country: string; hits: number }>;
     }
@@ -366,6 +374,7 @@ export const GET = withRequestLog(async () => {
     unique_visitors_24h: metrics.traffic_24h.unique_visitors,
     bot_hits_24h: metrics.traffic_24h.bot_hits,
     human_browser_24h: trafficBreakdown.find((row) => row.traffic_type === "human_browser")?.hits || 0,
+    browser_unverified_24h: trafficBreakdown.find((row) => row.traffic_type === "browser_unverified")?.hits || 0,
     agent_browser_24h: trafficBreakdown.find((row) => row.traffic_type === "agent_browser")?.hits || 0,
     ai_agent_24h: trafficBreakdown.find((row) => row.traffic_type === "ai_agent")?.hits || 0,
     ai_training_24h: trafficBreakdown.find((row) => row.traffic_type === "ai_training")?.hits || 0,

@@ -4,6 +4,7 @@ import { classifyTraffic } from "@/lib/traffic-classification";
 
 const CHROME_133 = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36";
 const CHROME_103 = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36";
+const SAFARI_17 = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
 
 function build(headers: Record<string, string>): NextRequest {
   const h = new Headers(headers);
@@ -97,18 +98,77 @@ describe("classifyTraffic — well-formed clients still pass", () => {
 
   it("classifies a browser-like request with no language or sec-* hints as crawler_bot", () => {
     const r = build({
-      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+      "user-agent": SAFARI_17,
       accept: "text/html",
     });
     expect(classifyTraffic(r, "page")).toEqual(expect.objectContaining({ trafficType: "crawler_bot", uaFamily: "BrowserLikeWeakSignals" }));
   });
 
-  it("classifies a non-Chrome browser UA as human_browser when it has real browser signals", () => {
+  it("classifies a non-Chrome browser UA with no engine signals as browser_unverified", () => {
     const r = build({
-      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+      "user-agent": SAFARI_17,
       accept: "text/html",
       "accept-language": "en-US,en;q=0.9",
     });
+    expect(classifyTraffic(r, "page")).toEqual(expect.objectContaining({
+      trafficType: "browser_unverified",
+      uaFamily: "Browser",
+    }));
+  });
+});
+
+describe("classifyTraffic — browser_unverified", () => {
+  // The regression this bucket exists for: these are the default headers of
+  // every HTTP scraping library, and they used to read as human_browser.
+  it("does not count default scraper headers as human", () => {
+    const r = build({
+      "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36",
+      accept: "text/html,application/xhtml+xml",
+      "accept-language": "en-US,en;q=0.9",
+    });
+    expect(classifyTraffic(r, "page").trafficType).toBe("browser_unverified");
+  });
+
+  it("promotes to human_browser once the request carries an fc_sid session", () => {
+    const r = build({
+      "user-agent": SAFARI_17,
+      accept: "text/html",
+      "accept-language": "en-US,en;q=0.9",
+      cookie: "fc_theme=modern; fc_sid=8f14e45fceea167a5a36dedd4bea2543; fc_lang=en",
+    });
     expect(classifyTraffic(r, "page").trafficType).toBe("human_browser");
+  });
+
+  it("ignores an fc_sid that is not shaped like a session id", () => {
+    const r = build({
+      "user-agent": SAFARI_17,
+      accept: "text/html",
+      "accept-language": "en-US,en;q=0.9",
+      cookie: "fc_sid=; fc_theme=modern",
+    });
+    expect(classifyTraffic(r, "page").trafficType).toBe("browser_unverified");
+  });
+
+  it("does not let a forged fc_sid buy a spoofed Chrome UA past the bot gate", () => {
+    const r = build({
+      "user-agent": CHROME_133,
+      accept: "text/html",
+      "accept-language": "en-US,en;q=0.9",
+      cookie: "fc_sid=8f14e45fceea167a5a36dedd4bea2543",
+    });
+    expect(classifyTraffic(r, "page")).toEqual(expect.objectContaining({
+      trafficType: "crawler_bot",
+      uaFamily: "SpoofedChromeUA",
+    }));
+  });
+
+  it("still classifies declared crawlers ahead of the browser buckets", () => {
+    const r = build({
+      "user-agent": "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)",
+      accept: "text/html",
+      "accept-language": "en-US,en;q=0.9",
+      cookie: "fc_sid=8f14e45fceea167a5a36dedd4bea2543",
+    });
+    expect(classifyTraffic(r, "page").trafficType).toBe("crawler_bot");
   });
 });

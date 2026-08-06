@@ -13,6 +13,9 @@ import { classifyTraffic } from "@/lib/traffic-classification";
  *                              page_view; emitting here would double-count
  *                              and pegs Railway's 500-logs/sec replica cap).
  *   - page + bot/api_client  → keep (no beacon fires for these clients).
+ *   - page + browser_unverified → keep. Not firing the beacon is most of why
+ *                              they are unverified, so the entry log is the
+ *                              only record we get of them.
  *
  * No PII: raw IP is never logged here, just whether one was present.
  */

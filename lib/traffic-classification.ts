@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 
 export type TrafficType =
   | "human_browser"
+  | "browser_unverified"
   | "agent_browser"
   | "ai_agent"
   | "ai_training"
@@ -102,19 +103,49 @@ function browserLike(headers: HeaderSource, ua: string): boolean {
     || hasHeader(headers, "sec-fetch-mode");
 }
 
-function strongBrowserSignals(headers: HeaderSource, ua: string): boolean {
-  const accept = headers.get("accept") || "";
-  const hasAcceptLanguage = !!(headers.get("accept-language") || "").trim();
+/**
+ * Fetch metadata (`Sec-Fetch-*`) and UA client hints (`Sec-CH-UA*`) are the only
+ * header signals a scraper cannot cheaply fake its way past by copying a UA
+ * string, because they are set by the browser engine, not the caller. Every
+ * engine still shipping sends at least one: Chrome 76+, Firefox 90+, Safari
+ * 16.4+.
+ *
+ * This used to also accept `Mozilla/` + `text/html` + `accept-language`, which
+ * is the exact header set every HTTP scraping library emits by default. On
+ * 2026-08-06 that branch put 13,559 hits/24h into `human_browser` against 45
+ * real beacon page views — a ~300x overcount that made every human-traffic
+ * number downstream fiction. Header shape alone cannot carry this decision.
+ */
+function hasEngineSignals(headers: HeaderSource): boolean {
   const hasSecFetch = hasHeader(headers, "sec-fetch-mode") || hasHeader(headers, "sec-fetch-site") || hasHeader(headers, "sec-fetch-dest");
   const hasClientHints = hasHeader(headers, "sec-ch-ua") || hasHeader(headers, "sec-ch-ua-mobile") || hasHeader(headers, "sec-ch-ua-platform");
-  const wantsHtml = accept.includes("text/html") || accept.includes("application/xhtml+xml");
-
-  if (hasSecFetch || hasClientHints) return true;
-  if ((/Safari\//.test(ua) || /Firefox\//.test(ua)) && wantsHtml && hasAcceptLanguage) return true;
-  if (ua.includes("Mozilla/") && wantsHtml && hasAcceptLanguage) return true;
-  return false;
+  return hasSecFetch || hasClientHints;
 }
 
+const SESSION_COOKIE_RE = /(?:^|;\s*)fc_sid=([a-f0-9-]{16,64})(?:;|$)/i;
+
+/**
+ * A request carrying `fc_sid` has already loaded the layout's beacon pixel on a
+ * previous hit and been handed the cookie back — a subresource fetch plus a
+ * cookie round-trip that plain HTML scrapers do not perform. This is what keeps
+ * pre-16.4 Safari and other engines with no fetch metadata classified as human
+ * from their second page view on, rather than being demoted forever.
+ *
+ * Corroboration only: it promotes a browser-shaped request, and deliberately
+ * runs after the SpoofedChromeUA gate so a forged cookie cannot buy a scraper
+ * pool its way back past the 429.
+ */
+function hasVerifiedSession(headers: HeaderSource): boolean {
+  return SESSION_COOKIE_RE.test(headers.get("cookie") || "");
+}
+
+/**
+ * Harder call than `browser_unverified`: a browser-shaped request that asks for
+ * HTML while sending no `accept-language` at all. Every shipping engine sends
+ * one, so its absence — unlike missing fetch metadata — has no legitimate
+ * explanation. These stay `crawler_bot` and stay subject to the /search
+ * throttle.
+ */
 function looksLikeSuspiciousBrowserLike(headers: HeaderSource, ua: string): boolean {
   if (!ua.includes("Mozilla/")) return false;
   const accept = headers.get("accept") || "";
@@ -179,8 +210,18 @@ export function classifyHeaders(headers: HeaderSource, surface: "api" | "page"):
     return { trafficType: "crawler_bot", uaFamily: "BrowserLikeWeakSignals", host };
   }
 
-  if (browserLike(headers, ua) && strongBrowserSignals(headers, ua)) {
-    return { trafficType: "human_browser", uaFamily: ua.includes("Mozilla/") ? "Browser" : "Unknown Browser", host };
+  if (browserLike(headers, ua)) {
+    if (hasEngineSignals(headers) || hasVerifiedSession(headers)) {
+      return { trafficType: "human_browser", uaFamily: ua.includes("Mozilla/") ? "Browser" : "Unknown Browser", host };
+    }
+    // Browser-shaped, but nothing here was produced by a browser engine: a UA
+    // string, an accept header and a language are all caller-supplied. Real but
+    // ancient engines and default-configured scrapers are indistinguishable at
+    // this point, so bucket them apart from both instead of guessing. Not
+    // counted as human, and not gated as a bot either — the /search throttle
+    // and the spoofed-UA 429 both stay off this bucket, so a genuine old
+    // browser still gets served and can earn `human_browser` via fc_sid.
+    return { trafficType: "browser_unverified", uaFamily: ua.includes("Mozilla/") ? "Browser" : "Unknown Browser", host };
   }
 
   return { trafficType: surface === "page" ? "agent_browser" : "api_client", uaFamily: ua ? "Unknown Client" : "Unknown", host };
