@@ -47,7 +47,7 @@ export const copy = {
     home: {
       latestReleases: "Latest Releases",
       packagesIndexed: "packages indexed",
-      heroTitle: "Open source packages for agents and AI labs worldwide.",
+      heroTitle: "Fresh releases from the agent ecosystem.",
       heroBody1: "Discover the agent ecosystem in one place: MCP servers, orchestration frameworks, coding agents, infrastructure, research tooling, security, and operator playbooks.",
       chipAgentEcosystem: "agent ecosystem",
       chipMcpServers: "MCP servers",
@@ -362,7 +362,7 @@ export const copy = {
     home: {
       latestReleases: "最新发布",
       packagesIndexed: "个项目已收录",
-      heroTitle: "面向全球智能体与 AI 实验室的开源软件目录。",
+      heroTitle: "智能体生态的最新发布。",
       heroBody1: "在一个地方发现智能体生态：MCP 服务器、编排框架、编码智能体、基础设施、研究工具、安全项目和运维手册。",
       chipAgentEcosystem: "智能体生态",
       chipMcpServers: "MCP 服务器",

@@ -15,9 +15,9 @@ import { recordPageRequest } from "@/lib/page-request";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.freshcrate.ai"),
-  title: "freshcrate — open source packages for agents",
+  title: "freshcrate — fresh releases from the agent ecosystem",
   description:
-    "freshcrate is a global open source package directory for AI agents and labs: MCP servers, orchestration frameworks, coding agents, research tooling, infrastructure, and operator playbooks.",
+    "freshcrate tracks fresh releases from the agent ecosystem: MCP servers, orchestration frameworks, coding agents, research tooling, infrastructure, and operator playbooks. A global open source package directory for AI agents and labs.",
   keywords: [
     "AI agents",
     "MCP servers",
@@ -36,17 +36,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "freshcrate",
-    title: "freshcrate — open source packages for agents",
+    title: "freshcrate — fresh releases from the agent ecosystem",
     description:
-      "A global open source package directory for AI agents and labs: MCP servers, orchestration frameworks, coding agents, research tooling, infrastructure, and operator playbooks.",
+      "Fresh releases from the agent ecosystem: MCP servers, orchestration frameworks, coding agents, research tooling, infrastructure, and operator playbooks. A global open source package directory for AI agents and labs.",
     url: "https://www.freshcrate.ai",
     images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "freshcrate" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "freshcrate — open source packages for agents",
+    title: "freshcrate — fresh releases from the agent ecosystem",
     description:
-      "A global open source package directory for AI agents and labs: MCP servers, orchestration frameworks, coding agents, research tooling, infrastructure, and operator playbooks.",
+      "Fresh releases from the agent ecosystem: MCP servers, orchestration frameworks, coding agents, research tooling, infrastructure, and operator playbooks. A global open source package directory for AI agents and labs.",
     images: ["/og-default.png"],
   },
 };

@@ -13,22 +13,22 @@ import TrackedLink from "./components/tracked-link";
 import TrackedNextLink from "./components/tracked-next-link";
 
 export const metadata: Metadata = {
-  title: "freshcrate — open source packages for AI agents, MCP servers, and frameworks",
+  title: "freshcrate — fresh releases from the agent ecosystem: MCP servers, frameworks, coding agents",
   description:
-    "Discover open source AI agent packages, MCP servers, orchestration frameworks, coding agents, infrastructure, and research tooling. Fresh releases, ranked packages, and retrieval-friendly project pages.",
+    "Fresh releases from the agent ecosystem: MCP servers, orchestration frameworks, coding agents, infrastructure, and research tooling. Ranked open source packages with retrieval-friendly project pages.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "freshcrate — open source packages for AI agents, MCP servers, and frameworks",
+    title: "freshcrate — fresh releases from the agent ecosystem: MCP servers, frameworks, coding agents",
     description:
-      "Discover open source AI agent packages, MCP servers, orchestration frameworks, coding agents, infrastructure, and research tooling.",
+      "Fresh releases from the agent ecosystem: MCP servers, orchestration frameworks, coding agents, infrastructure, and research tooling.",
     url: "https://www.freshcrate.ai/",
   },
   twitter: {
-    title: "freshcrate — open source packages for AI agents, MCP servers, and frameworks",
+    title: "freshcrate — fresh releases from the agent ecosystem: MCP servers, frameworks, coding agents",
     description:
-      "Discover open source AI agent packages, MCP servers, orchestration frameworks, coding agents, infrastructure, and research tooling.",
+      "Fresh releases from the agent ecosystem: MCP servers, orchestration frameworks, coding agents, infrastructure, and research tooling.",
   },
 };
 

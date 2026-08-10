@@ -8,7 +8,7 @@ describe("agent edition ui surfacing", () => {
     // Hero copy is centralized in the i18n catalog; the page renders it via getCopy().
     const i18n = fs.readFileSync(path.join(process.cwd(), "lib", "i18n.ts"), "utf-8");
 
-    expect(i18n).toContain("Open source packages for agents");
+    expect(i18n).toContain("Fresh releases from the agent ecosystem");
     expect(i18n).toContain("Discover the agent ecosystem in one place");
     expect(i18n).toContain("MCP servers");
     expect(i18n).toContain("Explore Orchestra");
