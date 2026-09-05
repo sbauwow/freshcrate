@@ -2,8 +2,16 @@ name: Refresh security snapshot
 
 on:
   schedule:
-    # Every hour at :37, offset from research and release refresh jobs.
-    - cron: '37 * * * *'
+    # Every 3 hours at :37, offset from research and release refresh jobs.
+    #
+    # This asked for hourly until 2026-09-05 and never got it. GitHub treats
+    # schedules as best-effort and drops them under load, so the job actually
+    # fired about 7 times a day at 2.1-5.0 hour gaps, and never at :37 -- every
+    # run succeeding, just not when asked. Declaring 3-hourly matches what the
+    # scheduler will actually deliver. If the snapshot ever needs to be fresher
+    # than this, it needs a trigger that is not GitHub's cron: the endpoint is
+    # POST /api/cron/refresh-security behind CRON_SECRET, callable by anything.
+    - cron: '37 */3 * * *'
   workflow_dispatch:
 
 jobs:
